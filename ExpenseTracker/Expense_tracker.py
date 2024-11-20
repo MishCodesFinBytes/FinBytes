@@ -13,8 +13,8 @@ df = pd.read_csv(r"C:\codebase\FinBytes\expenses.csv")
 # Create a pie chart to visualize the breakdown of expenses by category
 plt.figure(figsize=(8, 8))
 plt.pie(
-    df['Amount'], 
-    labels=df['Category'], 
+    df.groupby('Category')['Amount'].sum(), 
+    labels=df.groupby('Category')['Amount'].sum().index, 
     autopct='%1.1f%%', 
     startangle=140
 )
