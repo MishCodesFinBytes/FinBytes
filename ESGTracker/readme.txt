@@ -1,6 +1,7 @@
 # ESG Score Tracking (Python CLI Demo)
 
 A simple Python CLI tool demonstrating **ESG (Environmental, Social, Governance) score tracking** using historical data.
+the below gives a bare-minimum skeletal implemention of the blog post. ideally connected to real data from yahoo finance or other apis so that we can experiment with all visual features discussed.
 
 This project is based on a fintech blog post and demonstrates:
 - ESG data ingestion
