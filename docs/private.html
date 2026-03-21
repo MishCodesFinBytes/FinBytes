@@ -1,0 +1,38 @@
+---
+layout: page
+title: Private
+permalink: /private/
+---
+
+<div id="lock">
+  <input type="password" id="pwd" placeholder="Enter password" />
+  <button onclick="unlock()">Enter</button>
+  <p id="err" style="color:red;display:none">Wrong password</p>
+</div>
+
+<div id="content" style="display:none">
+  <h2>Private Posts</h2>
+  <ul>
+    <li><a href="/FinBytes/private/sp-3m1">SP 3M1</a></li>
+    <li><a href="/FinBytes/private/sp2-6m">SP2 6M</a></li>
+    <li><a href="/FinBytes/private/desk-strat-study-plan">Desk Strat Study Plan</a></li>
+  </ul>
+</div>
+
+<script>
+function unlock() {
+  if (document.getElementById('pwd').value === 'MyPassw0rd1*') {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    sessionStorage.setItem('unlocked', 'true');
+  } else {
+    document.getElementById('err').style.display = 'block';
+  }
+}
+
+// Stay unlocked during session
+if (sessionStorage.getItem('unlocked') === 'true') {
+  document.getElementById('lock').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+}
+</script>
