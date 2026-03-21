@@ -39,6 +39,10 @@ plugins:
   - jekyll-sitemap
 include:
   - _pages
+  
+ header_pages:
+  - about.md
+  - contact.md
 
 # Exclude from processing.
 # The following items will not be processed, by default.
