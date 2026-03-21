@@ -1,0 +1,550 @@
+---
+layout: post
+title: 'Demo Chat App with Redis: More Troubleshooting'
+date: 2026-02-08 14:43:06.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- debugging
+- demo
+- redis
+- troubleshooting
+meta:
+  _last_editor_used_jetpack: block-editor
+  firehose_sent: '1770561786'
+  _publicize_job_id: '111091037180'
+  timeline_notification: '1770561786'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 14:42:06'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Technology","Personal","Inspiration","Web Design","Movies"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/02/08/demo-chat-app-with-redis-more-troubleshooting/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/redis_sample","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>We can turn Redis chat demo (prev post) into a <strong>full learning/troubleshooting exercise</strong>. I’ll lay it out step by step, including <strong>how to intentionally cause issues, what you’d see in logs, and how to troubleshoot them</strong>. We’ll structure it by <strong>stage of the system</strong>: app, Redis, caching, and multi-worker scenarios.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Project Setup</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Python + Flask + Redis</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Windows: Redis standalone or Waitress for multi-threaded simulation</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Optional: Gunicorn (Linux/WSL/Docker) for multi-worker scenarios</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>1️⃣ Stage: App Layer – Cache Miss / TTL Expiration</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Cause Issue</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Request <code>/history</code> before sending any messages → Redis list is empty</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Wait longer than TTL (default 5 min) after sending messages → cache expires</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>What You See in Logs</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li><code>"Cache miss! Messages not found (expired or not populated)."</code></li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Redis console shows nothing because keys expired</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Troubleshoot</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Verify TTL of key:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtY2xpIFRUTCBjaGF0X21lc3NhZ2Vz"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-cli TTL chat_messages
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Returns <code>-2</code> → key does not exist (expired)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Returns <code>-1</code> → key exists but has no expiration</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Ensure messages are being stored with <code>LPUSH</code> and <code>EXPIRE</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>If key missing: check app logic or Redis connectivity</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>2️⃣ Stage: Redis Down / Connection Issues</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Cause Issue</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Stop <code>redis-server.exe</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Call <code>/chat</code> or <code>/history</code>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>What You See in Logs</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Python app raises connection error:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMuZXhjZXB0aW9ucy5Db25uZWN0aW9uRXJyb3I6IEVycm9yIDExMSBjb25uZWN0aW5nIHRvIGxvY2FsaG9zdDo2Mzc5Lg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379.
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Flask endpoint returns 500 error</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Troubleshoot</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check if Redis is running:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtY2xpIHBpbmc="]],[["IyBTaG91bGQgcmV0dXJuIFBPTkc="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-cli ping
+# Should return PONG
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Restart Redis server</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>If persistent issue: check firewall, port 6379 availability, or hostname</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>3️⃣ Stage: Pub/Sub – Message Not Received</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Cause Issue</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Start Flask app, but do not start listener thread (<code>Chat.start_listener()</code>)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Send messages → Pub/Sub has no subscribers</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>What You See in Logs</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Sender logs show status <code>sent</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>No messages appear on console for any client</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Troubleshoot</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Ensure listener thread is running (daemon=True)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Check subscription:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHVic3ViID0gci5wdWJzdWIoKQ=="]],[["cHVic3ViLnN1YnNjcmliZSgiZ2xvYmFsX2NoYXQiKQ=="]],[["cHJpbnQocHVic3ViLmNoYW5uZWxzKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>pubsub = r.pubsub()
+pubsub.subscribe("global_chat")
+print(pubsub.channels)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Must include <code>global_chat</code>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>4️⃣ Stage: Multi-Instance / Multi-Worker Race Conditions</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Cause Issue</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Run multiple Flask instances (or Gunicorn with multiple workers)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Send messages at the same time</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Use <code>/history</code> endpoint</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>What You See in Logs</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Some messages may appear out-of-order</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>If TTLs overlap, you may see missing or partial history</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Troubleshoot</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Verify <strong>atomic operations</strong>: LPUSH + LTRIM are atomic in Redis</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Check for multi-worker issues:<!-- wp:list -->
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Gunicorn logs: each worker writes separately</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Race conditions can occur if multiple processes try to update a key without atomic commands</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Use transactions or Lua scripts if consistency is critical</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>5️⃣ Stage: Overloaded Cache / Eviction</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Cause Issue</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Reduce TTL (e.g., 5 sec)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Send &gt;10 messages quickly</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Keys start expiring automatically</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>What You See in Logs</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>/history</code> shows fewer messages than expected</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<code>"Cache miss!"</code> appears intermittently</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How to Troubleshoot</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check key length:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtY2xpIExMRU4gY2hhdF9tZXNzYWdlcw=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-cli LLEN chat_messages
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check TTL:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtY2xpIFRUTCBjaGF0X21lc3NhZ2Vz"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-cli TTL chat_messages
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":3} --></p>
+<ol start="3" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Adjust TTL or LTRIM logic to avoid premature eviction</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>6️⃣ Step-by-Step Demo Workflow</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Start Redis</strong> <code>redis-server.exe</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Run chat app</strong> <code>python chat_cache_demo.py</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>Send a message</strong></li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UE9TVCAvY2hhdCB7Im1lc3NhZ2UiOiJIZWxsbyJ9"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>POST /chat {"message":"Hello"}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":4} --></p>
+<ol start="4" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li><strong>Check history immediately → cache hit</strong></li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["R0VUIC9oaXN0b3J5"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>GET /history
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":5} --></p>
+<ol start="5" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li><strong>Wait 5 minutes → cache expired → cache miss</strong></li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>Stop Redis → try sending a message → connection error</strong></li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>Start multiple listener threads → send messages → check race conditions</strong></li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>Reduce TTL, send many messages → eviction logs and missing messages</strong></li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>7️⃣ Optional: Run with Waitress (Windows Production Simulation)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB3YWl0cmVzcyBpbXBvcnQgc2VydmU="]],[["c2VydmUoYXBwLCBob3N0PSIwLjAuMC4wIiwgcG9ydD01MDAwKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from waitress import serve
+serve(app, host="0.0.0.0", port=5000)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Multiple threads simulate concurrent workers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Useful to demo race conditions, cache misses, TTL issues</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>8️⃣ Summary Table: Issues, Logs, Troubleshooting</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Stage</th>
+<th>Cause</th>
+<th>Logs / Observed Behavior</th>
+<th>Troubleshooting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cache miss</td>
+<td>Key expired / not populated</td>
+<td><code>"Cache miss! Messages not found"</code></td>
+<td>Check TTL, ensure LPUSH + EXPIRE logic</td>
+</tr>
+<tr>
+<td>Redis down</td>
+<td>Server stopped</td>
+<td><code>ConnectionError</code></td>
+<td>Restart Redis, check port, hostname</td>
+</tr>
+<tr>
+<td>Pub/Sub no listener</td>
+<td>Listener not running</td>
+<td>Messages sent but not printed</td>
+<td>Ensure listener thread subscribed</td>
+</tr>
+<tr>
+<td>Multi-worker</td>
+<td>Multiple processes updating same key</td>
+<td>Messages out-of-order, partial cache</td>
+<td>Use atomic ops (LPUSH+LTRIM), transactions, Lua scripts</td>
+</tr>
+<tr>
+<td>Eviction / TTL</td>
+<td>Messages exceed cache limit or TTL</td>
+<td>Missing messages in <code>/history</code>
+</td>
+<td>Adjust LTRIM, TTL, or max message count</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>We can <strong>update the single-file chat app</strong> in the prev post to <strong>include logging for cache hits/misses and Pub/Sub events</strong>, so you can <strong>run it and see all the issues live in the console</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>hop on over to the next post for more..</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

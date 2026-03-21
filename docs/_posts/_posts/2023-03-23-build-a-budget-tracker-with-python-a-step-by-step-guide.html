@@ -1,0 +1,119 @@
+---
+layout: post
+title: 'Build a mini Budget Tracker with Python: A Step-by-Step Guide'
+date: 2023-03-23 11:47:50.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- beginner
+- Budgeting
+- Personal Finance
+- project
+meta:
+  reader_suggested_tags: '["Books","Travel","Food","Art","Finance"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '310'
+  _wp_old_date: '2024-10-25'
+  _edit_last: '257720953'
+  _yoast_wpseo_primary_category: '1376'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '3'
+  _wp_page_template: default
+  _import_original_post_id: '99'
+  _publicize_job_id: '112088255190'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:47'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/03/23/build-a-budget-tracker-with-python-a-step-by-step-guide/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/MiniPersonalBudgetTracker","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>In today's fast-paced world, managing personal finances has become a crucial aspect of our lives. With the rise of technology and the increasing popularity of fintech, individuals are turning towards digital solutions to track their spending, budget, and investments. Python, with its versatile and powerful capabilities, has become a go-to language for many fintech professionals and enthusiasts. In this blog post, we will explore how Python can be used to build a simple budget tracker, showcasing its applications in the fintech industry.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Concept Explanation:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A budget tracker is a tool that helps individuals or businesses track their expenses and income, making it easier to manage their finances effectively. With Python, we can build a budget tracker that automates calculations, analyzes data, and even performs predictive modeling to provide insights into spending patterns and potential future expenses.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Variations and Use Cases:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>1. Automating Calculations:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python's built-in mathematical functions and libraries such as NumPy and Pandas make it easy to perform calculations. We can use these functions to create a budget tracker that automatically calculates expenses, income, and savings. For example, we can use the `sum()` function to calculate the total amount spent in a particular category, such as groceries or utilities. We can also use conditional statements to categorize expenses and track them separately, making it easier to identify areas where we need to cut down on spending.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>2. Data Analysis:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python's data analysis libraries, such as Pandas and Matplotlib, allow us to visualize and analyze financial data. We can use these libraries to create charts and graphs that provide a visual representation of our spending patterns, making it easier to identify areas where we can reduce expenses. For instance, we can create a bar chart to compare our monthly expenses and see if we are overspending in any category.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>3. Predictive Modeling:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python's machine learning libraries, such as scikit-learn, provide us with the tools to perform predictive modeling. We can use this capability to build a budget tracker that can analyze past spending patterns and make predictions for future expenses. This can be especially useful for individuals or businesses with irregular income, helping them plan and budget accordingly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Practical Examples and Code Snippets:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>To create a simple budget tracker with Python, we will use the Pandas library to import and analyze a CSV file containing expense data. We will then use Matplotlib to create a bar chart to visualize the expenses ( categorised as groceries, utilities, entertainment, as an example).</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\n# Import necessary libraries\nimport pandas as pd\nimport matplotlib.pyplot as plt\n\n# Read CSV file into a dataframe\ndf = pd.read_csv('expenses.csv')\n\n# Calculate total expenses for each category and add more if necessary\ngroceries = df[df['Category'] == 'Groceries']['Amount'].sum()\nutilities = df[df['Category'] == 'Utilities']['Amount'].sum()\nentertainment = df[df['Category'] == 'Entertainment']['Amount'].sum()\n\n# Create a bar chart to visualize expenses\ncategories = ['Groceries', 'Utilities', 'Entertainment']\namounts = [groceries, utilities, entertainment]\nplt.bar(categories, amounts)\nplt.xlabel('Categories')\nplt.ylabel('Amount (in USD)')\nplt.title('Monthly Expenses')\nplt.show()\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Import necessary libraries\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e matplotlib.pyplot \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Read CSV file into a dataframe\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;expenses.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate total expenses for each category and add more if necessary\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003egroceries = df[df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Category\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Groceries\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e][\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e].sum()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eutilities = df[df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Category\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Utilities\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e][\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e].sum()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eentertainment = df[df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Category\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Entertainment\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e][\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e].sum()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Create a bar chart to visualize expenses\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecategories = [\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Groceries\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Utilities\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Entertainment\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eamounts = [groceries, utilities, entertainment]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.bar(categories, amounts)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.xlabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Categories\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.ylabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Amount (in USD)\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.title(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Monthly Expenses\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.show()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #008000"># Import necessary libraries</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> matplotlib.pyplot </span><span style="color: #AF00DB">as</span><span style="color: #000000"> plt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Read CSV file into a dataframe</span></span>
+<span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">'expenses.csv'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate total expenses for each category and add more if necessary</span></span>
+<span class="line"><span style="color: #000000">groceries = df[df[</span><span style="color: #A31515">'Category'</span><span style="color: #000000">] == </span><span style="color: #A31515">'Groceries'</span><span style="color: #000000">][</span><span style="color: #A31515">'Amount'</span><span style="color: #000000">].sum()</span></span>
+<span class="line"><span style="color: #000000">utilities = df[df[</span><span style="color: #A31515">'Category'</span><span style="color: #000000">] == </span><span style="color: #A31515">'Utilities'</span><span style="color: #000000">][</span><span style="color: #A31515">'Amount'</span><span style="color: #000000">].sum()</span></span>
+<span class="line"><span style="color: #000000">entertainment = df[df[</span><span style="color: #A31515">'Category'</span><span style="color: #000000">] == </span><span style="color: #A31515">'Entertainment'</span><span style="color: #000000">][</span><span style="color: #A31515">'Amount'</span><span style="color: #000000">].sum()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Create a bar chart to visualize expenses</span></span>
+<span class="line"><span style="color: #000000">categories = [</span><span style="color: #A31515">'Groceries'</span><span style="color: #000000">, </span><span style="color: #A31515">'Utilities'</span><span style="color: #000000">, </span><span style="color: #A31515">'Entertainment'</span><span style="color: #000000">]</span></span>
+<span class="line"><span style="color: #000000">amounts = [groceries, utilities, entertainment]</span></span>
+<span class="line"><span style="color: #000000">plt.bar(categories, amounts)</span></span>
+<span class="line"><span style="color: #000000">plt.xlabel(</span><span style="color: #A31515">'Categories'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">plt.ylabel(</span><span style="color: #A31515">'Amount (in USD)'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">plt.title(</span><span style="color: #A31515">'Monthly Expenses'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">plt.show()</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In conclusion, Python offers a powerful and versatile platform for building budget trackers that can automate calculations, analyze data, and even perform predictive modeling. Its applications in fintech have made it an essential tool for financial professionals, providing them with the capability to manage and analyze large sets of financial data efficiently. With its continuous development and advancements, we can expect to see more innovative and sophisticated applications of Python in the fintech industry in the future. Whether you are an individual looking to track your finances or a fintech professional looking to develop financial tools, Python is a language that you can rely on.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:image {"id":559,"sizeSlug":"full","linkDestination":"none"} --></p>
+<figure class="wp-block-image size-full"><img src="{{site.baseurl}}/assets/2023/03/267e9-minipersonalbudgettracker.png" alt="" class="wp-image-559"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

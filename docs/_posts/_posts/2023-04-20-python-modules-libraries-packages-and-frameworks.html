@@ -1,0 +1,592 @@
+---
+layout: post
+title: Python - modules, libraries, packages and frameworks
+date: 2023-04-20 17:30:00.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Python fundamentals
+tags:
+- fundamentals
+- imports
+- modules
+- packages
+meta:
+  reader_suggested_tags: '["Travel","@ Vacation","Holiday","Visit","Srilanka"]'
+  _last_editor_used_jetpack: block-editor
+  _wp_old_date: '2025-01-16'
+  _thumbnail_id: '904'
+  _edit_last: '257720953'
+  _yoast_wpseo_primary_category: '1376'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '5'
+  _import_original_post_id: '890'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:52'
+  _publicize_job_id: '112088112562'
+  _publicize_shares: a:0:{}
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2023/04/20/python-modules-libraries-packages-and-frameworks/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:social-links --><html><body></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">
+<strong>But first, </strong>Inversion of Control:<strong> </strong><br />
+</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let's imagine you're playing with LEGO blocks. Normally, when you're building something, <strong>you decide what to build</strong>, which blocks to use, and where to put them. This is like using a <strong>library</strong>—you are in control and just picking tools to do what you want.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now, imagine you join a LEGO club where they have a specific plan for everyone to follow, like building a castle. The club leaders tell you what part of the castle to build, where it will go, and how it fits into the bigger structure. <strong>You’re still building</strong>, but you’re following their plan, and they’re in control of the overall project. This is like a <strong>framework</strong> with <strong>Inversion of Control (IoC)</strong>—the framework (or club leaders) decides the big picture, and you just fill in your part.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>So, <strong>IoC</strong> means instead of you controlling everything, you're letting the framework take charge of the structure, and you're just adding the pieces where they tell you to.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>1. Module</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A <strong>module</strong> is like a single toy in the store. It could be a toy car, a doll, or a puzzle. It’s small and focused on doing one thing.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example:</strong> A toy car is a module—it can drive, and that's its job.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In Python: A module is a single file with Python code, like <code>math.py</code> or your custom file <code>my_toy.py</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>2. Library</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A <strong>library</strong> is like a toy set. It’s a box of toys grouped together for a specific purpose, like a LEGO set or a craft kit. It gives you multiple tools to build or create something fun.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example:</strong> A LEGO set has many blocks, wheels, and figures you can combine to make a house, car, or spaceship.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In Python: A library is a collection of modules that help you do tasks, like <code>NumPy</code> for math or <code>Matplotlib</code> for drawing graphs.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# math_utils.py\n\ndef add(a, b):\n    \u0022\u0022\u0022Return the sum of two numbers.\u0022\u0022\u0022\n    return a + b\n\ndef subtract(a, b):\n    \u0022\u0022\u0022Return the difference of two numbers.\u0022\u0022\u0022\n    return a - b\n\ndef factorial(n):\n    \u0022\u0022\u0022Return the factorial of a number.\u0022\u0022\u0022\n    if n \u0026lt; 0:\n        raise ValueError(\u0022Factorial is not defined for negative numbers.\u0022)\n    result = 1\n    for i in range(1, n + 1):\n        result *= i\n    return result\n\n#USAGE:\n\n# main.py\nimport math_utils\n\n# Use the functions from the MathUtils library\nprint(\u0022Addition:\u0022, math_utils.add(5, 3))         # Output: Addition: 8\nprint(\u0022Subtraction:\u0022, math_utils.subtract(10, 4)) # Output: Subtraction: 6\nprint(\u0022Factorial:\u0022, math_utils.factorial(5))     # Output: Factorial: 120\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# math_utils.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eadd\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ea\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eb\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;Return the sum of two numbers.\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e a + b\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003esubtract\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ea\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eb\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;Return the difference of two numbers.\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e a - b\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003efactorial\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003en\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;Return the factorial of a number.\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e n \u0026lt; \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eraise\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003eValueError\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Factorial is not defined for negative numbers.\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    result = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e i \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ein\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003erange\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, n + \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        result *= i\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e result\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e#USAGE:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# main.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e math_utils\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Use the functions from the MathUtils library\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Addition:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, math_utils.add(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e3\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))         \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Addition: 8\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Subtraction:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, math_utils.subtract(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e4\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)) \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Subtraction: 6\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Factorial:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, math_utils.factorial(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))     \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Factorial: 120\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># math_utils.py</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""Return the sum of two numbers."""</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> a + b</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">subtract</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""Return the difference of two numbers."""</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> a - b</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">factorial</span><span style="color: #000000">(</span><span style="color: #001080">n</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""Return the factorial of a number."""</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">if</span><span style="color: #000000"> n &lt; </span><span style="color: #098658">0</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #AF00DB">raise</span><span style="color: #000000"> </span><span style="color: #267F99">ValueError</span><span style="color: #000000">(</span><span style="color: #A31515">"Factorial is not defined for negative numbers."</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    result = </span><span style="color: #098658">1</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">for</span><span style="color: #000000"> i </span><span style="color: #AF00DB">in</span><span style="color: #000000"> </span><span style="color: #795E26">range</span><span style="color: #000000">(</span><span style="color: #098658">1</span><span style="color: #000000">, n + </span><span style="color: #098658">1</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        result *= i</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> result</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000">#USAGE:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># main.py</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> math_utils</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Use the functions from the MathUtils library</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Addition:"</span><span style="color: #000000">, math_utils.add(</span><span style="color: #098658">5</span><span style="color: #000000">, </span><span style="color: #098658">3</span><span style="color: #000000">))         </span><span style="color: #008000"># Output: Addition: 8</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Subtraction:"</span><span style="color: #000000">, math_utils.subtract(</span><span style="color: #098658">10</span><span style="color: #000000">, </span><span style="color: #098658">4</span><span style="color: #000000">)) </span><span style="color: #008000"># Output: Subtraction: 6</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Factorial:"</span><span style="color: #000000">, math_utils.factorial(</span><span style="color: #098658">5</span><span style="color: #000000">))     </span><span style="color: #008000"># Output: Factorial: 120</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Using the Library</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can use this library in another Python script by importing it.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How It Works</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Library Structure:</strong><br>The <code>math_utils.py</code> file contains reusable functions for math operations.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Importing and Using the Library:</strong><br>The <code>main.py</code> script imports <code>math_utils</code> and calls its functions (<code>add</code>, <code>subtract</code>, <code>factorial</code>).</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Reusability:</strong><br>This library can be used in multiple projects to perform math operations without rewriting the logic.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How It's Different from a Framework</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>A <strong>library</strong> provides individual tools (like <code>add</code> and <code>factorial</code>) that you can pick and use wherever you want.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>A <strong>framework</strong> would provide a predefined structure and expect you to build your application by following its rules.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>3. Package</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A <strong>package</strong> is like a toy store aisle. It organizes similar types of toy sets (libraries) into one place so you can find everything you need easily.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example:</strong> The "building toys" aisle has LEGO sets, wooden blocks, and magnetic tiles—all organized in one spot so you can choose the set you like.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In Python: A package is a folder that contains related libraries or modules, like <code>scipy</code> having sub-packages for stats, optimization, etc.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here’s a <strong>simple example of a Python package</strong> that groups related functionality together. We'll create a package called <code>mypackage</code> that includes modules for <strong>math operations</strong> and <strong>string operations</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Step 1: Directory Structure</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Create the following directory structure for the package:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:preformatted --></p>
+<pre class="wp-block-preformatted">bashCopyEdit</pre>
+<p><!-- /wp:preformatted --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"mypackage/\n│\n├── __init__.py        # Marks this directory as a package\n├── math_operations.py # Module for math-related functions\n└── string_operations.py # Module for string-related functions\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emypackage/\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e│\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e├── \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003e__init__\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e.py        \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Marks this directory as a package\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e├── math_operations.py \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Module for math-related functions\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e└── string_operations.py \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Module for string-related functions\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">mypackage/</span></span>
+<span class="line"><span style="color: #000000">│</span></span>
+<span class="line"><span style="color: #000000">├── </span><span style="color: #795E26">__init__</span><span style="color: #000000">.py        </span><span style="color: #008000"># Marks this directory as a package</span></span>
+<span class="line"><span style="color: #000000">├── math_operations.py </span><span style="color: #008000"># Module for math-related functions</span></span>
+<span class="line"><span style="color: #000000">└── string_operations.py </span><span style="color: #008000"># Module for string-related functions</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Step 2: Create the Modules</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>math_operations.py</code></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# mypackage/math_operations.py\n\ndef add(a, b):\n    \u0022\u0022\u0022Return the sum of two numbers.\u0022\u0022\u0022\n    return a + b\n\ndef subtract(a, b):\n    \u0022\u0022\u0022Return the difference of two numbers.\u0022\u0022\u0022\n    return a - b","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# mypackage/math_operations.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eadd\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ea\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eb\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;Return the sum of two numbers.\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e a + b\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003esubtract\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ea\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eb\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;Return the difference of two numbers.\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e a - b\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># mypackage/math_operations.py</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""Return the sum of two numbers."""</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> a + b</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">subtract</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""Return the difference of two numbers."""</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> a - b</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>string_operations.py</code></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# mypackage/string_operations.py\n\ndef reverse_string(s):\n    \u0022\u0022\u0022Return the reversed version of a string.\u0022\u0022\u0022\n    return s[::-1]\n\ndef capitalize_string(s):\n    \u0022\u0022\u0022Return the string with the first letter capitalized.\u0022\u0022\u0022\n    return s.capitalize()\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# mypackage/string_operations.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ereverse_string\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003es\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;Return the reversed version of a string.\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e s[::-\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ecapitalize_string\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003es\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;Return the string with the first letter capitalized.\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e s.capitalize()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># mypackage/string_operations.py</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">reverse_string</span><span style="color: #000000">(</span><span style="color: #001080">s</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""Return the reversed version of a string."""</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> s[::-</span><span style="color: #098658">1</span><span style="color: #000000">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">capitalize_string</span><span style="color: #000000">(</span><span style="color: #001080">s</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""Return the string with the first letter capitalized."""</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> s.capitalize()</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>__init__.py</code></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# mypackage/__init__.py\n\n# Expose key functions directly in the package\nfrom .math_operations import add, subtract\nfrom .string_operations import reverse_string, capitalize_string\n\n# Metadata about the package\n__version__ = \u00221.0.0\u0022\n__author__ = \u0022Your Name\u0022\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# mypackage/__init__.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Expose key functions directly in the package\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e .math_operations \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e add, subtract\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e .string_operations \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e reverse_string, capitalize_string\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Metadata about the package\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #001080\u0022\u003e__version__\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;1.0.0\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e__author__ = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Your Name\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># mypackage/__init__.py</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Expose key functions directly in the package</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> .math_operations </span><span style="color: #AF00DB">import</span><span style="color: #000000"> add, subtract</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> .string_operations </span><span style="color: #AF00DB">import</span><span style="color: #000000"> reverse_string, capitalize_string</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Metadata about the package</span></span>
+<span class="line"><span style="color: #001080">__version__</span><span style="color: #000000"> = </span><span style="color: #A31515">"1.0.0"</span></span>
+<span class="line"><span style="color: #000000">__author__ = </span><span style="color: #A31515">"Your Name"</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Step 3: Using the Package</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Example Script (<code>main.py</code>)</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# main.py\nimport mypackage\n\n# Using math operations\nprint(\u0022Addition:\u0022, mypackage.add(10, 5))         # Output: Addition: 15\nprint(\u0022Subtraction:\u0022, mypackage.subtract(10, 5)) # Output: Subtraction: 5\n\n# Using string operations\nprint(\u0022Reversed:\u0022, mypackage.reverse_string(\u0022hello\u0022)) # Output: Reversed: olleh\nprint(\u0022Capitalized:\u0022, mypackage.capitalize_string(\u0022python\u0022)) # Output: Capitalized: Python\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# main.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e mypackage\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Using math operations\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Addition:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, mypackage.add(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))         \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Addition: 15\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Subtraction:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, mypackage.subtract(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)) \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Subtraction: 5\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Using string operations\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Reversed:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, mypackage.reverse_string(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;hello\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)) \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Reversed: olleh\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Capitalized:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, mypackage.capitalize_string(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;python\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)) \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Capitalized: Python\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># main.py</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> mypackage</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Using math operations</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Addition:"</span><span style="color: #000000">, mypackage.add(</span><span style="color: #098658">10</span><span style="color: #000000">, </span><span style="color: #098658">5</span><span style="color: #000000">))         </span><span style="color: #008000"># Output: Addition: 15</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Subtraction:"</span><span style="color: #000000">, mypackage.subtract(</span><span style="color: #098658">10</span><span style="color: #000000">, </span><span style="color: #098658">5</span><span style="color: #000000">)) </span><span style="color: #008000"># Output: Subtraction: 5</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Using string operations</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Reversed:"</span><span style="color: #000000">, mypackage.reverse_string(</span><span style="color: #A31515">"hello"</span><span style="color: #000000">)) </span><span style="color: #008000"># Output: Reversed: olleh</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Capitalized:"</span><span style="color: #000000">, mypackage.capitalize_string(</span><span style="color: #A31515">"python"</span><span style="color: #000000">)) </span><span style="color: #008000"># Output: Capitalized: Python</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How It Works</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong><code>__init__.py</code>:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This file initializes the package and allows you to expose selected functions directly at the package level.When you import <code>mypackage</code>, the <code>__init__.py</code> file is executed.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Modular Organization:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph {"style":{"typography":{"lineHeight":"0.5"}}} --></p>
+<p style="line-height:0.5"><code>math_operations.py</code> handles all math-related functionality.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph {"style":{"typography":{"lineHeight":"0.5"}}} --></p>
+<p style="line-height:0.5"><code>string_operations.py</code> handles all string-related functionality.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Ease of Use:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The <code>mypackage</code> package organizes functions logically into modules, making it easy to find and use them.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Key Benefits of a Package</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Organizes related modules into a single namespace.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Simplifies code management in larger projects.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Allows scalable and maintainable development.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This package can now be reused across projects, just like a library, but with better organization and modularity! </p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>To make a package installable via pip: </strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":5} --></p>
+<h5 class="wp-block-heading"><strong>1. Create the <code>setup.py</code> File</strong></h5>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size">At the same level as your <code>mypackage/</code> folder, create a <code>setup.py</code> file.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"#setup.py\nfrom setuptools import setup, find_packages\n\nsetup(\n    name=\u0022mypackage\u0022,  # Package name\n    version=\u00221.0.0\u0022,  # Package version\n    author=\u0022Your Name\u0022,  # Your name\n    author_email=\u0022your.email@example.com\u0022,  # Your email\n    description=\u0022A simple example Python package with math and string operations.\u0022,\n    packages=find_packages(),  # Automatically find packages in the directory\n    classifiers=[\n        \u0022Programming Language :: Python :: 3\u0022,\n        \u0022License :: OSI Approved :: MIT License\u0022,\n        \u0022Operating System :: OS Independent\u0022,\n    ],\n    python_requires=\u0022\u0026gt;=3.6\u0022,  # Minimum Python version required\n)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e#setup.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e setuptools \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e setup, find_packages\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003esetup(\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ename\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;mypackage\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Package name\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eversion\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;1.0.0\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Package version\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eauthor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Your Name\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Your name\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eauthor_email\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;your.email@example.com\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Your email\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003edescription\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;A simple example Python package with math and string operations.\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003epackages\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=find_packages(),  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Automatically find packages in the directory\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eclassifiers\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=[\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Programming Language :: Python :: 3\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;License :: OSI Approved :: MIT License\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Operating System :: OS Independent\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    ],\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003epython_requires\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026gt;=3.6\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Minimum Python version required\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000">#setup.py</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> setuptools </span><span style="color: #AF00DB">import</span><span style="color: #000000"> setup, find_packages</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">setup(</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">name</span><span style="color: #000000">=</span><span style="color: #A31515">"mypackage"</span><span style="color: #000000">,  </span><span style="color: #008000"># Package name</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">version</span><span style="color: #000000">=</span><span style="color: #A31515">"1.0.0"</span><span style="color: #000000">,  </span><span style="color: #008000"># Package version</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">author</span><span style="color: #000000">=</span><span style="color: #A31515">"Your Name"</span><span style="color: #000000">,  </span><span style="color: #008000"># Your name</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">author_email</span><span style="color: #000000">=</span><span style="color: #A31515">"your.email@example.com"</span><span style="color: #000000">,  </span><span style="color: #008000"># Your email</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">description</span><span style="color: #000000">=</span><span style="color: #A31515">"A simple example Python package with math and string operations."</span><span style="color: #000000">,</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">packages</span><span style="color: #000000">=find_packages(),  </span><span style="color: #008000"># Automatically find packages in the directory</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">classifiers</span><span style="color: #000000">=[</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #A31515">"Programming Language :: Python :: 3"</span><span style="color: #000000">,</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #A31515">"License :: OSI Approved :: MIT License"</span><span style="color: #000000">,</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #A31515">"Operating System :: OS Independent"</span><span style="color: #000000">,</span></span>
+<span class="line"><span style="color: #000000">    ],</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #001080">python_requires</span><span style="color: #000000">=</span><span style="color: #A31515">"&gt;=3.6"</span><span style="color: #000000">,  </span><span style="color: #008000"># Minimum Python version required</span></span>
+<span class="line"><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":5} --></p>
+<h5 class="wp-block-heading"><strong>2. Create a <code>README.md</code> File (Optional, for Documentation)</strong></h5>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size">Write a description of your package in Markdown format. This will be displayed on PyPI.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# readme.md\n# MyPackage\n\nA simple Python package that provides basic math and string operations.\n\n## Features\n- Add and subtract numbers.\n- Reverse and capitalize strings.\n\n## Installation\n`pip install mypackage`\n\n## Usage\n```python\nimport mypackage\n\nprint(mypackage.add(10, 5))  # Output: 15\nprint(mypackage.reverse_string(\u0022hello\u0022))  # Output: olleh\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# readme.md\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# MyPackage\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eA simple Python package that provides basic math \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eand\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e string operations.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e## Features\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e- Add \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eand\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e subtract numbers.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e- Reverse \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eand\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e capitalize strings.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e## Installation\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #CD3131\u0022\u003e`pip install mypackage`\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e## Usage\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #CD3131\u0022\u003e```python\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e mypackage\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(mypackage.add(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: 15\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(mypackage.reverse_string(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;hello\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: olleh\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># readme.md</span></span>
+<span class="line"><span style="color: #008000"># MyPackage</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">A simple Python package that provides basic math </span><span style="color: #0000FF">and</span><span style="color: #000000"> string operations.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000">## Features</span></span>
+<span class="line"><span style="color: #000000">- Add </span><span style="color: #0000FF">and</span><span style="color: #000000"> subtract numbers.</span></span>
+<span class="line"><span style="color: #000000">- Reverse </span><span style="color: #0000FF">and</span><span style="color: #000000"> capitalize strings.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000">## Installation</span></span>
+<span class="line"><span style="color: #CD3131">`pip install mypackage`</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000">## Usage</span></span>
+<span class="line"><span style="color: #CD3131">```python</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> mypackage</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(mypackage.add(</span><span style="color: #098658">10</span><span style="color: #000000">, </span><span style="color: #098658">5</span><span style="color: #000000">))  </span><span style="color: #008000"># Output: 15</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(mypackage.reverse_string(</span><span style="color: #A31515">"hello"</span><span style="color: #000000">))  </span><span style="color: #008000"># Output: olleh</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\n\u002d\u002d-\n\n### **3. Prepare the Package for Distribution**\n1. **Install Required Tools**:  \n   Run the following command to install the tools needed for packaging:\n   ```bash\n   pip install setuptools wheel\n\n2. Generate Distribution Files:\n   Run the following command in the terminal (inside the folder containing setup.py):\n   ```bash\n  python setup.py sdist bdist_wheel","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e\u002d\u002d-\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e### **3. Prepare the Package for Distribution**\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #800000\u0022\u003e1. **Install Required Tools**\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e   \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003eRun the following command to install the tools needed for packaging\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e   ```\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003ebash\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e   \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003epip install setuptools wheel\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #800000\u0022\u003e2. Generate Distribution Files\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e   \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003eRun the following command in the terminal (inside the folder containing setup.py)\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e   ```\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003ebash\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003epython setup.py sdist bdist_wheel\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"yaml","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000">### **3. Prepare the Package for Distribution**</span></span>
+<span class="line"><span style="color: #800000">1. **Install Required Tools**</span><span style="color: #000000">:  </span></span>
+<span class="line"><span style="color: #000000">   </span><span style="color: #800000">Run the following command to install the tools needed for packaging</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">   ```</span><span style="color: #0000FF">bash</span></span>
+<span class="line"><span style="color: #000000">   </span><span style="color: #0000FF">pip install setuptools wheel</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #800000">2. Generate Distribution Files</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">   </span><span style="color: #800000">Run the following command in the terminal (inside the folder containing setup.py)</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">   ```</span><span style="color: #0000FF">bash</span></span>
+<span class="line"><span style="color: #000000">  </span><span style="color: #0000FF">python setup.py sdist bdist_wheel</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph {"style":{"typography":{"lineHeight":"0.5"}},"fontSize":"small"} --></p>
+<p class="has-small-font-size" style="line-height:0.5">This will create a <code>dist/</code> directory containing files like:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph {"style":{"typography":{"lineHeight":"0.5"}},"fontSize":"small"} --></p>
+<p class="has-small-font-size" style="line-height:0.5"><code>mypackage-1.0.0.tar.gz</code></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph {"style":{"typography":{"lineHeight":"0.5"}},"fontSize":"small"} --></p>
+<p class="has-small-font-size" style="line-height:0.5"><code>mypackage-1.0.0-py3-none-any.whl</code></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":5} --></p>
+<h5 class="wp-block-heading"><strong>4. Install the Package Locally</strong></h5>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size">To test your package before uploading to PyPI, you can install it locally using <code>pip</code>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"pip install dist/mypackage-1.0.0-py3-none-any.whl","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003epip\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003einstall\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003edist/mypackage-1.0.0-py3-none-any.whl\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"bash","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #795E26">pip</span><span style="color: #000000"> </span><span style="color: #A31515">install</span><span style="color: #000000"> </span><span style="color: #A31515">dist/mypackage-1.0.0-py3-none-any.whl</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size">You can now use the package in any Python script:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import mypackage\n\nprint(mypackage.add(10, 5))  # Output: 15\nprint(mypackage.reverse_string(\u0022hello\u0022))  # Output: olleh","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e mypackage\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(mypackage.add(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: 15\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(mypackage.reverse_string(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;hello\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: olleh\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> mypackage</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(mypackage.add(</span><span style="color: #098658">10</span><span style="color: #000000">, </span><span style="color: #098658">5</span><span style="color: #000000">))  </span><span style="color: #008000"># Output: 15</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(mypackage.reverse_string(</span><span style="color: #A31515">"hello"</span><span style="color: #000000">))  </span><span style="color: #008000"># Output: olleh</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":5} --></p>
+<h5 class="wp-block-heading"><strong>5. Upload to PyPI (Optional)</strong></h5>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size">If you want others to install your package from PyPI:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item {"fontSize":"small"} --></p>
+<li class="has-small-font-size">
+<strong>Install Twine</strong>:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"pip install twine","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003epip\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003einstall\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003etwine\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"bash","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #795E26">pip</span><span style="color: #000000"> </span><span style="color: #A31515">install</span><span style="color: #000000"> </span><span style="color: #A31515">twine</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item {"fontSize":"small"} --></p>
+<li class="has-small-font-size">
+<strong>Upload the Package</strong>:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"twine upload dist/*","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003etwine\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003eupload\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003edist/\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e*\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"bash","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #795E26">twine</span><span style="color: #000000"> </span><span style="color: #A31515">upload</span><span style="color: #000000"> </span><span style="color: #A31515">dist/</span><span style="color: #0000FF">*</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size">You'll need a PyPI account. If you don't have one, <a href="https://pypi.org/account/register/">create an account here</a>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":5} --></p>
+<h5 class="wp-block-heading"><strong>6. Install from PyPI</strong></h5>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size">Once uploaded, anyone can install your package using:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"pip install mypackage","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003epip\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003einstall\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003emypackage\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"bash","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #795E26">pip</span><span style="color: #000000"> </span><span style="color: #A31515">install</span><span style="color: #000000"> </span><span style="color: #A31515">mypackage</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph {"fontSize":"small"} --></p>
+<p class="has-small-font-size"><strong><code>setup.py</code></strong> defines the package metadata and dependencies. Use <code>setuptools</code> to package your code. Test locally using <code>pip install</code> on the <code>.whl</code> file. Optionally, share your package with the world by uploading it to PyPI!</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>4. Framework</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A <strong>framework</strong> is like a giant play area in the toy store where the rules are already set for you. You can bring your toys, but you have to follow their instructions and play in a specific way.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example:</strong> A LEGO castle-building workshop. The instructors give you the blueprint, tell you what parts to use, and guide you step by step to finish the castle.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In Python: A framework like <code>Django</code> or <code>Flask</code> gives you a structure to build a website or app by following its rules.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# myframework.py\nclass MyFramework:\n    def __init__(self):\n        self.routes = {}  # A dictionary to store routes and their handlers\n\n    def route(self, path):\n        # Decorator to register a route\n        def decorator(func):\n            self.routes[path] = func\n            return func\n        return decorator\n\n    def serve(self, path):\n        # Call the handler for a specific route\n        if path in self.routes:\n            return self.routes[path]()  # Execute the registered handler\n        else:\n            return f\u0022404 Not Found: {path}\u0022\n\n# A simple application using MyFramework\napp = MyFramework()\n\n@app.route(\u0022/\u0022)  # Register the root path\ndef home():\n    return \u0022Welcome to MyFramework!\u0022\n\n@app.route(\u0022/about\u0022)  # Register the /about path\ndef about():\n    return \u0022This is a simple Python framework example.\u0022\n\n# Simulating requests\nif __name__ == \u0022__main__\u0022:\n    print(app.serve(\u0022/\u0022))      # Output: Welcome to MyFramework!\n    print(app.serve(\u0022/about\u0022)) # Output: This is a simple Python framework example.\n    print(app.serve(\u0022/404\u0022))   # Output: 404 Not Found: /404\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# myframework.py\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eclass\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003eMyFramework\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003e__init__\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eself\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eself\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e.routes = {}  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# A dictionary to store routes and their handlers\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eroute\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eself\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003epath\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Decorator to register a route\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003edecorator\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003efunc\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e            \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eself\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e.routes[path] = func\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e            \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e func\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e decorator\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eserve\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eself\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003epath\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Call the handler for a specific route\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e path \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003ein\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eself\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e.routes:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e            \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eself\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e.routes[path]()  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Execute the registered handler\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eelse\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e            \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003ef\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;404 Not Found: \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e{\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003epath\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e}\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# A simple application using MyFramework\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eapp = MyFramework()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003e@app.route\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;/\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Register the root path\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ehome\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e():\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Welcome to MyFramework!\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003e@app.route\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;/about\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Register the /about path\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eabout\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e():\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;This is a simple Python framework example.\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Simulating requests\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003e__name__\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;__main__\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(app.serve(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;/\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))      \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: Welcome to MyFramework!\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(app.serve(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;/about\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)) \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: This is a simple Python framework example.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(app.serve(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;/404\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))   \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Output: 404 Not Found: /404\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># myframework.py</span></span>
+<span class="line"><span style="color: #0000FF">class</span><span style="color: #000000"> </span><span style="color: #267F99">MyFramework</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">__init__</span><span style="color: #000000">(</span><span style="color: #001080">self</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #0000FF">self</span><span style="color: #000000">.routes = {}  </span><span style="color: #008000"># A dictionary to store routes and their handlers</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">route</span><span style="color: #000000">(</span><span style="color: #001080">self</span><span style="color: #000000">, </span><span style="color: #001080">path</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #008000"># Decorator to register a route</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">decorator</span><span style="color: #000000">(</span><span style="color: #001080">func</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">            </span><span style="color: #0000FF">self</span><span style="color: #000000">.routes[path] = func</span></span>
+<span class="line"><span style="color: #000000">            </span><span style="color: #AF00DB">return</span><span style="color: #000000"> func</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #AF00DB">return</span><span style="color: #000000"> decorator</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">serve</span><span style="color: #000000">(</span><span style="color: #001080">self</span><span style="color: #000000">, </span><span style="color: #001080">path</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #008000"># Call the handler for a specific route</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #AF00DB">if</span><span style="color: #000000"> path </span><span style="color: #0000FF">in</span><span style="color: #000000"> </span><span style="color: #0000FF">self</span><span style="color: #000000">.routes:</span></span>
+<span class="line"><span style="color: #000000">            </span><span style="color: #AF00DB">return</span><span style="color: #000000"> </span><span style="color: #0000FF">self</span><span style="color: #000000">.routes[path]()  </span><span style="color: #008000"># Execute the registered handler</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #AF00DB">else</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">            </span><span style="color: #AF00DB">return</span><span style="color: #000000"> </span><span style="color: #0000FF">f</span><span style="color: #A31515">"404 Not Found: </span><span style="color: #0000FF">{</span><span style="color: #000000">path</span><span style="color: #0000FF">}</span><span style="color: #A31515">"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># A simple application using MyFramework</span></span>
+<span class="line"><span style="color: #000000">app = MyFramework()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">@app.route</span><span style="color: #000000">(</span><span style="color: #A31515">"/"</span><span style="color: #000000">)  </span><span style="color: #008000"># Register the root path</span></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">home</span><span style="color: #000000">():</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> </span><span style="color: #A31515">"Welcome to MyFramework!"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">@app.route</span><span style="color: #000000">(</span><span style="color: #A31515">"/about"</span><span style="color: #000000">)  </span><span style="color: #008000"># Register the /about path</span></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">about</span><span style="color: #000000">():</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> </span><span style="color: #A31515">"This is a simple Python framework example."</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Simulating requests</span></span>
+<span class="line"><span style="color: #AF00DB">if</span><span style="color: #000000"> </span><span style="color: #001080">__name__</span><span style="color: #000000"> == </span><span style="color: #A31515">"__main__"</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #795E26">print</span><span style="color: #000000">(app.serve(</span><span style="color: #A31515">"/"</span><span style="color: #000000">))      </span><span style="color: #008000"># Output: Welcome to MyFramework!</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #795E26">print</span><span style="color: #000000">(app.serve(</span><span style="color: #A31515">"/about"</span><span style="color: #000000">)) </span><span style="color: #008000"># Output: This is a simple Python framework example.</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #795E26">print</span><span style="color: #000000">(app.serve(</span><span style="color: #A31515">"/404"</span><span style="color: #000000">))   </span><span style="color: #008000"># Output: 404 Not Found: /404</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>How It Works</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Routing System:</strong><br>The framework stores a dictionary (<code>self.routes</code>) that maps paths (like <code>/about</code>) to their corresponding handler functions (<code>about()</code>).</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Decorator for Registration:</strong><br>The <code>route</code> decorator registers functions to specific paths. It allows users to easily "attach" a function to a URL route.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Serve Requests:</strong><br>The <code>serve</code> method simulates a server by calling the appropriate handler for a given path or returning a <code>404 Not Found</code> message if the path isn't registered.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Usage Example</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Imagine you're building a small web app. You can define routes like <code>/</code> or <code>/about</code> and associate them with functions that return what the user should see.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is a toy framework, but it illustrates the <strong>key concept of a framework</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li><strong>Predefined structure (routing).</strong></li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>User-defined customization (functions for each route).</strong></li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>It can be expanded further with features like HTTP methods (GET, POST), templates, or even middleware!</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Toy Store Example:</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Module:</strong> A single toy (e.g., a car or a doll).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Library:</strong> A box of toys or tools with related items (e.g., a LEGO set).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Package:</strong> An aisle that organizes similar toy sets (e.g., all building toys).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Framework:</strong> A play area with rules and instructions for what to build (e.g., a LEGO castle workshop).</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

@@ -1,0 +1,134 @@
+---
+layout: post
+title: Mastering Python Loops for Financial Automation
+date: 2023-03-20 11:25:24.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Python fundamentals
+tags:
+- automation
+- finance
+- fundamentals
+- Loops
+meta:
+  reader_suggested_tags: '["Finance","Artificial Intelligence","Business","Technology","AI"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '304'
+  _wp_old_date: '2024-10-22'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _yoast_wpseo_primary_category: '1377'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '3'
+  _import_original_post_id: '82'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:46'
+  _publicize_job_id: '112088265369'
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/03/20/mastering-python-loops-for-financial-automation/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below: </strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/blob/main/Loops.py","service":"github","label":"Get your code here: ","rel":"","metadata":{"name":"cdscC"}} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>In today's fast-paced financial world, automation is key to staying ahead of the competition. With the rise of fintech and the increasing reliance on technology in finance, there is a growing demand for professionals who can automate repetitive tasks and streamline financial processes. This is where Python comes in – a powerful programming language that is widely used in fintech for its versatility, efficiency, and ease of use.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>One of the most important concepts in Python that is crucial for automating repetitive tasks in finance is loops. In this blog post, we will dive into the world of Python loops and explore how they can be used to automate various financial tasks, making work processes more efficient and accurate.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Understanding Python Loops:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Loops are a fundamental concept in programming that allows us to execute a set of instructions repeatedly until a certain condition is met. In simpler terms, a loop is a block of code that repeats itself until a specific condition is satisfied. In Python, there are two types of loops – for loops and while loops.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">For Loops:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>For loops are used when we know the number of times we want to repeat a certain task. They are widely used in finance for automating repetitive calculations or data analysis tasks. Let's look at an example of how a for loop can be used to calculate the monthly interest rate for a loan.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\n# initialize the loan amount\nloan_amount = 100000\n# initialize the interest rate\ninterest_rate = 0.05\n# initialize the number of years\nyears = 5\n# calculate the monthly interest rate\nmonthly_interest = interest_rate/12\n# use a for loop to calculate the monthly payment for each month in 5 years\nfor i in range(years*12):\n    monthly_payment = (loan_amount*monthly_interest)/(1-(1+monthly_interest)**(-(years*12)))\n    # print the monthly payment for each month\n    print(\u0022Month \u0022, i+1, \u0022Monthly Payment: \u0022, monthly_payment)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# initialize the loan amount\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eloan_amount = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# initialize the interest rate\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_rate = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.05\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# initialize the number of years\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eyears = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# calculate the monthly interest rate\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_interest = interest_rate/\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# use a for loop to calculate the monthly payment for each month in 5 years\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e i \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ein\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003erange\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(years*\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    monthly_payment = (loan_amount*monthly_interest)/(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e-(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e+monthly_interest)**(-(years*\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# print the monthly payment for each month\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Month \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, i+\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Monthly Payment: \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, monthly_payment)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #008000"># initialize the loan amount</span></span>
+<span class="line"><span style="color: #000000">loan_amount = </span><span style="color: #098658">100000</span></span>
+<span class="line"><span style="color: #008000"># initialize the interest rate</span></span>
+<span class="line"><span style="color: #000000">interest_rate = </span><span style="color: #098658">0.05</span></span>
+<span class="line"><span style="color: #008000"># initialize the number of years</span></span>
+<span class="line"><span style="color: #000000">years = </span><span style="color: #098658">5</span></span>
+<span class="line"><span style="color: #008000"># calculate the monthly interest rate</span></span>
+<span class="line"><span style="color: #000000">monthly_interest = interest_rate/</span><span style="color: #098658">12</span></span>
+<span class="line"><span style="color: #008000"># use a for loop to calculate the monthly payment for each month in 5 years</span></span>
+<span class="line"><span style="color: #AF00DB">for</span><span style="color: #000000"> i </span><span style="color: #AF00DB">in</span><span style="color: #000000"> </span><span style="color: #795E26">range</span><span style="color: #000000">(years*</span><span style="color: #098658">12</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    monthly_payment = (loan_amount*monthly_interest)/(</span><span style="color: #098658">1</span><span style="color: #000000">-(</span><span style="color: #098658">1</span><span style="color: #000000">+monthly_interest)**(-(years*</span><span style="color: #098658">12</span><span style="color: #000000">)))</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># print the monthly payment for each month</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Month "</span><span style="color: #000000">, i+</span><span style="color: #098658">1</span><span style="color: #000000">, </span><span style="color: #A31515">"Monthly Payment: "</span><span style="color: #000000">, monthly_payment)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this example, we have used the for loop to calculate the monthly payment for each month in 5 years, based on the loan amount, interest rate, and number of years. This is just one of the many ways for loops can be used in finance to automate repetitive calculations, saving time and reducing the chances of errors.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">While Loops:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>While loops are used when we do not know the exact number of times a task needs to be repeated. They are particularly useful in finance for tasks that require continuous monitoring or data analysis. Let's take an example of how a while loop can be used to track stock prices and alert us when a certain stock reaches a specific price.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\n# import the necessary libraries\nimport yfinance as yf\n# initialize the stock symbol\nstock_symbol = \u0022AAPL\u0022\n# initialize the target price\ntarget_price = 150\n# use a while loop to continuously monitor the stock price\nwhile True:\n    # get the current stock price\n    stock_price = yf.Ticker(stock_symbol).info['regularMarketPrice']\n    # check if the stock price has reached the target price\n    if stock_price \u0026gt;= target_price:\n        # if yes, print a message\n        print(\u0022Stock price for\u0022, stock_symbol, \u0022has reached or exceeded\u0022, target_price)\n        break\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# import the necessary libraries\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e yfinance \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e yf\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# initialize the stock symbol\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003estock_symbol = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;AAPL\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# initialize the target price\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003etarget_price = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e150\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# use a while loop to continuously monitor the stock price\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ewhile\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eTrue\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# get the current stock price\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    stock_price = yf.Ticker(stock_symbol).info[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;regularMarketPrice\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# check if the stock price has reached the target price\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e stock_price \u0026gt;= target_price:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# if yes, print a message\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Stock price for\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, stock_symbol, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;has reached or exceeded\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, target_price)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ebreak\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #008000"># import the necessary libraries</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> yfinance </span><span style="color: #AF00DB">as</span><span style="color: #000000"> yf</span></span>
+<span class="line"><span style="color: #008000"># initialize the stock symbol</span></span>
+<span class="line"><span style="color: #000000">stock_symbol = </span><span style="color: #A31515">"AAPL"</span></span>
+<span class="line"><span style="color: #008000"># initialize the target price</span></span>
+<span class="line"><span style="color: #000000">target_price = </span><span style="color: #098658">150</span></span>
+<span class="line"><span style="color: #008000"># use a while loop to continuously monitor the stock price</span></span>
+<span class="line"><span style="color: #AF00DB">while</span><span style="color: #000000"> </span><span style="color: #0000FF">True</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># get the current stock price</span></span>
+<span class="line"><span style="color: #000000">    stock_price = yf.Ticker(stock_symbol).info[</span><span style="color: #A31515">'regularMarketPrice'</span><span style="color: #000000">]</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># check if the stock price has reached the target price</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">if</span><span style="color: #000000"> stock_price &gt;= target_price:</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #008000"># if yes, print a message</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Stock price for"</span><span style="color: #000000">, stock_symbol, </span><span style="color: #A31515">"has reached or exceeded"</span><span style="color: #000000">, target_price)</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #AF00DB">break</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this example, we have used a while loop to continuously monitor the stock price and print a message when it reaches or exceeds the target price. This can be particularly useful for traders who want to keep track of stock prices without having to constantly check them manually.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Python Applications in Fintech:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The applications of Python loops in fintech are endless. From automating financial calculations and data analysis to building predictive models and algorithms, loops play a crucial role in streamlining financial processes. In addition to their efficiency and accuracy, they also make it easier for professionals to handle large datasets and perform complex tasks with just a few lines of code.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python is also being widely used in fintech for machine learning and artificial intelligence applications. With the help of loops, financial institutions can train and test their models on large datasets, making more accurate predictions and informed decisions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In conclusion, Python loops are a powerful tool in the world of finance and fintech. They allow professionals to automate repetitive tasks, save time, and reduce the chances of errors, ultimately leading to more efficient and accurate financial processes. As the use of technology in finance continues to grow, the demand for professionals with Python skills will also increase. So, if you want to have a competitive edge in the fintech industry, mastering Python and its concepts, including loops, is a must.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

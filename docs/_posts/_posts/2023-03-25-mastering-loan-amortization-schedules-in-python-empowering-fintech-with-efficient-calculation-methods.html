@@ -1,0 +1,304 @@
+---
+layout: post
+title: 'Mastering Loan Amortization Schedules in Python: Empowering Fintech with Efficient
+  Calculation Methods'
+date: 2023-03-25 12:02:32.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- amortization
+- calculations
+- Fintech
+- loans
+meta:
+  reader_suggested_tags: '["Finance","Technology","Money","Mortgage","News"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '354'
+  _wp_old_date: '2024-10-27'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _yoast_wpseo_primary_category: '1377'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '4'
+  _import_original_post_id: '107'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:47'
+  _publicize_job_id: '112088254972'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/03/25/mastering-loan-amortization-schedules-in-python-empowering-fintech-with-efficient-calculation-methods/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong><a href="https://github.com/MishCodesFinBytes/FinBytes/blob/main/variables-and-data-types-for-fintech-applications.py"></a></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/blob/main/Loan%20Amortization.py","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>In today's fast-paced world, technology plays a crucial role in the financial sector. With the rise of fintech, we have seen a significant shift towards automation and data-driven decision making. Python, with its powerful libraries and tools, has become a popular choice for financial institutions, researchers, and analysts. One of the essential tasks in finance is calculating loan amortization schedules, and Python provides efficient solutions for this task. In this blog, we will delve into the concept of loan amortization schedules and how Python can be used to automate and streamline the process.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">What is Loan Amortization?</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Loan amortization is the process of paying off a debt with regular payments, consisting of both principal and interest. An amortization schedule is a table that shows the breakdown of each payment, including the amount of principal and interest paid, remaining balance, and the total amount paid over the loan term. It is essential to understand the loan amortization schedule to make informed financial decisions, such as estimating the total cost of a loan or determining the impact of prepayments on the loan term.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Calculating Loan Amortization Schedules in Python:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python offers various libraries and functions to calculate loan amortization schedules efficiently. Let's look at some of the ways we can use Python to automate this process.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Using the Numpy and Pandas Libraries:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Numpy and Pandas are two popular libraries used for data analysis and manipulation. We can use these libraries to create a loan amortization schedule in Python. First, we will define the loan details such as loan amount, interest rate, and loan term. Then, using the Numpy array function, we can create a table with the number of payments, payment amount, interest paid, and principal paid. Finally, we can use Pandas to display this data in a tabular format. Here's a code snippet to illustrate this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Importing necessary libraries\nimport numpy as np\nimport pandas as pd\nimport numpy_financial as npf  # Import numpy-financial for ipmt and ppmt\n\n# Define loan details\nloan_amount = 10000  # Total loan amount in currency\ninterest_rate = 0.05  # Annual interest rate (5%)\nloan_term = 5  # Loan term in years\n\n# Calculate the monthly interest rate\nmonthly_rate = interest_rate / 12  # Monthly interest rate (annual rate / 12)\nnper = loan_term * 12  # Total number of payments (loan term in months)\n\n# Calculate the monthly payment using the loan amortization formula\n# The formula: M = P * [r(1 + r)^n] / [(1 + r)^n - 1]\n# M = monthly payment, P = loan amount, r = monthly interest rate, n = number of periods\nmonthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate) ** nper) / ((1 + monthly_rate) ** nper - 1)\n\n# Generate the payment number sequence (from 1 to total number of months)\npayment_number = np.arange(1, nper + 1)\n\n# Calculate interest paid each month using numpy-financial's npf.ipmt function\ninterest_paid = npf.ipmt(monthly_rate, payment_number, nper, loan_amount)\n\n# Calculate principal paid each month using numpy-financial's npf.ppmt function\nprincipal_paid = npf.ppmt(monthly_rate, payment_number, nper, loan_amount)\n\n# Create a DataFrame using Pandas to display the loan amortization table\ndf = pd.DataFrame({\n    'Payment Number': payment_number,  # Payment number (month)\n    'Payment Amount': np.repeat(monthly_payment, nper),  # Same monthly payment for all months\n    'Interest Paid': interest_paid,  # Interest paid in each month\n    'Principal Paid': principal_paid  # Principal paid in each month\n})\n\n# Display the loan amortization table without index\nprint(df.to_string(index=False))\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Importing necessary libraries\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e numpy \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e np\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e numpy_financial \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e npf  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Import numpy-financial for ipmt and ppmt\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Define loan details\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eloan_amount = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10000\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Total loan amount in currency\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_rate = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.05\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Annual interest rate (5%)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eloan_term = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Loan term in years\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the monthly interest rate\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_rate = interest_rate / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Monthly interest rate (annual rate / 12)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003enper = loan_term * \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Total number of payments (loan term in months)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the monthly payment using the loan amortization formula\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# The formula: M = P * [r(1 + r)^n] / [(1 + r)^n - 1]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# M = monthly payment, P = loan amount, r = monthly interest rate, n = number of periods\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = loan_amount * (monthly_rate * (\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + monthly_rate) ** nper) / ((\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + monthly_rate) ** nper - \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Generate the payment number sequence (from 1 to total number of months)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003epayment_number = np.arange(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, nper + \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate interest paid each month using numpy-financial\u0026#039;s npf.ipmt function\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_paid = npf.ipmt(monthly_rate, payment_number, nper, loan_amount)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate principal paid each month using numpy-financial\u0026#039;s npf.ppmt function\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprincipal_paid = npf.ppmt(monthly_rate, payment_number, nper, loan_amount)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Create a DataFrame using Pandas to display the loan amortization table\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.DataFrame({\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Payment Number\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: payment_number,  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Payment number (month)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Payment Amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: np.repeat(monthly_payment, nper),  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Same monthly payment for all months\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Interest Paid\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: interest_paid,  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Interest paid in each month\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Principal Paid\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: principal_paid  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Principal paid in each month\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e})\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Display the loan amortization table without index\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(df.to_string(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eindex\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eFalse\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Importing necessary libraries</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> numpy </span><span style="color: #AF00DB">as</span><span style="color: #000000"> np</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> numpy_financial </span><span style="color: #AF00DB">as</span><span style="color: #000000"> npf  </span><span style="color: #008000"># Import numpy-financial for ipmt and ppmt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Define loan details</span></span>
+<span class="line"><span style="color: #000000">loan_amount = </span><span style="color: #098658">10000</span><span style="color: #000000">  </span><span style="color: #008000"># Total loan amount in currency</span></span>
+<span class="line"><span style="color: #000000">interest_rate = </span><span style="color: #098658">0.05</span><span style="color: #000000">  </span><span style="color: #008000"># Annual interest rate (5%)</span></span>
+<span class="line"><span style="color: #000000">loan_term = </span><span style="color: #098658">5</span><span style="color: #000000">  </span><span style="color: #008000"># Loan term in years</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate the monthly interest rate</span></span>
+<span class="line"><span style="color: #000000">monthly_rate = interest_rate / </span><span style="color: #098658">12</span><span style="color: #000000">  </span><span style="color: #008000"># Monthly interest rate (annual rate / 12)</span></span>
+<span class="line"><span style="color: #000000">nper = loan_term * </span><span style="color: #098658">12</span><span style="color: #000000">  </span><span style="color: #008000"># Total number of payments (loan term in months)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate the monthly payment using the loan amortization formula</span></span>
+<span class="line"><span style="color: #008000"># The formula: M = P * [r(1 + r)^n] / [(1 + r)^n - 1]</span></span>
+<span class="line"><span style="color: #008000"># M = monthly payment, P = loan amount, r = monthly interest rate, n = number of periods</span></span>
+<span class="line"><span style="color: #000000">monthly_payment = loan_amount * (monthly_rate * (</span><span style="color: #098658">1</span><span style="color: #000000"> + monthly_rate) ** nper) / ((</span><span style="color: #098658">1</span><span style="color: #000000"> + monthly_rate) ** nper - </span><span style="color: #098658">1</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Generate the payment number sequence (from 1 to total number of months)</span></span>
+<span class="line"><span style="color: #000000">payment_number = np.arange(</span><span style="color: #098658">1</span><span style="color: #000000">, nper + </span><span style="color: #098658">1</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate interest paid each month using numpy-financial's npf.ipmt function</span></span>
+<span class="line"><span style="color: #000000">interest_paid = npf.ipmt(monthly_rate, payment_number, nper, loan_amount)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate principal paid each month using numpy-financial's npf.ppmt function</span></span>
+<span class="line"><span style="color: #000000">principal_paid = npf.ppmt(monthly_rate, payment_number, nper, loan_amount)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Create a DataFrame using Pandas to display the loan amortization table</span></span>
+<span class="line"><span style="color: #000000">df = pd.DataFrame({</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">'Payment Number'</span><span style="color: #000000">: payment_number,  </span><span style="color: #008000"># Payment number (month)</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">'Payment Amount'</span><span style="color: #000000">: np.repeat(monthly_payment, nper),  </span><span style="color: #008000"># Same monthly payment for all months</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">'Interest Paid'</span><span style="color: #000000">: interest_paid,  </span><span style="color: #008000"># Interest paid in each month</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">'Principal Paid'</span><span style="color: #000000">: principal_paid  </span><span style="color: #008000"># Principal paid in each month</span></span>
+<span class="line"><span style="color: #000000">})</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Display the loan amortization table without index</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(df.to_string(</span><span style="color: #001080">index</span><span style="color: #000000">=</span><span style="color: #0000FF">False</span><span style="color: #000000">))</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Console output:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>
+
+
+Payment Number   Payment Amount  Interest Paid  Principal Paid
+             1      -212.088678      -41.666667     -170.422011
+             2      -212.088678      -35.843052     -176.245626
+             3      -212.088678      -29.970190     -182.118488
+             4      -212.088678      -24.047075     -188.041603
+             5      -212.088678      -18.072703     -193.015975
+             6      -212.088678      -12.046071     -198.042607
+             7      -212.088678       -6.966175     -203.122503
+             8      -212.088678       -0.831013     -208.257665
+             9      -212.088678        5.383198     -214.471876
+            10      -212.088678       11.710248     -225.798926
+            11      -212.088678       18.225886     -230.862792
+            12      -212.088678       24.933139     -237.021517
+            13      -212.088678       31.835050     -243.253628
+            14      -212.088678       38.934674     -249.618004
+            15      -212.088678       46.235080     -256.153598
+            16      -212.088678       53.739356     -262.849322
+            17      -212.088678       61.450607     -269.638071
+            18      -212.088678       69.371953     -276.516725
+            19      -212.088678       77.506532     -283.582146
+            20      -212.088678       85.857498     -290.931180
+            21      -212.088678       94.428022     -298.560656
+            22      -212.088678      103.221290     -306.867388
+            23      -212.088678      112.240508     -316.848170
+            24      -212.088678      121.488902     -318.599776
+            25      -212.088678      130.969729     -324.118949
+            26      -212.088678      140.686268     -331.402410
+            27      -212.088678      150.641829     -341.446849
+            28      -212.088678      160.839740     -342.248938
+            29      -212.088678      171.283353     -351.805325
+            30      -212.088678      181.976039     -360.112639
+            31      -212.088678      192.921192     -369.167486
+            32      -212.088678      204.122228     -377.966450
+            33      -212.088678      215.582590     -386.506088
+            34      -212.088678      227.305747     -394.783930
+            35      -212.088678      239.295199     -402.793478
+            36      -212.088678      251.554477     -410.534200
+            37      -212.088678      264.087142     -418.001535
+            38      -212.088678      276.896775     -425.191902
+            39      -212.088678      289.987982     -432.100695
+            40      -212.088678      303.364398     -438.724280
+            41      -212.088678      317.029689     -445.059989
+            42      -212.088678      330.987547     -451.101131
+            43      -212.088678      345.241689     -456.846989
+            44      -212.088678      359.795855     -462.292823
+            45      -212.088678      374.653809     -467.440869
+            46      -212.088678      389.819342     -472.269336
+            47      -212.088678      405.296272     -476.792406
+            48      -212.088678      421.088450     -481.000228
+            49      -212.088678      437.199758     -484.888920
+            50      -212.088678      453.634111     -488.454567
+            51      -212.088678      470.395457     -491.693222
+            52      -212.088678      487.487775     -494.601904
+            53      -212.088678      504.915083     -497.173596
+            54      -212.088678      522.681434     -499.407246
+            55      -212.088678      540.790912     -501.297766
+            56      -212.088678      559.247632     -502.841046
+            57      -212.088678      578.055738     -504.032940
+            58      -212.088678      597.219408     -504.869270
+            59      -212.088678      616.742850     -505.345828
+            60      -212.088678      636.630306     -505.458371
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Using the loan details, we can see that the monthly payment is $212.09, and the total amount paid over the loan term is $12,725.55.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Using Pure Python (No Libraries):</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>For smaller projects or educational purposes, you can calculate loan amortization directly in Python without any external libraries. By implementing the amortization formula manually, this approach offers full transparency into each calculation step. Here’s an outline of what this approach might look like:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"def calculate_amortization_schedule(principal, annual_interest_rate, term_years):\n    monthly_interest_rate = annual_interest_rate / 100 / 12\n    num_payments = term_years * 12\n    monthly_payment = principal * (monthly_interest_rate * (1 + monthly_interest_rate)**num_payments) / ((1 + monthly_interest_rate)**num_payments - 1)\n    \n    balance = principal\n    schedule = []\n    \n    for i in range(1, num_payments + 1):\n        interest = balance * monthly_interest_rate\n        principal_payment = monthly_payment - interest\n        balance -= principal_payment\n        schedule.append((i, principal_payment, interest, balance if balance \u0026gt; 0 else 0))\n    \n    return schedule\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ecalculate_amortization_schedule\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eprincipal\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eannual_interest_rate\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eterm_years\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    monthly_interest_rate = annual_interest_rate / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    num_payments = term_years * \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    monthly_payment = principal * (monthly_interest_rate * (\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + monthly_interest_rate)**num_payments) / ((\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + monthly_interest_rate)**num_payments - \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    balance = principal\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    schedule = []\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e i \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ein\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003erange\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, num_payments + \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        interest = balance * monthly_interest_rate\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        principal_payment = monthly_payment - interest\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        balance -= principal_payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        schedule.append((i, principal_payment, interest, balance \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e balance \u0026gt; \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eelse\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e schedule\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">calculate_amortization_schedule</span><span style="color: #000000">(</span><span style="color: #001080">principal</span><span style="color: #000000">, </span><span style="color: #001080">annual_interest_rate</span><span style="color: #000000">, </span><span style="color: #001080">term_years</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    monthly_interest_rate = annual_interest_rate / </span><span style="color: #098658">100</span><span style="color: #000000"> / </span><span style="color: #098658">12</span></span>
+<span class="line"><span style="color: #000000">    num_payments = term_years * </span><span style="color: #098658">12</span></span>
+<span class="line"><span style="color: #000000">    monthly_payment = principal * (monthly_interest_rate * (</span><span style="color: #098658">1</span><span style="color: #000000"> + monthly_interest_rate)**num_payments) / ((</span><span style="color: #098658">1</span><span style="color: #000000"> + monthly_interest_rate)**num_payments - </span><span style="color: #098658">1</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    balance = principal</span></span>
+<span class="line"><span style="color: #000000">    schedule = []</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">for</span><span style="color: #000000"> i </span><span style="color: #AF00DB">in</span><span style="color: #000000"> </span><span style="color: #795E26">range</span><span style="color: #000000">(</span><span style="color: #098658">1</span><span style="color: #000000">, num_payments + </span><span style="color: #098658">1</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        interest = balance * monthly_interest_rate</span></span>
+<span class="line"><span style="color: #000000">        principal_payment = monthly_payment - interest</span></span>
+<span class="line"><span style="color: #000000">        balance -= principal_payment</span></span>
+<span class="line"><span style="color: #000000">        schedule.append((i, principal_payment, interest, balance </span><span style="color: #AF00DB">if</span><span style="color: #000000"> balance &gt; </span><span style="color: #098658">0</span><span style="color: #000000"> </span><span style="color: #AF00DB">else</span><span style="color: #000000"> </span><span style="color: #098658">0</span><span style="color: #000000">))</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> schedule</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This method allows for a highly customizable solution, although it requires more lines of code and knowledge of the amortization formula.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Using Financial Libraries like <code>numpy_financial</code><br />
+</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python has financial-specific libraries such as <strong><code>numpy_financial</code></strong>, which include functions designed for finance calculations like payment (<code>pmt</code>), present value (<code>pv</code>), and future value (<code>fv</code>). These functions can simplify calculations for amortization without needing a full library like <code>loan_calculator</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import numpy_financial as npf\n\n# Calculate monthly payment\nprincipal = 10000\nannual_interest_rate = 5\nterm_years = 5\n\nmonthly_payment = npf.pmt(annual_interest_rate / 100 / 12, term_years * 12, -principal)\n\nprint(monthly_payment)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e numpy_financial \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e npf\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate monthly payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprincipal = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eannual_interest_rate = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eterm_years = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = npf.pmt(annual_interest_rate / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, term_years * \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, -principal)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(monthly_payment)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> numpy_financial </span><span style="color: #AF00DB">as</span><span style="color: #000000"> npf</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate monthly payment</span></span>
+<span class="line"><span style="color: #000000">principal = </span><span style="color: #098658">10000</span></span>
+<span class="line"><span style="color: #000000">annual_interest_rate = </span><span style="color: #098658">5</span></span>
+<span class="line"><span style="color: #000000">term_years = </span><span style="color: #098658">5</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">monthly_payment = npf.pmt(annual_interest_rate / </span><span style="color: #098658">100</span><span style="color: #000000"> / </span><span style="color: #098658">12</span><span style="color: #000000">, term_years * </span><span style="color: #098658">12</span><span style="color: #000000">, -principal)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(monthly_payment)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is particularly useful for developers already familiar with the finance-specific functions and who prefer to work within a streamlined environment.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Using SymPy for Symbolic Computation</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>SymPy</strong> is a symbolic computation library in Python that can solve mathematical equations, making it ideal for algebraic manipulation. For educational purposes or if you need exact symbolic results, you could use SymPy to symbolically solve for loan payments or balances over time.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"from sympy import symbols, Eq, solve\n\n# Define variables\nP, r, n, M = symbols('P r n M')  # Principal, monthly interest rate, term in months, monthly payment\nequation = Eq(M, P * r * (1 + r)**n / ((1 + r)**n - 1))\n\n# Solve for M, the monthly payment\nmonthly_payment = solve(equation, M)[0]","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sympy \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e symbols, Eq, solve\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Define variables\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eP, r, n, M = symbols(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;P r n M\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Principal, monthly interest rate, term in months, monthly payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eequation = Eq(M, P * r * (\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + r)**n / ((\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + r)**n - \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Solve for M, the monthly payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = solve(equation, M)[\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sympy </span><span style="color: #AF00DB">import</span><span style="color: #000000"> symbols, Eq, solve</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Define variables</span></span>
+<span class="line"><span style="color: #000000">P, r, n, M = symbols(</span><span style="color: #A31515">'P r n M'</span><span style="color: #000000">)  </span><span style="color: #008000"># Principal, monthly interest rate, term in months, monthly payment</span></span>
+<span class="line"><span style="color: #000000">equation = Eq(M, P * r * (</span><span style="color: #098658">1</span><span style="color: #000000"> + r)**n / ((</span><span style="color: #098658">1</span><span style="color: #000000"> + r)**n - </span><span style="color: #098658">1</span><span style="color: #000000">))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Solve for M, the monthly payment</span></span>
+<span class="line"><span style="color: #000000">monthly_payment = solve(equation, M)[</span><span style="color: #098658">0</span><span style="color: #000000">]</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>While it’s not commonly used for amortization schedules, SymPy can offer insight into the formulas behind the calculations.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Using <code>scipy.optimize</code> to Solve for Payment Values</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>For more complex loans or unusual repayment schedules, <strong>SciPy’s <code>optimize</code> module</strong> can help solve for monthly payments based on constraints. This is especially useful in scenarios where payment amounts vary or custom repayment models are required.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>For example, you could use <code>scipy.optimize.fsolve</code> to calculate the monthly payment that would reduce the loan balance to zero over time:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"from scipy.optimize import fsolve\n\n# Define a function for loan balance at term end given a monthly payment\ndef loan_balance(monthly_payment):\n    balance = principal\n    for i in range(term_years * 12):\n        interest = balance * (annual_interest_rate / 100 / 12)\n        balance += interest - monthly_payment\n    return balance\n\n# Solve for the monthly payment\nmonthly_payment = fsolve(loan_balance, 200)[0]\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e scipy.optimize \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e fsolve\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Define a function for loan balance at term end given a monthly payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eloan_balance\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003emonthly_payment\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    balance = principal\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e i \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ein\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003erange\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(term_years * \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        interest = balance * (annual_interest_rate / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        balance += interest - monthly_payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e balance\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Solve for the monthly payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = fsolve(loan_balance, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e200\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)[\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> scipy.optimize </span><span style="color: #AF00DB">import</span><span style="color: #000000"> fsolve</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Define a function for loan balance at term end given a monthly payment</span></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">loan_balance</span><span style="color: #000000">(</span><span style="color: #001080">monthly_payment</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    balance = principal</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">for</span><span style="color: #000000"> i </span><span style="color: #AF00DB">in</span><span style="color: #000000"> </span><span style="color: #795E26">range</span><span style="color: #000000">(term_years * </span><span style="color: #098658">12</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        interest = balance * (annual_interest_rate / </span><span style="color: #098658">100</span><span style="color: #000000"> / </span><span style="color: #098658">12</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">        balance += interest - monthly_payment</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> balance</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Solve for the monthly payment</span></span>
+<span class="line"><span style="color: #000000">monthly_payment = fsolve(loan_balance, </span><span style="color: #098658">200</span><span style="color: #000000">)[</span><span style="color: #098658">0</span><span style="color: #000000">]</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this post, we explored three robust methods for calculating loan amortization schedules in Python, each with unique strengths that cater to different needs. <strong>Using NumPy and Pandas</strong>, we saw how to leverage core libraries to build a customizable solution, offering fine-grained control over every aspect of the calculation process. <strong>The Loan Calculator Library</strong> simplified our task with an out-of-the-box, well-structured approach, making it a quick and accessible option for developers focusing on reliable, ready-made solutions. Finally, <strong>the Loan Amortization Library</strong> provided an additional, efficient alternative with specific features tailored to financial calculations, giving us the flexibility to adjust various loan parameters with ease. These additional methods provides a unique approach to loan amortization calculations and can be suitable for specific use cases, from educational insights to highly customized loan management applications.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>By combining any of the above methods with <strong>Matplotlib</strong> or <strong>Plotly</strong>, you can create real-time graphs of the amortization schedule, giving a more visual understanding of the amortization process.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>By mastering these techniques, developers in fintech can build more versatile tools for loan management, integrate amortization schedules into broader financial models, and deliver greater value to users. Whether aiming for deep customization, ease of implementation, or specialized functionality, Python’s diverse libraries make it a powerful choice for handling complex financial calculations with precision.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

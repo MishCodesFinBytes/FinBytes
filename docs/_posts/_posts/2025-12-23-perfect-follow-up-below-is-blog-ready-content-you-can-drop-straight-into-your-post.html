@@ -1,0 +1,490 @@
+---
+layout: post
+title: 'Mental Model: Fixture Scope vs Fixture Location'
+date: 2025-12-23 20:12:14.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- best practices
+- fixtures
+- mental model
+- pytest
+meta:
+  _last_editor_used_jetpack: block-editor
+  _wp_old_date: '2026-02-09'
+  _publicize_job_id: '111122798241'
+  firehose_sent: '1770668266'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-09 20:16:20'
+  timeline_notification: '1770668267'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Technology","Testing","Announcements","Media","Film"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/12/23/perfect-follow-up-below-is-blog-ready-content-you-can-drop-straight-into-your-post/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>Most confusion comes from mixing these two ideas. This diagram makes the separation explicit.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Diagram: What Scope Controls vs What Location Controls</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSQ"]],[["4pSCICAgICAgICAgICAgICBQWVRFU1QgRklYVFVSRSAgICAgICAgICAgICAgIOKUgg=="]],[["4pSU4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSY"]],[["ICAgICAgICAgICAgICAg4pSC"]],[["ICAgICAgICAgICAgICAg4pa8"]],[["4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSQ"]],[["4pSCICBTY29wZSAobGlmZXRpbWUpICAgICAgICDilII="]],[["4pSCICDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgIOKUgg=="]],[["4pSCICBmdW5jdGlvbiAvIGNsYXNzICAgICAgICDilII="]],[["4pSCICBtb2R1bGUgLyBwYWNrYWdlICAgICAgICDilII="]],[["4pSCICBzZXNzaW9uICAgICAgICAgICAgICAgICDilII="]],[["4pSCICAgICAgICAgICAgICAgICAgICAgICAgICDilII="]],[["4pSCICDinpwgV0hFTiBpcyBpdCBjcmVhdGVkPyAgIOKUgg=="]],[["4pSCICDinpwgV0hFTiBpcyBpdCBkZXN0cm95ZWQ/IOKUgg=="]],[["4pSU4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSY"]],[["ICAgICAgICAgICAgICAg4pSC"]],[["ICAgICAgICAgICAgICAg4pSCICAoY29tcGxldGVseSBpbmRlcGVuZGVudCk="]],[["ICAgICAgICAgICAgICAg4pa8"]],[["4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSQ"]],[["4pSCICBMb2NhdGlvbiAodmlzaWJpbGl0eSkgICDilII="]],[["4pSCICDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgIOKUgg=="]],[["4pSCICBpbnNpZGUgY2xhc3MgICAgICAgICAgICDilII="]],[["4pSCICBtb2R1bGUtbGV2ZWwgICAgICAgICAgICDilII="]],[["4pSCICBjb25mdGVzdC5weSAgICAgICAgICAgICDilII="]],[["4pSCICAgICAgICAgICAgICAgICAgICAgICAgICDilII="]],[["4pSCICDinpwgV0hPIGNhbiB1c2UgaXQ/ICAgICAgIOKUgg=="]],[["4pSU4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSY"]],[[""]],[[""]],[[""]]],"languageConfidence":"certain","className":"is-style-no-highlight","fontSize":"small"} --></p>
+<pre class="wp-block-code is-style-no-highlight has-small-font-size"><code>┌──────────────────────────────────────────┐
+│              PYTEST FIXTURE               │
+└──────────────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────┐
+│  Scope (lifetime)        │
+│  ─────────────────────  │
+│  function / class        │
+│  module / package        │
+│  session                 │
+│                          │
+│  ➜ WHEN is it created?   │
+│  ➜ WHEN is it destroyed? │
+└──────────────────────────┘
+               │
+               │  (completely independent)
+               ▼
+┌──────────────────────────┐
+│  Location (visibility)   │
+│  ─────────────────────  │
+│  inside class            │
+│  module-level            │
+│  conftest.py             │
+│                          │
+│  ➜ WHO can use it?       │
+└──────────────────────────┘
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Key Insight (call this out in the blog)</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><strong>Scope controls lifetime.<br>Location controls visibility.<br>Placement does <em>not</em> imply sharing.</strong></p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Concrete Illustration</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["dGVzdF9leGFtcGxlLnB5"]],[["4pSC"]],[["4pSc4pSA4pSAIEBweXRlc3QuZml4dHVyZSAgICAgICAgICDihpAgZnVuY3Rpb24gc2NvcGUgKGRlZmF1bHQp"]],[["4pSCICAgZGVmIGNvdW50ZXIoKTogICAgICAgICAgIOKGkCB2aXNpYmxlIHRvIGVudGlyZSBmaWxl"]],[["4pSCICAgICAgIHJldHVybiBbXQ=="]],[["4pSC"]],[["4pSc4pSA4pSAIGNsYXNzIFRlc3RBOg=="]],[["4pSCICAg4pSc4pSA4pSAIHRlc3Rfb25lKGNvdW50ZXIpICAgIOKGkCBuZXcgaW5zdGFuY2U="]],[["4pSCICAg4pSU4pSA4pSAIHRlc3RfdHdvKGNvdW50ZXIpICAgIOKGkCBuZXcgaW5zdGFuY2U="]],[["4pSC"]],[["4pSU4pSA4pSAIGNsYXNzIFRlc3RCOg=="]],[["ICAgIOKUlOKUgOKUgCB0ZXN0X3RocmVlKGNvdW50ZXIpICDihpAgbmV3IGluc3RhbmNl"]],[[""]],[[""]],[[""]]],"className":"is-style-no-highlight","fontSize":"small"} --></p>
+<pre class="wp-block-code is-style-no-highlight has-small-font-size"><code>test_example.py
+│
+├── @pytest.fixture          ← function scope (default)
+│   def counter():           ← visible to entire file
+│       return []
+│
+├── class TestA:
+│   ├── test_one(counter)    ← new instance
+│   └── test_two(counter)    ← new instance
+│
+└── class TestB:
+    └── test_three(counter)  ← new instance
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Even though the fixture is <strong>above the classes</strong>, it is <strong>not shared</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The CI-Only Failure (Realistic and Painful)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is the kind of bug that:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>passes locally</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>fails only in CI</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>wastes hours</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The Intent (what the author thought)</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>“This fixture is function-scoped, so each test is isolated.”</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The Code (looks innocent)</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyB0ZXN0X2NhY2hlLnB5","tok-comment"]],[],[["aW1wb3J0","tok-keyword"],["IA=="],["cHl0ZXN0","tok-variableName"]],[],[["c2hhcmVkX2NhY2hl","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ew==","tok-punctuation"],["fQ==","tok-punctuation"]],[],[["QA==","tok-meta"],["cHl0ZXN0","tok-variableName"],["Lg==","tok-operator"],["Zml4dHVyZQ==","tok-variableName"]],[["ZGVm","tok-keyword"],["IA=="],["Y2FjaGU=","tok-variableName tok-definition"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["c2hhcmVkX2NhY2hl","tok-variableName"]],[],[["Y2xhc3M=","tok-keyword"],["IA=="],["VGVzdFVzZXJDYWNoZQ==","tok-className"],["Og=="]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dGVzdF9hZGRfdXNlcg==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["Y2FjaGU=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["Y2FjaGU=","tok-variableName"],["Ww==","tok-punctuation"],["ImFsaWNlIg==","tok-string"],["XQ==","tok-punctuation"],["IA=="],["PQ==","tok-operator"],["IA=="],["MQ==","tok-number"]],[["ICAgICAgICA="],["YXNzZXJ0","tok-keyword"],["IA=="],["Y2FjaGU=","tok-variableName"],["Ww==","tok-punctuation"],["ImFsaWNlIg==","tok-string"],["XQ==","tok-punctuation"],["IA=="],["PT0=","tok-operator"],["IA=="],["MQ==","tok-number"]],[],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dGVzdF9jYWNoZV9lbXB0eQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["Y2FjaGU=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["YXNzZXJ0","tok-keyword"],["IA=="],["Y2FjaGU=","tok-variableName"],["IA=="],["PT0=","tok-operator"],["IA=="],["ew==","tok-punctuation"],["fQ==","tok-punctuation"]],[],[],[]],"language":"Python","languageConfidence":"certain","fontSize":"small"} --></p>
+<pre class="wp-block-code has-small-font-size"><code># test_cache.py
+
+import pytest
+
+shared_cache = {}
+
+@pytest.fixture
+def cache():
+    return shared_cache
+
+class TestUserCache:
+    def test_add_user(self, cache):
+        cache["alice"] = 1
+        assert cache["alice"] == 1
+
+    def test_cache_empty(self, cache):
+        assert cache == {}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">What Happens Locally</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>You run one test at a time:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0ZXN0IHRlc3RfY2FjaGUucHk6OlRlc3RVc2VyQ2FjaGU6OnRlc3RfY2FjaGVfZW1wdHk="]],[[""]],[[""]],[[""]]],"fontSize":"small"} --></p>
+<pre class="wp-block-code has-small-font-size"><code>pytest test_cache.py::TestUserCache::test_cache_empty
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ Passes</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0ZXN0","tok-variableName"],["IA=="],["dGVzdF9jYWNoZQ==","tok-variableName"],["Lg==","tok-operator"],["cHk=","tok-propertyName"],["Ojo="],["VGVzdFVzZXJDYWNoZQ==","tok-variableName"],["Ojo="],["dGVzdF9hZGRfdXNlcg==","tok-variableName"]],[],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>pytest test_cache.py::TestUserCache::test_add_user
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ Passes</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">What Happens in CI</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>CI runs the full suite:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0ZXN0"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>pytest
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Execution order (example):</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["dGVzdF9hZGRfdXNlcg=="]],[["dGVzdF9jYWNoZV9lbXB0eQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>test_add_user
+test_cache_empty
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Failure:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["RSAgIEFzc2VydGlvbkVycm9yOiBhc3NlcnQgeydhbGljZSc6IDF9ID09IHt9"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>E   AssertionError: assert {'alice': 1} == {}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why This Happens (the misunderstanding)</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Fixture <strong>scope</strong> is function → fixture <em>execution</em> is isolated</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>But the fixture <strong>returns a module-level mutable object</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>The object identity is shared</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Important distinction</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>pytest isolates <strong>fixture calls</strong>, not <strong>objects you return</strong></p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The Subtle Mental Trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Many developers believe:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnVuY3Rpb24gc2NvcGUg4oaSIG5vIHNoYXJlZCBzdGF0ZQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>function scope → no shared state
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>But the real rule is:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnVuY3Rpb24gc2NvcGUg4oaSIGZpeHR1cmUgY29kZSByZS1ydW5z"]],[["c2hhcmVkIG9iamVjdCDihpIgc3RhdGUgc3RpbGwgbGVha3M="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>function scope → fixture code re-runs
+shared object → state still leaks
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Why This Often Appears Only in CI</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>CI environments differ in critical ways:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Factor</th>
+<th>Local</th>
+<th>CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Test order</td>
+<td>Often manual</td>
+<td>Deterministic or randomized</td>
+</tr>
+<tr>
+<td>Full suite</td>
+<td>Rare</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>Parallelism</td>
+<td>No</td>
+<td>Often yes (<code>-n auto</code>)</td>
+</tr>
+<tr>
+<td>Clean env</td>
+<td>Not guaranteed</td>
+<td>Fresh every run</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p>This exposes hidden coupling that local runs mask.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The Correct Fix (Two Safe Options)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">✅ Option 1: Create a fresh object inside the fixture</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJl"]],[["ZGVmIGNhY2hlKCk6"]],[["ICAgIHJldHVybiB7fQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture
+def cache():
+    return {}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Best default.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">✅ Option 2: Reset shared state explicitly (if unavoidable)</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJl"]],[["ZGVmIGNhY2hlKCk6"]],[["ICAgIHNoYXJlZF9jYWNoZS5jbGVhcigp"]],[["ICAgIHJldHVybiBzaGFyZWRfY2FjaGU="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture
+def cache():
+    shared_cache.clear()
+    return shared_cache
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Only acceptable when:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Performance demands reuse</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You <em>explicitly</em> control mutation</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Add This Rule to the Blog (Very Shareable)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><strong>Fixture scope does not guarantee object isolation.<br>Only object creation does.</strong></p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Bonus: How This Gets Even Worse with Wider Scope</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJzZXNzaW9uIik="]],[["ZGVmIGNhY2hlKCk6"]],[["ICAgIHJldHVybiB7fQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="session")
+def cache():
+    return {}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now you’ve created:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>global mutable state</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>shared across the entire test run</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>order-dependent failures</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>CI-only flakiness</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is one of the most common pytest anti-patterns.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Summary Section </h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Defining a fixture above a class <strong>does not change its scope</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Default scope is always <strong>function</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Fixture <em>location</em> controls visibility, not sharing</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Mutable shared objects bypass scope guarantees</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>CI exposes what local runs hide</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

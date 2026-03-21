@@ -1,0 +1,155 @@
+---
+layout: post
+title: Calculate Monthly Payments for Credit Card Debt with Python
+date: 2023-04-14 11:38:00.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- beginner
+- calculations
+- debt
+- Personal Finance
+meta:
+  reader_suggested_tags: '["Personal Finance","Finance","Budgeting","Money","Debt"]'
+  _last_editor_used_jetpack: block-editor
+  _edit_last: '257720953'
+  _yoast_wpseo_primary_category: '1543'
+  _yoast_wpseo_content_score: '60'
+  _yoast_wpseo_estimated-reading-time-minutes: '4'
+  _thumbnail_id: '489'
+  _import_original_post_id: '485'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:50'
+  _publicize_job_id: '112036926963'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/04/14/calculate-monthly-payments-for-credit-card-debt-with-python/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/CreditCardRepaymentCalculator","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Credit card debt is a common issue that affects millions of people worldwide. According to a survey by CNBC, the average credit card debt in the United States alone is over $6,000. Many people struggle to pay off their credit card debt due to high interest rates, and it can quickly become a never-ending cycle. This is where fintech and Python come into play. With the help of Python, we can develop a tool that not only calculates monthly payments needed to pay off credit card debt but also shows interest savings and payoff timelines. In this blog post, we will explore various Python applications in fintech and how this tool can benefit users.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The concept of calculating monthly payments needed to pay off credit card debt involves complex financial calculations. However, with the right tools and programming language, we can simplify the process. Python, being a powerful and versatile language, offers various applications that can help us develop this tool.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>1. Basic Calculation:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The first step in developing our tool is to calculate the monthly payments needed to pay off credit card debt. This involves determining the principal amount, interest rate, and the time period. With the help of Python's basic mathematical operations, we can write a simple program to calculate the monthly payment. Here's an example code snippet:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"principal = 5000\ninterest_rate = 0.18\ntime_period = 12\n\nmonthly_payment = (principal + (principal * interest_rate))/time_period\n\nprint(\u0022Your monthly payment is: $\u0022, monthly_payment)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprincipal = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_rate = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.18\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003etime_period = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = (principal + (principal * interest_rate))/time_period\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Your monthly payment is: $\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, monthly_payment)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">principal = </span><span style="color: #098658">5000</span></span>
+<span class="line"><span style="color: #000000">interest_rate = </span><span style="color: #098658">0.18</span></span>
+<span class="line"><span style="color: #000000">time_period = </span><span style="color: #098658">12</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">monthly_payment = (principal + (principal * interest_rate))/time_period</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Your monthly payment is: $"</span><span style="color: #000000">, monthly_payment)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This program will output the monthly payment for a principal amount of $5000 with an interest rate of 18% over a period of 12 months. However, this is a simplified calculation and does not take into account the compounding interest. To calculate the accurate monthly payment, we need to consider the compounding interest, which brings us to our next variation.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>2. Compounding Interest Calculation:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Credit card companies often compound interest on a daily, weekly, or monthly basis, making it challenging to calculate the exact monthly payment. Thankfully, Python has a powerful library called Pandas that can help us with this calculation. Pandas offers a function called `pmt` that calculates the periodic payment for a loan with a fixed interest rate and a fixed principal amount. Here's an example code snippet:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import pandas as pd\n\nprincipal = 5000\ninterest_rate = 0.18\ntime_period = 12\n\nmonthly_payment = pd.pmt(interest_rate/time_period, time_period, principal)\n\nprint(\u0022Your monthly payment is: $\u0022, monthly_payment)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprincipal = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_rate = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.18\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003etime_period = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = pd.pmt(interest_rate/time_period, time_period, principal)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Your monthly payment is: $\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, monthly_payment)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">principal = </span><span style="color: #098658">5000</span></span>
+<span class="line"><span style="color: #000000">interest_rate = </span><span style="color: #098658">0.18</span></span>
+<span class="line"><span style="color: #000000">time_period = </span><span style="color: #098658">12</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">monthly_payment = pd.pmt(interest_rate/time_period, time_period, principal)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Your monthly payment is: $"</span><span style="color: #000000">, monthly_payment)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This function takes into account the compounding interest and gives a more accurate monthly payment amount. It uses the `time_period` parameter to determine the frequency of compounding interest.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>3. Interest Savings Calculation:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>One of the main benefits of paying off credit card debt is the interest savings. With the help of Python, we can also calculate the total interest paid and the interest savings by paying off the debt sooner. This can encourage users to make larger payments and pay off their debt faster. Here's an example code snippet:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"principal = 5000\ninterest_rate = 0.18\ntime_period = 12\nmonthly_payment = 450\n\ninterest_paid = (principal + (principal * interest_rate))/time_period * time_period - principal\ninterest_savings = interest_paid - ((time_period - 1) * monthly_payment)\n\nprint(\u0022Total interest paid: $\u0022, interest_paid)\nprint(\u0022Interest savings: $\u0022, interest_savings)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprincipal = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_rate = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.18\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003etime_period = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e450\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_paid = (principal + (principal * interest_rate))/time_period * time_period - principal\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_savings = interest_paid - ((time_period - \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e) * monthly_payment)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Total interest paid: $\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, interest_paid)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Interest savings: $\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, interest_savings)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">principal = </span><span style="color: #098658">5000</span></span>
+<span class="line"><span style="color: #000000">interest_rate = </span><span style="color: #098658">0.18</span></span>
+<span class="line"><span style="color: #000000">time_period = </span><span style="color: #098658">12</span></span>
+<span class="line"><span style="color: #000000">monthly_payment = </span><span style="color: #098658">450</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">interest_paid = (principal + (principal * interest_rate))/time_period * time_period - principal</span></span>
+<span class="line"><span style="color: #000000">interest_savings = interest_paid - ((time_period - </span><span style="color: #098658">1</span><span style="color: #000000">) * monthly_payment)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Total interest paid: $"</span><span style="color: #000000">, interest_paid)</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Interest savings: $"</span><span style="color: #000000">, interest_savings)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This program calculates the total interest paid for a principal amount of $5000 with an interest rate of 18% over a period of 12 months. It then compares the interest paid for a monthly payment of $450 and the interest paid if the debt was paid off in 11 months. This gives the interest savings amount, motivating users to pay off their debt sooner.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>4. Payoff Timelines:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Another essential aspect of paying off credit card debt is setting a realistic timeline. With Python, we can develop a tool that takes in the user's desired monthly payment and calculates the number of months needed to pay off the debt fully. Here's an example code snippet:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"principal = 5000\ninterest_rate = 0.18\nmonthly_payment = 450\n\nmonths = 0\n\nwhile principal \u0026gt; 0:\n    interest = principal * interest_rate\n    principal = principal + interest - monthly_payment\n    months += 1\n\nprint(\u0022Number of months needed to pay off debt:\u0022, months)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprincipal = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einterest_rate = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.18\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_payment = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e450\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonths = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ewhile\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e principal \u0026gt; \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    interest = principal * interest_rate\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    principal = principal + interest - monthly_payment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    months += \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Number of months needed to pay off debt:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, months)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">principal = </span><span style="color: #098658">5000</span></span>
+<span class="line"><span style="color: #000000">interest_rate = </span><span style="color: #098658">0.18</span></span>
+<span class="line"><span style="color: #000000">monthly_payment = </span><span style="color: #098658">450</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">months = </span><span style="color: #098658">0</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #AF00DB">while</span><span style="color: #000000"> principal &gt; </span><span style="color: #098658">0</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">    interest = principal * interest_rate</span></span>
+<span class="line"><span style="color: #000000">    principal = principal + interest - monthly_payment</span></span>
+<span class="line"><span style="color: #000000">    months += </span><span style="color: #098658">1</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Number of months needed to pay off debt:"</span><span style="color: #000000">, months)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This program uses a while loop to calculate the number of months needed to pay off a principal amount of $5000 with an interest rate of 18%. The loop continues until the principal amount reaches 0, and the number of months is incremented. This gives the user a realistic timeline to pay off their debt.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this blog post, we explored various Python applications in fintech and how it can help us develop a tool that calculates monthly payments needed to pay off credit card debt. We discussed different variations of the calculation, including compounding interest, interest savings, and payoff timelines. This tool can benefit users by simplifying complex financial calculations and motivating them to pay off their debt sooner. With the advancements in fintech and the power of Python, we can expect to see more innovative tools and applications in the future.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

@@ -1,0 +1,522 @@
+---
+layout: post
+title: "“The Drawer and the Fridge: Why lru_cache Can Betray You in Distributed Systems”"
+date: 2026-01-11 11:29:05.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- caching
+- distributed systems
+- gotchas
+- lru_cache
+meta:
+  _last_editor_used_jetpack: block-editor
+  firehose_sent: '1770550818'
+  _wp_old_date: '2026-01-27'
+  _publicize_job_id: '111088005293'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 11:40:16'
+  timeline_notification: '1770550821'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Books","Blogs","Introduction","Physics","Reading"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/01/11/the-drawer-and-the-fridge-why-lru_cache-can-betray-you-in-distributed-systems/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:heading {"level":5} --><html><body></p>
+<h5 class="wp-block-heading">The Drawer and the Fridge: Why <code>lru_cache</code> Can Betray You in Distributed Systems</h5>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Part 1: The problem — explained like to a child </h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Imagine a restaurant.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>There are <strong>many kitchens</strong> (web servers)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Each kitchen has <strong>many cooks</strong> (workers)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Downstairs there is <strong>one big fridge</strong> everyone shares (Redis)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Each cook also has:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>A <strong>small desk drawer</strong> next to them</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>That drawer is <code>lru_cache</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">What the drawer is good for</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If a cook keeps:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>A recipe</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>A rule</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>A math answer</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>in their drawer, that’s great.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>They don’t need to run downstairs every time.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">What the big fridge is for</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The fridge stores:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Today’s food</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Customer orders</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Things that change</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Everyone sees the same fridge.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The problem 😬</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>One cook puts apples in their drawer.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Later, someone replaces the apples in the fridge with bananas.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Cook A serves apples 🍎</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Cook B serves bananas 🍌</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Same question.<br>Different answers.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Customers get confused.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>👉 This is exactly what happens when <code>lru_cache</code> is used for shared data.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Part 2: The same idea: a real life scenario</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:image --></p>
+<figure class="wp-block-image"><img src="{{site.baseurl}}/assets/2026/01/351e4-02au0rszpl08gbxjqoz.png" alt="Image"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:image --></p>
+<figure class="wp-block-image"><img src="{{site.baseurl}}/assets/2026/01/78e262d7-76a3-4bf3-886c-32a190d190b7.webp" alt="Image"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:image --></p>
+<figure class="wp-block-image"><img src="{{site.baseurl}}/assets/2026/01/caching-flow-1ca407905a2f3.png" alt="Image"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:paragraph --></p>
+<p>Each box is a server.<br>Each server has its own memory.<br>Redis sits in the middle.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">🟢 Good code example</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>(</strong>Recipe<strong> in the drawer, food in the fridge)</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbQ==","tok-keyword"],["IA=="],["ZnVuY3Rvb2xz","tok-variableName"],["IA=="],["aW1wb3J0","tok-keyword"],["IA=="],["bHJ1X2NhY2hl","tok-variableName"]],[],[["IyBEcmF3ZXI6IGEgcmVjaXBlIChuZXZlciBjaGFuZ2VzKQ==","tok-comment"]],[["QA==","tok-meta"],["bHJ1X2NhY2hl","tok-variableName"],["KA==","tok-punctuation"],["bWF4c2l6ZQ==","tok-variableName"],["PQ==","tok-operator"],["MTI4","tok-number"],["KQ==","tok-punctuation"]],[["ZGVm","tok-keyword"],["IA=="],["Zm9ybWF0X3ByaWNl","tok-variableName tok-definition"],["KA==","tok-punctuation"],["YW1vdW50","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["ZiLCow==","tok-string2"],["ew==","tok-punctuation"],["YW1vdW50","tok-variableName"],["Og=="],["LjJm","tok-keyword"],["fQ==","tok-punctuation"],["Ig==","tok-string2"]],[],[],[["IyBGcmlkZ2U6IHJlYWwgZGF0YSAoY2FuIGNoYW5nZSk=","tok-comment"]],[["ZGVm","tok-keyword"],["IA=="],["Z2V0X3VzZXJfYmFsYW5jZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVkaXM=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["YmFsYW5jZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["ZiJiYWxhbmNlOg==","tok-string2"],["ew==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["Zm9ybWF0X3ByaWNl","tok-variableName"],["KA==","tok-punctuation"],["YmFsYW5jZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>from functools import lru_cache
+
+# Drawer: a recipe (never changes)
+@lru_cache(maxsize=128)
+def format_price(amount):
+    return f"£{amount:.2f}"
+
+
+# Fridge: real data (can change)
+def get_user_balance(user_id, redis):
+    balance = redis.get(f"balance:{user_id}")
+    return format_price(balance)
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Why this is safe</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>format_price(10)</code> is always the same</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>If Redis changes, formatting logic does not care</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Being “a bit wrong” here causes no harm</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">🔴 Bad code example</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>(Food in the drawer — dangerous)</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbQ==","tok-keyword"],["IA=="],["ZnVuY3Rvb2xz","tok-variableName"],["IA=="],["aW1wb3J0","tok-keyword"],["IA=="],["bHJ1X2NhY2hl","tok-variableName"]],[],[["IyDinYwgQkFEOiBzaGFyZWQgZGF0YSBjYWNoZWQgbG9jYWxseQ==","tok-comment"]],[["QA==","tok-meta"],["bHJ1X2NhY2hl","tok-variableName"],["KA==","tok-punctuation"],["bWF4c2l6ZQ==","tok-variableName"],["PQ==","tok-operator"],["MTAyNA==","tok-number"],["KQ==","tok-punctuation"]],[["ZGVm","tok-keyword"],["IA=="],["Z2V0X3VzZXJfYmFsYW5jZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVkaXM=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["ZiJiYWxhbmNlOg==","tok-string2"],["ew==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["KQ==","tok-punctuation"]],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>from functools import lru_cache
+
+# ❌ BAD: shared data cached locally
+@lru_cache(maxsize=1024)
+def get_user_balance(user_id, redis):
+    return redis.get(f"balance:{user_id}")
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>What goes wrong</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Balance changes in Redis</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<code>lru_cache</code> keeps the old value</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Other servers don’t know</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Users see inconsistent balances</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This bug does not always show up in tests.<br>It shows up in production.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The bug in one line 🐞</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Redis changed, but <code>lru_cache</code> didn’t hear about it.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Part 3: The grown-up explanation </h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now let’s remove the story and say this properly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">What <code>lru_cache</code> actually is</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>lru_cache</code> is:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>In-process</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Per-worker</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Non-distributed</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Memory-only</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Unaware of other servers</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>In a typical enterprise setup:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["TG9hZCBCYWxhbmNlcg=="]],[["IOKUnOKUgCBTZXJ2ZXIgQQ=="]],[["IOKUgiAgIOKUnOKUgCBXb3JrZXIgMSAobHJ1X2NhY2hlKQ=="]],[["IOKUgiAgIOKUlOKUgCBXb3JrZXIgMiAobHJ1X2NhY2hlKQ=="]],[["IOKUnOKUgCBTZXJ2ZXIgQg=="]],[["IOKUgiAgIOKUnOKUgCBXb3JrZXIgMSAobHJ1X2NhY2hlKQ=="]],[["IOKUgiAgIOKUlOKUgCBXb3JrZXIgMiAobHJ1X2NhY2hlKQ=="]],[["IOKUlOKUgCBSZWRpcyAoc2hhcmVkIGNhY2hlKQ=="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>Load Balancer
+ ├─ Server A
+ │   ├─ Worker 1 (lru_cache)
+ │   └─ Worker 2 (lru_cache)
+ ├─ Server B
+ │   ├─ Worker 1 (lru_cache)
+ │   └─ Worker 2 (lru_cache)
+ └─ Redis (shared cache)
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Each <code>lru_cache</code> is <strong>completely isolated</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this breaks correctness</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Redis gives you:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Shared state</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>TTL</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Invalidation</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Consistency (eventual or strong, depending on use)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>lru_cache</code> gives you:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>None of the above</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>So when you layer them incorrectly:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Redis invalidation does nothing</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Pub/sub does nothing</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Cache clears don’t propagate</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Autoscaling creates cold, inconsistent caches</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Memory amplification problem</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you have:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>10 servers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>8 workers each</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><code>lru_cache(maxsize=1000)</code></li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>You now have <strong>80,000 cached entries</strong>, silently.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Increases RSS</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Complicates capacity planning</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Makes OOM kills harder to diagnose</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The correct enterprise mental model</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"className":"is-style-regular"} --></p>
+<figure class="wp-block-table is-style-regular">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Layer</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lru_cache</code></td>
+<td>Micro-optimisation for pure logic</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>Shared, authoritative cache</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>Source of truth</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>lru_cache</code> must <strong>never</strong> be part of your correctness story.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">When <code>lru_cache</code> is acceptable</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ Pure functions<br>✅ Deterministic output<br>✅ Small key space<br>✅ No user or tenant context<br>✅ No freshness requirement</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Examples:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Parsing schemas</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Formatting values</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Compiling regexes</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Building SQL templates</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">When it is not acceptable</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>❌ User balances<br>❌ Permissions<br>❌ Feature flags<br>❌ Prices<br>❌ Anything invalidated elsewhere</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If it would be bad to be wrong, even briefly:<br><strong>don’t cache it locally</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Final rule to remember</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><strong><code>lru_cache</code> is a speed trick, not a cache strategy.</strong></p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>Or, from the child version:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>🟢 Rules go in the drawer<br>🔴 Facts stay in the fridge</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

@@ -1,0 +1,478 @@
+---
+layout: post
+title: Build Your Investment Planner with Python Today
+date: 2023-04-15 11:47:31.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- Financial Forecasting
+- Financial Planning Tool
+- Investment Goal Tracker
+- Investment Planner
+- Personal Finance Python Tool
+- Portfolio Management
+- Python for Finance
+- Python Investment Tracker
+- Python Programming
+- Wealth Building
+meta:
+  reader_suggested_tags: '["Finance","Work","Marketing","Programming","Boating"]'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _last_editor_used_jetpack: block-editor
+  _yoast_wpseo_primary_category: '1376'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '6'
+  _thumbnail_id: '497'
+  _import_original_post_id: '491'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:50'
+  _publicize_job_id: '112037199206'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/04/15/build-your-investment-planner-with-python-today/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/InvestmentPlanner","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In the world of finance, setting and tracking investment goals is crucial for individuals looking to achieve financial stability and growth. However, this can be a daunting task for many, especially when it comes to forecasting progress based on investment returns and regular contributions. This is where a planner that utilizes Python applications can be incredibly beneficial. In this blog post, we will explore the concept of creating a planner that helps users set and track investment goals using Python, and its potential for revolutionizing the fintech industry.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python, a popular programming language used in various industries, including finance, has a wide range of applications that make it an ideal choice for creating a planner for investment goals. With its simplicity, flexibility, and powerful libraries such as Pandas, NumPy, and Matplotlib, Python makes it easy to automate calculations, analyze data, and even build predictive models – all crucial elements in setting and tracking investment goals.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>So, let's dive into how Python can be used to create a planner that can help individuals achieve their investment goals.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The Concept of Investment Goal Planning</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Before we delve into the technicalities, let's first understand the concept of investment goal planning. It involves setting specific, achievable, and measurable goals for your investments, whether it's saving for retirement, buying a house, or starting a business. These goals are then tracked and monitored regularly to ensure progress and make necessary adjustments along the way.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Step 1: Defining Investment Goals</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The first step in creating a planner is to define the investment goals. This can be done by creating a function that takes in user inputs such as the target amount, timeline, and risk tolerance. With Python, we can easily create a function that calculates the required monthly contribution based on these inputs. Let's look at an example:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\ndef calculate_monthly_contribution(target_amount, timeline, risk_tolerance):\n    \u0022\u0022\u0022\n    Calculates the required monthly contribution based on investment goals.\n    \n    Args:\n        target_amount (float): The desired amount to be achieved.\n        timeline (int): Number of months to achieve the target amount.\n        risk_tolerance (str): User's risk tolerance level.\n        \n    Returns:\n        monthly_contribution (float): The required monthly contribution.\n    \u0022\u0022\u0022\n    \n    # Calculate the monthly interest rate based on risk tolerance\n    if risk_tolerance == \u0022high\u0022:\n        monthly_interest = 0.005\n    elif risk_tolerance == \u0022medium\u0022:\n        monthly_interest = 0.004\n    else:\n        monthly_interest = 0.003\n        \n    # Calculate the monthly contribution\n    monthly_contribution = target_amount / timeline * (1 + monthly_interest) ** timeline\n    \n    return monthly_contribution\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ecalculate_monthly_contribution\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003etarget_amount\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003etimeline\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003erisk_tolerance\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Calculates the required monthly contribution based on investment goals.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Args:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        target_amount (float): The desired amount to be achieved.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        timeline (int): Number of months to achieve the target amount.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        risk_tolerance (str): User\u0026#039;s risk tolerance level.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Returns:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        monthly_contribution (float): The required monthly contribution.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    \u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the monthly interest rate based on risk tolerance\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e risk_tolerance == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;high\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        monthly_interest = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.005\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eelif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e risk_tolerance == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;medium\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        monthly_interest = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.004\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eelse\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        monthly_interest = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.003\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the monthly contribution\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    monthly_contribution = target_amount / timeline * (\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + monthly_interest) ** timeline\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e monthly_contribution\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">calculate_monthly_contribution</span><span style="color: #000000">(</span><span style="color: #001080">target_amount</span><span style="color: #000000">, </span><span style="color: #001080">timeline</span><span style="color: #000000">, </span><span style="color: #001080">risk_tolerance</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""</span></span>
+<span class="line"><span style="color: #A31515">    Calculates the required monthly contribution based on investment goals.</span></span>
+<span class="line"><span style="color: #A31515">    </span></span>
+<span class="line"><span style="color: #A31515">    Args:</span></span>
+<span class="line"><span style="color: #A31515">        target_amount (float): The desired amount to be achieved.</span></span>
+<span class="line"><span style="color: #A31515">        timeline (int): Number of months to achieve the target amount.</span></span>
+<span class="line"><span style="color: #A31515">        risk_tolerance (str): User's risk tolerance level.</span></span>
+<span class="line"><span style="color: #A31515">        </span></span>
+<span class="line"><span style="color: #A31515">    Returns:</span></span>
+<span class="line"><span style="color: #A31515">        monthly_contribution (float): The required monthly contribution.</span></span>
+<span class="line"><span style="color: #A31515">    """</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Calculate the monthly interest rate based on risk tolerance</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">if</span><span style="color: #000000"> risk_tolerance == </span><span style="color: #A31515">"high"</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">        monthly_interest = </span><span style="color: #098658">0.005</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">elif</span><span style="color: #000000"> risk_tolerance == </span><span style="color: #A31515">"medium"</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">        monthly_interest = </span><span style="color: #098658">0.004</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">else</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">        monthly_interest = </span><span style="color: #098658">0.003</span></span>
+<span class="line"><span style="color: #000000">        </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Calculate the monthly contribution</span></span>
+<span class="line"><span style="color: #000000">    monthly_contribution = target_amount / timeline * (</span><span style="color: #098658">1</span><span style="color: #000000"> + monthly_interest) ** timeline</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> monthly_contribution</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>With this function, users can easily enter their investment goals, and the planner will calculate the required monthly contribution based on their risk tolerance level. This not only makes the process more efficient but also eliminates the potential for human error.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Step 2: Tracking Investment Progress</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Once the investment goals are defined, the next step is to track the progress regularly. This can be done by creating a function that takes in user inputs such as the current investment balance, monthly contributions, and investment returns. The function then calculates the expected investment progress and displays it in a graph using Matplotlib. Here is an example:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\ndef track_investment_progress(current_balance, monthly_contributions, investment_returns):\n    \u0022\u0022\u0022\n    Calculates and plots the expected investment progress over time.\n    \n    Args:\n        current_balance (float): The current investment balance.\n        monthly_contributions (float): The monthly contributions.\n        investment_returns (float): The expected investment returns.\n        \n    Returns:\n        None\n    \u0022\u0022\u0022\n    \n    # Create a list to store the investment balance over time\n    investment_balance = [current_balance]\n    \n    # Calculate the investment balance for each month\n    for i in range(1, 13):\n        investment_balance.append(investment_balance[i-1] * (1 + investment_returns) + monthly_contributions)\n        \n    # Plot the investment balance over time\n    plt.plot(investment_balance)\n    plt.xlabel(\u0022Months\u0022)\n    plt.ylabel(\u0022Investment Balance ($)\u0022)\n    plt.title(\u0022Expected Investment Progress\u0022)\n    plt.show()\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003etrack_investment_progress\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ecurrent_balance\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003emonthly_contributions\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003einvestment_returns\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Calculates and plots the expected investment progress over time.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Args:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        current_balance (float): The current investment balance.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        monthly_contributions (float): The monthly contributions.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        investment_returns (float): The expected investment returns.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Returns:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        None\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    \u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Create a list to store the investment balance over time\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    investment_balance = [current_balance]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the investment balance for each month\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e i \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ein\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003erange\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e13\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        investment_balance.append(investment_balance[i-\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] * (\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + investment_returns) + monthly_contributions)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Plot the investment balance over time\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.plot(investment_balance)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.xlabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Months\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.ylabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Investment Balance ($)\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.title(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Expected Investment Progress\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.show()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">track_investment_progress</span><span style="color: #000000">(</span><span style="color: #001080">current_balance</span><span style="color: #000000">, </span><span style="color: #001080">monthly_contributions</span><span style="color: #000000">, </span><span style="color: #001080">investment_returns</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""</span></span>
+<span class="line"><span style="color: #A31515">    Calculates and plots the expected investment progress over time.</span></span>
+<span class="line"><span style="color: #A31515">    </span></span>
+<span class="line"><span style="color: #A31515">    Args:</span></span>
+<span class="line"><span style="color: #A31515">        current_balance (float): The current investment balance.</span></span>
+<span class="line"><span style="color: #A31515">        monthly_contributions (float): The monthly contributions.</span></span>
+<span class="line"><span style="color: #A31515">        investment_returns (float): The expected investment returns.</span></span>
+<span class="line"><span style="color: #A31515">        </span></span>
+<span class="line"><span style="color: #A31515">    Returns:</span></span>
+<span class="line"><span style="color: #A31515">        None</span></span>
+<span class="line"><span style="color: #A31515">    """</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Create a list to store the investment balance over time</span></span>
+<span class="line"><span style="color: #000000">    investment_balance = [current_balance]</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Calculate the investment balance for each month</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">for</span><span style="color: #000000"> i </span><span style="color: #AF00DB">in</span><span style="color: #000000"> </span><span style="color: #795E26">range</span><span style="color: #000000">(</span><span style="color: #098658">1</span><span style="color: #000000">, </span><span style="color: #098658">13</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        investment_balance.append(investment_balance[i-</span><span style="color: #098658">1</span><span style="color: #000000">] * (</span><span style="color: #098658">1</span><span style="color: #000000"> + investment_returns) + monthly_contributions)</span></span>
+<span class="line"><span style="color: #000000">        </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Plot the investment balance over time</span></span>
+<span class="line"><span style="color: #000000">    plt.plot(investment_balance)</span></span>
+<span class="line"><span style="color: #000000">    plt.xlabel(</span><span style="color: #A31515">"Months"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.ylabel(</span><span style="color: #A31515">"Investment Balance ($)"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.title(</span><span style="color: #A31515">"Expected Investment Progress"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.show()</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This function can be used to track the investment progress over a specific period, giving users a visual representation of their progress and helping them make more informed decisions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Step 3: Forecasting Investment Returns</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Another crucial aspect of investment goal planning is forecasting investment returns. Python's powerful libraries such as Pandas and NumPy make it easy to analyze historical data and build predictive models to forecast future investment returns. This information can then be used to make more accurate investment decisions and adjust the investment plan accordingly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\ndef forecast_investment_returns():\n    \u0022\u0022\u0022\n    Uses historical data to forecast future investment returns.\n    \n    Args:\n        None\n        \n    Returns:\n        investment_returns (float): The expected investment returns.\n    \u0022\u0022\u0022\n    \n    # Load the historical investment data\n    historical_data = pd.read_csv(\u0022historical_data.csv\u0022)\n    \n    # Calculate the mean and standard deviation of the data\n    mean = np.mean(historical_data)\n    std = np.std(historical_data)\n    \n    # Generate a random number within the range of mean ± 2 * std\n    investment_returns = np.random.normal(mean, 2 * std)\n    \n    return investment_returns\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eforecast_investment_returns\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e():\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Uses historical data to forecast future investment returns.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Args:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        None\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    Returns:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e        investment_returns (float): The expected investment returns.\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e    \u0026quot;\u0026quot;\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Load the historical investment data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    historical_data = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;historical_data.csv\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the mean and standard deviation of the data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    mean = np.mean(historical_data)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    std = np.std(historical_data)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Generate a random number within the range of mean ± 2 * std\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    investment_returns = np.random.normal(mean, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e2\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e * std)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e investment_returns\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">forecast_investment_returns</span><span style="color: #000000">():</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #A31515">"""</span></span>
+<span class="line"><span style="color: #A31515">    Uses historical data to forecast future investment returns.</span></span>
+<span class="line"><span style="color: #A31515">    </span></span>
+<span class="line"><span style="color: #A31515">    Args:</span></span>
+<span class="line"><span style="color: #A31515">        None</span></span>
+<span class="line"><span style="color: #A31515">        </span></span>
+<span class="line"><span style="color: #A31515">    Returns:</span></span>
+<span class="line"><span style="color: #A31515">        investment_returns (float): The expected investment returns.</span></span>
+<span class="line"><span style="color: #A31515">    """</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Load the historical investment data</span></span>
+<span class="line"><span style="color: #000000">    historical_data = pd.read_csv(</span><span style="color: #A31515">"historical_data.csv"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Calculate the mean and standard deviation of the data</span></span>
+<span class="line"><span style="color: #000000">    mean = np.mean(historical_data)</span></span>
+<span class="line"><span style="color: #000000">    std = np.std(historical_data)</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Generate a random number within the range of mean ± 2 * std</span></span>
+<span class="line"><span style="color: #000000">    investment_returns = np.random.normal(mean, </span><span style="color: #098658">2</span><span style="color: #000000"> * std)</span></span>
+<span class="line"><span style="color: #000000">    </span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> investment_returns</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This function uses historical data to generate a random investment return, giving users an idea of the potential range of returns they can expect.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Benefits </h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>As evident from the examples above, Python offers numerous benefits when it comes to creating a planner for investment goals. It provides a simple and efficient way to automate calculations, track progress, and forecast investment returns. Additionally, its powerful libraries make it easier to analyze data and build predictive models, giving users a more accurate understanding of their investment journey.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Investment planning is essential for achieving long-term financial success. Whether it's saving for retirement, a home, or simply building wealth, setting clear goals and tracking your progress are key steps. In this blog post, we'll walk through how to create a Python-based investment planner that tracks goals, forecasts progress, and provides insights based on investment returns and regular contributions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Overview of the Project</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This planner will allow users to:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Set an initial investment amount.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Set monthly contributions.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Input an expected annual return rate.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Forecast progress over a given time frame (e.g., 5, 10, 20 years).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Track how their investments grow based on the inputs provided.</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>We’ll use Python libraries such as <code>pandas</code> for data management and <code>matplotlib</code> for visualizing the progress.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Key Functions</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Before diving into the code, let’s define the basic functionality:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Initial investment amount</strong>: The starting amount of money the user invests.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Monthly contributions</strong>: The amount the user will add every month.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Annual return rate</strong>: The yearly percentage return on the investment.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Time period</strong>: How long the user plans to invest.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>We’ll calculate the <strong>future value of an investment</strong> using the formula:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Ww=="]],[["RlYgPSBQIFx0aW1lcyAoMSArIHIvbilee250fSArIFxmcmFje0MgXHRpbWVzIFxsZWZ0KCAoMSArIHIvbilee250fSAtIDEgXHJpZ2h0KX17ci9ufQ=="]],[["XQ=="]]]} --></p>
+<pre class="wp-block-code"><code>[
+FV = P \times (1 + r/n)^{nt} + \frac{C \times \left( (1 + r/n)^{nt} - 1 \right)}{r/n}
+]</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Where:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>(FV) = future value of the investment</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>(P) = initial principal (initial investment)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>(C) = monthly contribution</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>(r) = annual interest rate (expressed as a decimal)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>(n) = number of times the interest is compounded per year (monthly = 12)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>(t) = time in years</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Step-by-Step Guide</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let’s implement this step-by-step using Python.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Install Dependencies</strong><br>We need the following libraries:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>pandas</code>: For handling and managing data.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<code>matplotlib</code>: For visualizing the investment growth.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can install them with:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"pip install pandas matplotlib","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003epip install pandas matplotlib\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">pip install pandas matplotlib</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Creating the Planner Functionality</strong><br>Here’s the full code for creating the investment planner:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import pandas as pd\nimport matplotlib.pyplot as plt\n\ndef calculate_investment_growth(initial_investment, monthly_contribution, annual_return_rate, years):\n    # Set the number of times the interest is compounded per year (monthly compounding)\n    n = 12\n    # Convert the annual return rate to a decimal\n    r = annual_return_rate / 100\n\n    # Create a DataFrame to store the data\n    data = pd.DataFrame(columns=[\u0022Month\u0022, \u0022Balance\u0022])\n    balance = initial_investment\n\n    for month in range(1, years * 12 + 1):\n        # Calculate the future value for each month\n        balance = balance * (1 + r / n) ** (n / 12) + monthly_contribution\n        data.loc[month] = [ month,  balance]\n\n    return data\n\ndef plot_investment_growth(data):\n    plt.figure(figsize=(10, 6))\n    plt.plot(data[\u0022Month\u0022], data[\u0022Balance\u0022], label=\u0022Investment Growth\u0022, color=\u0022blue\u0022)\n    plt.title(\u0022Investment Growth Over Time\u0022)\n    plt.xlabel(\u0022Months\u0022)\n    plt.ylabel(\u0022Balance ($)\u0022)\n    plt.grid(True)\n    plt.legend()\n    plt.show()\n\n# User input: initial investment, monthly contribution, return rate, and investment duration\ninitial_investment = float(input(\u0022Enter your initial investment ($): \u0022))\nmonthly_contribution = float(input(\u0022Enter your monthly contribution ($): \u0022))\nannual_return_rate = float(input(\u0022Enter expected annual return rate (%): \u0022))\nyears = int(input(\u0022Enter the number of years you plan to invest: \u0022))\n\n# Calculate the investment growth\ninvestment_data = calculate_investment_growth(initial_investment, monthly_contribution, annual_return_rate, years)\n\n# Display the investment data\nprint(\u0022\u005cnInvestment Growth Data:\u0022)\nprint(investment_data.tail())  # Display the last few entries for review\n\n# Plot the investment growth over time\nplot_investment_growth(investment_data)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e matplotlib.pyplot \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ecalculate_investment_growth\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003einitial_investment\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003emonthly_contribution\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eannual_return_rate\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eyears\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Set the number of times the interest is compounded per year (monthly compounding)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    n = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Convert the annual return rate to a decimal\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    r = annual_return_rate / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Create a DataFrame to store the data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    data = pd.DataFrame(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ecolumns\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Month\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Balance\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    balance = initial_investment\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e month \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ein\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003erange\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, years * \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the future value for each month\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        balance = balance * (\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e + r / n) ** (n / \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e12\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e) + monthly_contribution\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        data.loc[month] = [ month,  balance]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eplot_investment_growth\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003edata\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.figure(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003efigsize\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e6\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.plot(data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Month\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e], data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Balance\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e], \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003elabel\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Investment Growth\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ecolor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;blue\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.title(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Investment Growth Over Time\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.xlabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Months\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.ylabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Balance ($)\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.grid(\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eTrue\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.legend()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    plt.show()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# User input: initial investment, monthly contribution, return rate, and investment duration\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einitial_investment = \u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003efloat\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003einput\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Enter your initial investment ($): \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emonthly_contribution = \u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003efloat\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003einput\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Enter your monthly contribution ($): \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eannual_return_rate = \u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003efloat\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003einput\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Enter expected annual return rate (%): \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eyears = \u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003eint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003einput\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Enter the number of years you plan to invest: \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate the investment growth\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003einvestment_data = calculate_investment_growth(initial_investment, monthly_contribution, annual_return_rate, years)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Display the investment data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #EE0000\u0022\u003e\u005cn\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003eInvestment Growth Data:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(investment_data.tail())  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Display the last few entries for review\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Plot the investment growth over time\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplot_investment_growth(investment_data)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> matplotlib.pyplot </span><span style="color: #AF00DB">as</span><span style="color: #000000"> plt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">calculate_investment_growth</span><span style="color: #000000">(</span><span style="color: #001080">initial_investment</span><span style="color: #000000">, </span><span style="color: #001080">monthly_contribution</span><span style="color: #000000">, </span><span style="color: #001080">annual_return_rate</span><span style="color: #000000">, </span><span style="color: #001080">years</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Set the number of times the interest is compounded per year (monthly compounding)</span></span>
+<span class="line"><span style="color: #000000">    n = </span><span style="color: #098658">12</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Convert the annual return rate to a decimal</span></span>
+<span class="line"><span style="color: #000000">    r = annual_return_rate / </span><span style="color: #098658">100</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #008000"># Create a DataFrame to store the data</span></span>
+<span class="line"><span style="color: #000000">    data = pd.DataFrame(</span><span style="color: #001080">columns</span><span style="color: #000000">=[</span><span style="color: #A31515">"Month"</span><span style="color: #000000">, </span><span style="color: #A31515">"Balance"</span><span style="color: #000000">])</span></span>
+<span class="line"><span style="color: #000000">    balance = initial_investment</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">for</span><span style="color: #000000"> month </span><span style="color: #AF00DB">in</span><span style="color: #000000"> </span><span style="color: #795E26">range</span><span style="color: #000000">(</span><span style="color: #098658">1</span><span style="color: #000000">, years * </span><span style="color: #098658">12</span><span style="color: #000000"> + </span><span style="color: #098658">1</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #008000"># Calculate the future value for each month</span></span>
+<span class="line"><span style="color: #000000">        balance = balance * (</span><span style="color: #098658">1</span><span style="color: #000000"> + r / n) ** (n / </span><span style="color: #098658">12</span><span style="color: #000000">) + monthly_contribution</span></span>
+<span class="line"><span style="color: #000000">        data.loc[month] = [ month,  balance]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> data</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">plot_investment_growth</span><span style="color: #000000">(</span><span style="color: #001080">data</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    plt.figure(</span><span style="color: #001080">figsize</span><span style="color: #000000">=(</span><span style="color: #098658">10</span><span style="color: #000000">, </span><span style="color: #098658">6</span><span style="color: #000000">))</span></span>
+<span class="line"><span style="color: #000000">    plt.plot(data[</span><span style="color: #A31515">"Month"</span><span style="color: #000000">], data[</span><span style="color: #A31515">"Balance"</span><span style="color: #000000">], </span><span style="color: #001080">label</span><span style="color: #000000">=</span><span style="color: #A31515">"Investment Growth"</span><span style="color: #000000">, </span><span style="color: #001080">color</span><span style="color: #000000">=</span><span style="color: #A31515">"blue"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.title(</span><span style="color: #A31515">"Investment Growth Over Time"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.xlabel(</span><span style="color: #A31515">"Months"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.ylabel(</span><span style="color: #A31515">"Balance ($)"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.grid(</span><span style="color: #0000FF">True</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">    plt.legend()</span></span>
+<span class="line"><span style="color: #000000">    plt.show()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># User input: initial investment, monthly contribution, return rate, and investment duration</span></span>
+<span class="line"><span style="color: #000000">initial_investment = </span><span style="color: #267F99">float</span><span style="color: #000000">(</span><span style="color: #795E26">input</span><span style="color: #000000">(</span><span style="color: #A31515">"Enter your initial investment ($): "</span><span style="color: #000000">))</span></span>
+<span class="line"><span style="color: #000000">monthly_contribution = </span><span style="color: #267F99">float</span><span style="color: #000000">(</span><span style="color: #795E26">input</span><span style="color: #000000">(</span><span style="color: #A31515">"Enter your monthly contribution ($): "</span><span style="color: #000000">))</span></span>
+<span class="line"><span style="color: #000000">annual_return_rate = </span><span style="color: #267F99">float</span><span style="color: #000000">(</span><span style="color: #795E26">input</span><span style="color: #000000">(</span><span style="color: #A31515">"Enter expected annual return rate (%): "</span><span style="color: #000000">))</span></span>
+<span class="line"><span style="color: #000000">years = </span><span style="color: #267F99">int</span><span style="color: #000000">(</span><span style="color: #795E26">input</span><span style="color: #000000">(</span><span style="color: #A31515">"Enter the number of years you plan to invest: "</span><span style="color: #000000">))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate the investment growth</span></span>
+<span class="line"><span style="color: #000000">investment_data = calculate_investment_growth(initial_investment, monthly_contribution, annual_return_rate, years)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Display the investment data</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"</span><span style="color: #EE0000">\n</span><span style="color: #A31515">Investment Growth Data:"</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(investment_data.tail())  </span><span style="color: #008000"># Display the last few entries for review</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Plot the investment growth over time</span></span>
+<span class="line"><span style="color: #000000">plot_investment_growth(investment_data)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Explanation of the Code</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong><code>calculate_investment_growth</code></strong>: This function calculates the investment growth over time based on the formula mentioned earlier. It loops through each month and updates the investment balance by compounding the returns and adding the monthly contributions.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong><code>plot_investment_growth</code></strong>: Once the investment growth data is calculated, this function uses <code>matplotlib</code> to plot a graph showing the growth over time. It gives users a visual representation of how their investments will perform over the years.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>User Inputs</strong>: The user is asked to input:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Initial investment amount.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Monthly contribution.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Annual return rate.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Number of years they plan to invest.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Displaying Data</strong>: After the calculations, the program displays the final investment balance for the given time period and shows the plot of the investment growth.</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Example Output</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>After running the code, you might see the following output for a user’s inputs:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Initial investment: $5,000</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Monthly contribution: $500</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Annual return rate: 7%</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Investment duration: 20 years</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["SW52ZXN0bWVudCBHcm93dGggRGF0YTo="]],[["ICAgICAgICBNb250aCAgICAgICAgQmFsYW5jZQ=="]],[["MjM5ICAyNDAuMCAgMTk5MTc5LjA1MzM1Nw=="]],[["MjQwICAyNDEuMCAgMjAxMDcxLjYzNTQyOA=="]]]} --></p>
+<pre class="wp-block-code"><code>Investment Growth Data:
+        Month        Balance
+239  240.0  199179.053357
+240  241.0  201071.635428</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The plot will show a line graph that indicates how the balance grows over the 20 years.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this post, we've built a simple yet powerful tool for tracking and forecasting investment progress. The Python script allows users to input their initial investment, monthly contributions, and expected return rate, then it calculates the future value of their investments and plots the growth over time. By using Python’s data analysis and visualization libraries, we've created a tool that helps users make informed decisions about their financial goals and investments.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This planner can be further enhanced by adding features like:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Customizing investment types (e.g., stocks, bonds).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Accounting for inflation.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Adding more advanced financial formulas for better accuracy.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>In conclusion, creating a planner that helps users set and track investment goals, forecasting progress based on investment returns and regular contributions, can be a game-changer for the fintech industry. With the help of Python, this concept can be brought to life, making it easier for individuals to achieve their financial goals and ultimately leading to a more financially stable society. The possibilities for using Python in fintech are endless, and its potential for future applications is undoubtedly exciting. So, let's embrace the power of Python and revolutionize the world of finance.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

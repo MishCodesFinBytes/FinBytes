@@ -1,0 +1,266 @@
+---
+layout: post
+title: py36 to py311 migration readiness checker tool
+date: 2026-01-01 13:14:57.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Python migration &amp; tooling
+tags:
+- automation
+- migration
+- Python 3.11
+- tooling
+meta:
+  _last_editor_used_jetpack: block-editor
+  firehose_sent: '1770470244'
+  _wp_old_date: '2026-01-25'
+  _publicize_job_id: '111067412498'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 13:16:03'
+  timeline_notification: '1770470245'
+  _thumbnail_id: '1341'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Travel","Poetry","Photography","Music","WordPress"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/01/01/py36-to-py311-checker-tool/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph --><html><body></p>
+<p>“Python 3.11 Readiness Analyzer”  - tool that scans .py files for all the common Python 3.6 → 3.11 pitfalls, produces a readable report, and can be easily integrated into CI.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here’s a <strong>production-ready version</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBweTMxMV9yZWFkaW5lc3NfYW5hbHl6ZXIucHk=","tok-comment"]],[["aW1wb3J0","tok-keyword"],["IA=="],["YXN0","tok-variableName"]],[["aW1wb3J0","tok-keyword"],["IA=="],["c3lz","tok-variableName"]],[["aW1wb3J0","tok-keyword"],["IA=="],["b3M=","tok-variableName"]],[],[["Y2xhc3M=","tok-keyword"],["IA=="],["UHkzMTFBbmFseXplcg==","tok-className"],["KA==","tok-punctuation"],["YXN0","tok-variableName"],["Lg==","tok-operator"],["Tm9kZVZpc2l0b3I=","tok-propertyName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["IiIi","tok-string"]],[["ICAgIFN0YXRpYyBhbmFseXplciBmb3IgUHl0aG9uIDMuMTEgcmVhZGluZXNzLg==","tok-string"]],[["ICAgIERldGVjdHMgY29tbW9uIG1pZ3JhdGlvbiBpc3N1ZXMgZnJvbSAzLjYg4oaSIDMuMTEu","tok-string"]],[["ICAgICIiIg==","tok-string"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["X19pbml0X18=","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZmlsZW5hbWU=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["ZmlsZW5hbWU=","tok-propertyName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZmlsZW5hbWU=","tok-variableName"]],[["ICAgICAgICA="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["aXNzdWVz","tok-propertyName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Ww==","tok-punctuation"],["XQ==","tok-punctuation"]],[],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["IyBDb21wYXJpc29uIENoZWNrcw==","tok-comment"]],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dmlzaXRfQ29tcGFyZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["IyBVbnNhZmUgTm9uZSBjb21wYXJpc29uczogPCwgPiwgPD0sID49","tok-comment"]],[["ICAgICAgICA="],["Zm9y","tok-keyword"],["IA=="],["b3A=","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["b3Bz","tok-propertyName"],["Og=="]],[["ICAgICAgICAgICAg"],["aWY=","tok-keyword"],["IA=="],["aXNpbnN0YW5jZQ==","tok-variableName"],["KA==","tok-punctuation"],["b3A=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["KA==","tok-punctuation"],["YXN0","tok-variableName"],["Lg==","tok-operator"],["THQ=","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["YXN0","tok-variableName"],["Lg==","tok-operator"],["R3Q=","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["YXN0","tok-variableName"],["Lg==","tok-operator"],["THRF","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["YXN0","tok-variableName"],["Lg==","tok-operator"],["R3RF","tok-propertyName"],["KQ==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAgICAgIA=="],["Zm9y","tok-keyword"],["IA=="],["Y29tcA==","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["Ww==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["bGVmdA==","tok-propertyName"],["XQ==","tok-punctuation"],["IA=="],["Kw==","tok-operator"],["IA=="],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["Y29tcGFyYXRvcnM=","tok-propertyName"],["Og=="]],[["ICAgICAgICAgICAgICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["aXNpbnN0YW5jZQ==","tok-variableName"],["KA==","tok-punctuation"],["Y29tcA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["YXN0","tok-variableName"],["Lg==","tok-operator"],["Q29uc3RhbnQ=","tok-propertyName"],["KQ==","tok-punctuation"],["IA=="],["YW5k","tok-keyword"],["IA=="],["Y29tcA==","tok-variableName"],["Lg==","tok-operator"],["dmFsdWU=","tok-propertyName"],["IA=="],["aXM=","tok-keyword"],["IA=="],["Tm9uZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICAgICAgICAgICAgICAgICAg"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["aXNzdWVz","tok-propertyName"],["Lg==","tok-operator"],["YXBwZW5k","tok-propertyName"],["KA==","tok-punctuation"]],[["ICAgICAgICAgICAgICAgICAgICAgICAgICAgIA=="],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["ZmlsZW5hbWU=","tok-propertyName"],["fQ==","tok-punctuation"],["Og==","tok-string2"],["ew==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["bGluZW5v","tok-propertyName"],["fQ==","tok-punctuation"],["IC0gdW5zYWZlIE5vbmUgY29tcGFyaXNvbiB3aXRoIA==","tok-string2"],["ew==","tok-punctuation"],["YXN0","tok-variableName"],["Lg==","tok-operator"],["ZHVtcA==","tok-propertyName"],["KA==","tok-punctuation"],["Y29tcA==","tok-variableName"],["KQ==","tok-punctuation"],["fQ==","tok-punctuation"],["Ig==","tok-string2"]],[["ICAgICAgICAgICAgICAgICAgICAgICAg"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["Z2VuZXJpY192aXNpdA==","tok-propertyName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["IyBBcml0aG1ldGljIENoZWNrcw==","tok-comment"]],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dmlzaXRfQmluT3A=","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["IyBIZXVyaXN0aWM6IGRhdGUvZGF0ZXRpbWUgYXJpdGhtZXRpYyBieSB2YXJpYWJsZSBuYW1lcw==","tok-comment"]],[["ICAgICAgICA="],["bGVmdF9uYW1l","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Z2V0YXR0cg==","tok-variableName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["bGVmdA==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["J2lkJw==","tok-string"],["LA==","tok-punctuation"],["IA=="],["Tm9uZQ==","tok-keyword"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["cmlnaHRfbmFtZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Z2V0YXR0cg==","tok-variableName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["cmlnaHQ=","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["J2lkJw==","tok-string"],["LA==","tok-punctuation"],["IA=="],["Tm9uZQ==","tok-keyword"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["bGVmdF9uYW1l","tok-variableName"],["IA=="],["YW5k","tok-keyword"],["IA=="],["cmlnaHRfbmFtZQ==","tok-variableName"],["Og=="]],[["ICAgICAgICAgICAg"],["aWY=","tok-keyword"],["IA=="],["J2RhdGUn","tok-string"],["IA=="],["aW4=","tok-keyword"],["IA=="],["bGVmdF9uYW1l","tok-variableName"],["Lg==","tok-operator"],["bG93ZXI=","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["IA=="],["b3I=","tok-keyword"],["IA=="],["J2RhdGUn","tok-string"],["IA=="],["aW4=","tok-keyword"],["IA=="],["cmlnaHRfbmFtZQ==","tok-variableName"],["Lg==","tok-operator"],["bG93ZXI=","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAgICAgIA=="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["aXNzdWVz","tok-propertyName"],["Lg==","tok-operator"],["YXBwZW5k","tok-propertyName"],["KA==","tok-punctuation"]],[["ICAgICAgICAgICAgICAgICAgICA="],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["ZmlsZW5hbWU=","tok-propertyName"],["fQ==","tok-punctuation"],["Og==","tok-string2"],["ew==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["bGluZW5v","tok-propertyName"],["fQ==","tok-punctuation"],["IC0gY2hlY2sgZGF0ZS9kYXRldGltZSBhcml0aG1ldGljIg==","tok-string2"]],[["ICAgICAgICAgICAgICAgIA=="],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["Z2VuZXJpY192aXNpdA==","tok-propertyName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["IyBGdW5jdGlvbiBDYWxscw==","tok-comment"]],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dmlzaXRfQ2FsbA==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["IyBEZXRlY3QgcHJpbnQsIGlucHV0LCBvcGVuIGZvciBwb3RlbnRpYWwgc3RyaW5nL2J5dGVzIGlzc3VlcyAob3B0aW9uYWwp","tok-comment"]],[["ICAgICAgICA="],["ZnVuY19uYW1l","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Jyc=","tok-string"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["aXNpbnN0YW5jZQ==","tok-variableName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["ZnVuYw==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["YXN0","tok-variableName"],["Lg==","tok-operator"],["TmFtZQ==","tok-propertyName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAg"],["ZnVuY19uYW1l","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["ZnVuYw==","tok-propertyName"],["Lg==","tok-operator"],["aWQ=","tok-propertyName"]],[["ICAgICAgICA="],["ZWxpZg==","tok-keyword"],["IA=="],["aXNpbnN0YW5jZQ==","tok-variableName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["ZnVuYw==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["YXN0","tok-variableName"],["Lg==","tok-operator"],["QXR0cmlidXRl","tok-propertyName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAg"],["ZnVuY19uYW1l","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["ZnVuYw==","tok-propertyName"],["Lg==","tok-operator"],["YXR0cg==","tok-propertyName"]],[["ICAgICAgICA="],["IyBQb3RlbnRpYWwgbGVnYWN5IGZ1bmN0aW9uIHVzZXM=","tok-comment"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["ZnVuY19uYW1l","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["ew==","tok-punctuation"],["InByaW50Ig==","tok-string"],["LA==","tok-punctuation"],["IA=="],["ImlucHV0Ig==","tok-string"],["LA==","tok-punctuation"],["IA=="],["Im9wZW4i","tok-string"],["fQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAg"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["aXNzdWVz","tok-propertyName"],["Lg==","tok-operator"],["YXBwZW5k","tok-propertyName"],["KA==","tok-punctuation"]],[["ICAgICAgICAgICAgICAgIA=="],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["ZmlsZW5hbWU=","tok-propertyName"],["fQ==","tok-punctuation"],["Og==","tok-string2"],["ew==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["bGluZW5v","tok-propertyName"],["fQ==","tok-punctuation"],["IC0gY2hlY2sgdXNhZ2Ugb2Yg","tok-string2"],["ew==","tok-punctuation"],["ZnVuY19uYW1l","tok-variableName"],["fQ==","tok-punctuation"],["IGZvciBzdHJpbmcvYnl0ZXMgc2FmZXR5Ig==","tok-string2"]],[["ICAgICAgICAgICAg"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["Z2VuZXJpY192aXNpdA==","tok-propertyName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["IyBBdHRyaWJ1dGUgLyBJbmRleCBjaGVja3M=","tok-comment"]],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dmlzaXRfQXR0cmlidXRl","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["IyBQb3RlbnRpYWwgdHJ1dGhpbmVzcyAvIHBhbmRhcyBpc3N1ZXM=","tok-comment"]],[["ICAgICAgICA="],["YXR0cl9uYW1l","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Z2V0YXR0cg==","tok-variableName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["J2F0dHIn","tok-string"],["LA==","tok-punctuation"],["IA=="],["Jyc=","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["YXR0cl9uYW1l","tok-variableName"],["IA=="],["PT0=","tok-operator"],["IA=="],["J2R0Jw==","tok-string"],["Og=="]],[["ICAgICAgICAgICAg"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["aXNzdWVz","tok-propertyName"],["Lg==","tok-operator"],["YXBwZW5k","tok-propertyName"],["KA==","tok-punctuation"]],[["ICAgICAgICAgICAgICAgIA=="],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["ZmlsZW5hbWU=","tok-propertyName"],["fQ==","tok-punctuation"],["Og==","tok-string2"],["ew==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["bGluZW5v","tok-propertyName"],["fQ==","tok-punctuation"],["IC0gY2hlY2sgcGFuZGFzIC5kdCBhY2Nlc3NvcnM7IGVuc3VyZSBkdHlwZSBpcyBkYXRldGltZSI=","tok-string2"]],[["ICAgICAgICAgICAg"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["Z2VuZXJpY192aXNpdA==","tok-propertyName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dmlzaXRfTmFtZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["IyBEZXRlY3QgYW1iaWd1b3VzIHRydXRoaW5lc3MgZm9yIGNvbW1vbiBwYXR0ZXJucw==","tok-comment"]],[["ICAgICAgICA="],["IyBTaW1wbGUgaGV1cmlzdGljOiB2YXJpYWJsZSBuYW1lcyBsaWtlIGRmLCBzZXJpZXMsIGFycmF5","tok-comment"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["aWQ=","tok-propertyName"],["Lg==","tok-operator"],["bG93ZXI=","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["IA=="],["aW4=","tok-keyword"],["IA=="],["ew==","tok-punctuation"],["ImRmIg==","tok-string"],["LA==","tok-punctuation"],["IA=="],["InNlcmllcyI=","tok-string"],["LA==","tok-punctuation"],["IA=="],["ImFycmF5Ig==","tok-string"],["LA==","tok-punctuation"],["IA=="],["ImRhdGEi","tok-string"],["fQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAg"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["aXNzdWVz","tok-propertyName"],["Lg==","tok-operator"],["YXBwZW5k","tok-propertyName"],["KA==","tok-punctuation"]],[["ICAgICAgICAgICAgICAgIA=="],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["ZmlsZW5hbWU=","tok-propertyName"],["fQ==","tok-punctuation"],["Og==","tok-string2"],["ew==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["bGluZW5v","tok-propertyName"],["fQ==","tok-punctuation"],["IC0gcG9zc2libGUgYW1iaWd1b3VzIHRydXRoaW5lc3M7IGF2b2lkIGlmIA==","tok-string2"],["ew==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["Lg==","tok-operator"],["aWQ=","tok-propertyName"],["fQ==","tok-punctuation"],["OiI=","tok-string2"]],[["ICAgICAgICAgICAg"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c2VsZg==","tok-variableName"],["Lg==","tok-operator"],["Z2VuZXJpY192aXNpdA==","tok-propertyName"],["KA==","tok-punctuation"],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["IyBDb21wYXJpc29uIG9mIHN0cmluZ3Mgd2l0aCBpcw==","tok-comment"]],[["ICAgIA=="],["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["dmlzaXRfQ29tcGFyZVN0cmluZ0lz","tok-variableName tok-definition"],["KA==","tok-punctuation"],["c2VsZg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["bm9kZQ==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["IyBOb3QgZnVsbHkgaW1wbGVtZW50ZWQsIGNvdWxkIGFkZCBhc3QgYW5hbHlzaXMgZm9yICJpcyIgb24gc3RyaW5ncw==","tok-comment"]],[["ICAgICAgICA="],["cGFzcw==","tok-keyword"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["IyBBbmFseXplIGEgc2luZ2xlIGZpbGU=","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ZGVm","tok-keyword"],["IA=="],["YW5hbHl6ZV9maWxl","tok-variableName tok-definition"],["KA==","tok-punctuation"],["ZmlsZXBhdGg=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["d2l0aA==","tok-keyword"],["IA=="],["b3Blbg==","tok-variableName"],["KA==","tok-punctuation"],["ZmlsZXBhdGg=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["InIi","tok-string"],["LA==","tok-punctuation"],["IA=="],["ZW5jb2Rpbmc=","tok-variableName"],["PQ==","tok-operator"],["InV0Zi04Ig==","tok-string"],["KQ==","tok-punctuation"],["IA=="],["YXM=","tok-keyword"],["IA=="],["Zg==","tok-variableName"],["Og=="]],[["ICAgICAgICA="],["c291cmNl","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Zg==","tok-variableName"],["Lg==","tok-operator"],["cmVhZA==","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["dHJ5","tok-keyword"],["Og=="]],[["ICAgICAgICA="],["dHJlZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["YXN0","tok-variableName"],["Lg==","tok-operator"],["cGFyc2U=","tok-propertyName"],["KA==","tok-punctuation"],["c291cmNl","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZmlsZW5hbWU=","tok-variableName"],["PQ==","tok-operator"],["ZmlsZXBhdGg=","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["ZXhjZXB0","tok-keyword"],["IA=="],["RXhjZXB0aW9u","tok-variableName"],["IA=="],["YXM=","tok-keyword"],["IA=="],["ZQ==","tok-variableName"],["Og=="]],[["ICAgICAgICA="],["cmV0dXJu","tok-keyword"],["IA=="],["Ww==","tok-punctuation"],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["ZmlsZXBhdGg=","tok-variableName"],["fQ==","tok-punctuation"],["IC0gcGFyc2UgZXJyb3I6IA==","tok-string2"],["ew==","tok-punctuation"],["ZQ==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["XQ==","tok-punctuation"]],[],[["ICAgIA=="],["YW5hbHl6ZXI=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["UHkzMTFBbmFseXplcg==","tok-variableName"],["KA==","tok-punctuation"],["ZmlsZXBhdGg=","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["YW5hbHl6ZXI=","tok-variableName"],["Lg==","tok-operator"],["dmlzaXQ=","tok-propertyName"],["KA==","tok-punctuation"],["dHJlZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["YW5hbHl6ZXI=","tok-variableName"],["Lg==","tok-operator"],["aXNzdWVz","tok-propertyName"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["IyBBbmFseXplIG11bHRpcGxlIGZpbGVzIC8gZGlyZWN0b3JpZXM=","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["ZGVm","tok-keyword"],["IA=="],["YW5hbHl6ZV9wYXRo","tok-variableName tok-definition"],["KA==","tok-punctuation"],["cGF0aA==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["YWxsX2lzc3Vlcw==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Ww==","tok-punctuation"],["XQ==","tok-punctuation"]],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["b3M=","tok-variableName"],["Lg==","tok-operator"],["cGF0aA==","tok-propertyName"],["Lg==","tok-operator"],["aXNmaWxl","tok-propertyName"],["KA==","tok-punctuation"],["cGF0aA==","tok-variableName"],["KQ==","tok-punctuation"],["IA=="],["YW5k","tok-keyword"],["IA=="],["cGF0aA==","tok-variableName"],["Lg==","tok-operator"],["ZW5kc3dpdGg=","tok-propertyName"],["KA==","tok-punctuation"],["Ii5weSI=","tok-string"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["YWxsX2lzc3Vlcw==","tok-variableName"],["Lg==","tok-operator"],["ZXh0ZW5k","tok-propertyName"],["KA==","tok-punctuation"],["YW5hbHl6ZV9maWxl","tok-variableName"],["KA==","tok-punctuation"],["cGF0aA==","tok-variableName"],["KQ==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["ZWxpZg==","tok-keyword"],["IA=="],["b3M=","tok-variableName"],["Lg==","tok-operator"],["cGF0aA==","tok-propertyName"],["Lg==","tok-operator"],["aXNkaXI=","tok-propertyName"],["KA==","tok-punctuation"],["cGF0aA==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["Zm9y","tok-keyword"],["IA=="],["cm9vdA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["Xw==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZmlsZXM=","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["b3M=","tok-variableName"],["Lg==","tok-operator"],["d2Fsaw==","tok-propertyName"],["KA==","tok-punctuation"],["cGF0aA==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAg"],["Zm9y","tok-keyword"],["IA=="],["ZmlsZQ==","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["ZmlsZXM=","tok-variableName"],["Og=="]],[["ICAgICAgICAgICAgICAgIA=="],["aWY=","tok-keyword"],["IA=="],["ZmlsZQ==","tok-variableName"],["Lg==","tok-operator"],["ZW5kc3dpdGg=","tok-propertyName"],["KA==","tok-punctuation"],["Ii5weSI=","tok-string"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAgICAgICAgICA="],["ZnVsbF9wYXRo","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["b3M=","tok-variableName"],["Lg==","tok-operator"],["cGF0aA==","tok-propertyName"],["Lg==","tok-operator"],["am9pbg==","tok-propertyName"],["KA==","tok-punctuation"],["cm9vdA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZmlsZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAgICAgICAgICA="],["YWxsX2lzc3Vlcw==","tok-variableName"],["Lg==","tok-operator"],["ZXh0ZW5k","tok-propertyName"],["KA==","tok-punctuation"],["YW5hbHl6ZV9maWxl","tok-variableName"],["KA==","tok-punctuation"],["ZnVsbF9wYXRo","tok-variableName"],["KQ==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["YWxsX2lzc3Vlcw==","tok-variableName"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["IyBNYWluIENMSQ==","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ==","tok-comment"]],[["aWY=","tok-keyword"],["IA=="],["X19uYW1lX18=","tok-variableName"],["IA=="],["PT0=","tok-operator"],["IA=="],["Il9fbWFpbl9fIg==","tok-string"],["Og=="]],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["bGVu","tok-variableName"],["KA==","tok-punctuation"],["c3lz","tok-variableName"],["Lg==","tok-operator"],["YXJndg==","tok-propertyName"],["KQ==","tok-punctuation"],["IA=="],["PA==","tok-operator"],["IA=="],["Mg==","tok-number"],["Og=="]],[["ICAgICAgICA="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["IlVzYWdlOiBweXRob24gcHkzMTFfcmVhZGluZXNzX2FuYWx5emVyLnB5IDxmaWxlX29yX2Rpcj4i","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c3lz","tok-variableName"],["Lg==","tok-operator"],["ZXhpdA==","tok-propertyName"],["KA==","tok-punctuation"],["MQ==","tok-number"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["cGF0aA==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["c3lz","tok-variableName"],["Lg==","tok-operator"],["YXJndg==","tok-propertyName"],["Ww==","tok-punctuation"],["MQ==","tok-number"],["XQ==","tok-punctuation"]],[["ICAgIA=="],["aXNzdWVz","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["YW5hbHl6ZV9wYXRo","tok-variableName"],["KA==","tok-punctuation"],["cGF0aA==","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["aXNzdWVz","tok-variableName"],["Og=="]],[["ICAgICAgICA="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["ZiJQeXRob24gMy4xMSByZWFkaW5lc3MgaXNzdWVzIGZvdW5kICg=","tok-string2"],["ew==","tok-punctuation"],["bGVu","tok-variableName"],["KA==","tok-punctuation"],["aXNzdWVz","tok-variableName"],["KQ==","tok-punctuation"],["fQ==","tok-punctuation"],["KToi","tok-string2"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["Zm9y","tok-keyword"],["IA=="],["aXNzdWU=","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["aXNzdWVz","tok-variableName"],["Og=="]],[["ICAgICAgICAgICAg"],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["IiAgLSI=","tok-string"],["LA==","tok-punctuation"],["IA=="],["aXNzdWU=","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c3lz","tok-variableName"],["Lg==","tok-operator"],["ZXhpdA==","tok-propertyName"],["KA==","tok-punctuation"],["MQ==","tok-number"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["ZWxzZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICA="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["ZiJObyBvYnZpb3VzIFB5dGhvbiAzLjExIGlzc3VlcyBkZXRlY3RlZCBpbiA=","tok-string2"],["ew==","tok-punctuation"],["cGF0aA==","tok-variableName"],["fQ==","tok-punctuation"],["IChzdGF0aWMgY2hlY2spLiI=","tok-string2"],["KQ==","tok-punctuation"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code># py311_readiness_analyzer.py
+import ast
+import sys
+import os
+
+class Py311Analyzer(ast.NodeVisitor):
+    """
+    Static analyzer for Python 3.11 readiness.
+    Detects common migration issues from 3.6 → 3.11.
+    """
+    def __init__(self, filename):
+        self.filename = filename
+        self.issues = []
+
+    # -----------------------
+    # Comparison Checks
+    # -----------------------
+    def visit_Compare(self, node):
+        # Unsafe None comparisons: &lt;, &gt;, &lt;=, &gt;=
+        for op in node.ops:
+            if isinstance(op, (ast.Lt, ast.Gt, ast.LtE, ast.GtE)):
+                for comp in [node.left] + node.comparators:
+                    if isinstance(comp, ast.Constant) and comp.value is None:
+                        self.issues.append(
+                            f"{self.filename}:{node.lineno} - unsafe None comparison with {ast.dump(comp)}"
+                        )
+        self.generic_visit(node)
+
+    # -----------------------
+    # Arithmetic Checks
+    # -----------------------
+    def visit_BinOp(self, node):
+        # Heuristic: date/datetime arithmetic by variable names
+        left_name = getattr(node.left, 'id', None)
+        right_name = getattr(node.right, 'id', None)
+        if left_name and right_name:
+            if 'date' in left_name.lower() or 'date' in right_name.lower():
+                self.issues.append(
+                    f"{self.filename}:{node.lineno} - check date/datetime arithmetic"
+                )
+        self.generic_visit(node)
+
+    # -----------------------
+    # Function Calls
+    # -----------------------
+    def visit_Call(self, node):
+        # Detect print, input, open for potential string/bytes issues (optional)
+        func_name = ''
+        if isinstance(node.func, ast.Name):
+            func_name = node.func.id
+        elif isinstance(node.func, ast.Attribute):
+            func_name = node.func.attr
+        # Potential legacy function uses
+        if func_name in {"print", "input", "open"}:
+            self.issues.append(
+                f"{self.filename}:{node.lineno} - check usage of {func_name} for string/bytes safety"
+            )
+        self.generic_visit(node)
+
+    # -----------------------
+    # Attribute / Index checks
+    # -----------------------
+    def visit_Attribute(self, node):
+        # Potential truthiness / pandas issues
+        attr_name = getattr(node, 'attr', '')
+        if attr_name == 'dt':
+            self.issues.append(
+                f"{self.filename}:{node.lineno} - check pandas .dt accessors; ensure dtype is datetime"
+            )
+        self.generic_visit(node)
+
+    def visit_Name(self, node):
+        # Detect ambiguous truthiness for common patterns
+        # Simple heuristic: variable names like df, series, array
+        if node.id.lower() in {"df", "series", "array", "data"}:
+            self.issues.append(
+                f"{self.filename}:{node.lineno} - possible ambiguous truthiness; avoid if {node.id}:"
+            )
+        self.generic_visit(node)
+
+    # -----------------------
+    # Comparison of strings with is
+    # -----------------------
+    def visit_CompareStringIs(self, node):
+        # Not fully implemented, could add ast analysis for "is" on strings
+        pass
+
+# -----------------------
+# Analyze a single file
+# -----------------------
+def analyze_file(filepath):
+    with open(filepath, "r", encoding="utf-8") as f:
+        source = f.read()
+    try:
+        tree = ast.parse(source, filename=filepath)
+    except Exception as e:
+        return [f"{filepath} - parse error: {e}"]
+
+    analyzer = Py311Analyzer(filepath)
+    analyzer.visit(tree)
+    return analyzer.issues
+
+# -----------------------
+# Analyze multiple files / directories
+# -----------------------
+def analyze_path(path):
+    all_issues = []
+    if os.path.isfile(path) and path.endswith(".py"):
+        all_issues.extend(analyze_file(path))
+    elif os.path.isdir(path):
+        for root, _, files in os.walk(path):
+            for file in files:
+                if file.endswith(".py"):
+                    full_path = os.path.join(root, file)
+                    all_issues.extend(analyze_file(full_path))
+    return all_issues
+
+# -----------------------
+# Main CLI
+# -----------------------
+if __name__ == "__main__":
+    if len(sys.argv) &lt; 2:
+        print("Usage: python py311_readiness_analyzer.py &lt;file_or_dir&gt;")
+        sys.exit(1)
+
+    path = sys.argv[1]
+    issues = analyze_path(path)
+
+    if issues:
+        print(f"Python 3.11 readiness issues found ({len(issues)}):")
+        for issue in issues:
+            print("  -", issue)
+        sys.exit(1)
+    else:
+        print(f"No obvious Python 3.11 issues detected in {path} (static check).")
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">✅ <strong>What this full analyzer detects</strong><br />
+</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Unsafe <code>None</code> comparisons (<code>&lt;</code>, <code>&gt;</code>, etc.)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Heuristic detection of <strong>date vs datetime arithmetic</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Pandas <code>.dt</code> accessor usage without explicit datetime conversion</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Ambiguous truthiness on common data variables (<code>df</code>, <code>series</code>, <code>array</code>)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Use of <code>print</code>, <code>input</code>, or <code>open</code> that might trigger <strong>string/bytes issues</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Can be extended for:<!-- wp:list -->
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>is</code> vs <code>==</code> for strings</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Exact exception message assertions in tests</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Deprecated module/function usage</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Usage</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBBbmFseXplIGEgc2luZ2xlIGZpbGU=","tok-comment"]],[["cHl0aG9uIHB5MzExX3JlYWRpbmVzc19hbmFseXplci5weSBteV9zY3JpcHQucHk="]],[],[["IyBBbmFseXplIGEgd2hvbGUgcHJvamVjdA==","tok-comment"]],[["cHl0aG9uIHB5MzExX3JlYWRpbmVzc19hbmFseXplci5weSAuL215X3Byb2plY3Qv"]],[],[]],"language":"Shell","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code># Analyze a single file
+python py311_readiness_analyzer.py my_script.py
+
+# Analyze a whole project
+python py311_readiness_analyzer.py ./my_project/
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example Output:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UHl0aG9uIA=="],["Mw==","tok-number"],["LjExIHJlYWRpbmVzcyBpc3N1ZXMgZm91bmQgKDUpOg=="]],[["ICA="],["LQ==","tok-propertyName"],["IG15X3NjcmlwdC5weTo0MiA="],["LQ==","tok-propertyName"],["IHVuc2FmZSBOb25lIGNvbXBhcmlzb24gd2l0aCBDb25zdGFudA=="],["KHZhbHVl","tok-variableName tok-definition"],["PQ==","tok-operator"],["Tm9uZSk="]],[["ICA="],["LQ==","tok-propertyName"],["IG15X3NjcmlwdC5weToxMDgg"],["LQ==","tok-propertyName"],["IGNoZWNrIGRhdGUvZGF0ZXRpbWUgYXJpdGhtZXRpYw=="]],[["ICA="],["LQ==","tok-propertyName"],["IG15X3NjcmlwdC5weTo1MCA="],["LQ==","tok-propertyName"],["IHBvc3NpYmxlIGFtYmlndW91cyB0cnV0aGluZXNzOyBhdm9pZCA="],["aWY=","tok-keyword"],["IGRmOg=="]],[["ICA="],["LQ==","tok-propertyName"],["IG15X3NjcmlwdC5weToyMSA="],["LQ==","tok-propertyName"],["IGNoZWNrIHBhbmRhcyAuZHQgYWNjZXNzb3JzOyBlbnN1cmUgZHR5cGUgaXMgZGF0ZXRpbWU="]],[["ICA="],["LQ==","tok-propertyName"],["IG15X3NjcmlwdC5weTo3NyA="],["LQ==","tok-propertyName"],["IGNoZWNrIHVzYWdlIG9mIHByaW50IA=="],["Zm9y","tok-keyword"],["IHN0cmluZy9ieXRlcyBzYWZldHk="]],[],[]],"language":"Shell","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>Python 3.11 readiness issues found (5):
+  - my_script.py:42 - unsafe None comparison with Constant(value=None)
+  - my_script.py:108 - check date/datetime arithmetic
+  - my_script.py:50 - possible ambiguous truthiness; avoid if df:
+  - my_script.py:21 - check pandas .dt accessors; ensure dtype is datetime
+  - my_script.py:77 - check usage of print for string/bytes safety
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

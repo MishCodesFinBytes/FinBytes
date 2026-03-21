@@ -1,0 +1,358 @@
+---
+layout: post
+title: 'Mastering Python Patch Targets: Top-Level Functions, Instance Methods, and
+  Static Methods'
+date: 2025-11-14 13:03:52.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- advanced
+- mocking
+- patching
+- pytest
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Journalism","Photography","Research","History","Search"]'
+  _wp_old_date: '2026-02-12'
+  _publicize_job_id: '111194998071'
+  firehose_sent: '1770901531'
+  timeline_notification: '1770901531'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-12 13:05:01'
+  _publicize_shares: a:0:{}
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/11/14/mastering-python-patch-targets-top-level-functions-instance-methods-and-static-methods/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph --><html><body></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph {"fontSize":"x-small"} --></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links">
+<!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></p>
+<p><!-- wp:social-link {"url":"test_samples","service":"github"} /-->
+</ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph {"fontSize":"x-small"} --></p>
+<p class="has-x-small-font-size">
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Introduction</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python’s <code>unittest.mock.patch</code> is a powerful tool for testing. But when multiple functions or methods share the same name—across classes, static methods, or even top-level functions—developers often struggle with patch targets.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This post will show <strong>exactly how to patch each type of function/method</strong>, explain <strong>why each target works</strong>, and provide <strong>fully runnable examples</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>By the end, you’ll never wonder whether to patch <code>helpers.func</code> or <code>service.Class.func</code> again.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1️⃣ Setup: Two Classes + Top-Level Function + Static Method</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><code>service.py</code></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBUb3AtbGV2ZWwgZnVuY3Rpb24="]],[["ZGVmIGNvbXB1dGUoeCk6"]],[["ICAgIHJldHVybiB4ICogMg=="]],[[""]],[["IyBGaXJzdCBjbGFzcw=="]],[["Y2xhc3MgQ2FsY3VsYXRvckE6"]],[["ICAgIGRlZiBjb21wdXRlKHNlbGYsIHgpOg=="]],[["ICAgICAgICByZXR1cm4geCArIDE="]],[[""]],[["ICAgIEBzdGF0aWNtZXRob2Q="]],[["ICAgIGRlZiBjb21wdXRlX3N0YXRpYyh4KTo="]],[["ICAgICAgICByZXR1cm4geCAqIDEw"]],[[""]],[["ICAgIEBjbGFzc21ldGhvZA=="]],[["ICAgIGRlZiBjb21wdXRlX2NsYXNzKGNscywgeCk6"]],[["ICAgICAgICByZXR1cm4geCAqIDEwMA=="]],[[""]],[["IyBTZWNvbmQgY2xhc3M="]],[["Y2xhc3MgQ2FsY3VsYXRvckI6"]],[["ICAgIGRlZiBjb21wdXRlKHNlbGYsIHgpOg=="]],[["ICAgICAgICByZXR1cm4geCArIDEw"]],[[""]],[[""]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code># Top-level function
+def compute(x):
+    return x * 2
+
+# First class
+class CalculatorA:
+    def compute(self, x):
+        return x + 1
+
+    @staticmethod
+    def compute_static(x):
+        return x * 10
+
+    @classmethod
+    def compute_class(cls, x):
+        return x * 100
+
+# Second class
+class CalculatorB:
+    def compute(self, x):
+        return x + 10
+
+
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Summary of entities to patch:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Entity</th>
+<th>Type</th>
+<th>Patch Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compute()</code></td>
+<td>top-level function</td>
+<td><code>service.compute</code></td>
+</tr>
+<tr>
+<td><code>CalculatorA.compute()</code></td>
+<td>instance method</td>
+<td><code>service.CalculatorA.compute</code></td>
+</tr>
+<tr>
+<td><code>CalculatorA.compute_static()</code></td>
+<td>static method</td>
+<td><code>service.CalculatorA.compute_static</code></td>
+</tr>
+<tr>
+<td><code>CalculatorA.compute_class()</code></td>
+<td>class method</td>
+<td><code>service.CalculatorA.compute_class</code></td>
+</tr>
+<tr>
+<td><code>CalculatorB.compute()</code></td>
+<td>instance method</td>
+<td><code>service.CalculatorB.compute</code></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2️⃣ Patch Examples: <code>pytest</code> Tests</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><code>test_service.py</code></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IHB5dGVzdA=="]],[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBwYXRjaA=="]],[["ZnJvbSBzZXJ2aWNlIGltcG9ydCBjb21wdXRlLCBDYWxjdWxhdG9yQSwgQ2FsY3VsYXRvckI="]],[[""]],[["IyBQYXRjaCB0b3AtbGV2ZWwgZnVuY3Rpb24="]],[["QHBhdGNoKCJzZXJ2aWNlLmNvbXB1dGUiKQ=="]],[["ZGVmIHRlc3RfcGF0Y2hfdG9wKG1vY2tfY29tcHV0ZSk6"]],[["ICAgIG1vY2tfY29tcHV0ZS5yZXR1cm5fdmFsdWUgPSA5OQ=="]],[["ICAgIGFzc2VydCBjb21wdXRlKDUpID09IDk5"]],[["ICAgICMgQ2xhc3MgbWV0aG9kcyByZW1haW4gdW5hZmZlY3RlZA=="]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQSgpLmNvbXB1dGUoNSkgPT0gNg=="]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQigpLmNvbXB1dGUoNSkgPT0gMTU="]],[[""]],[["IyBQYXRjaCBDYWxjdWxhdG9yQSBpbnN0YW5jZSBtZXRob2Q="]],[["QHBhdGNoKCJzZXJ2aWNlLkNhbGN1bGF0b3JBLmNvbXB1dGUiKQ=="]],[["ZGVmIHRlc3RfcGF0Y2hfY2FsY19hKG1vY2tfbWV0aG9kKTo="]],[["ICAgIG1vY2tfbWV0aG9kLnJldHVybl92YWx1ZSA9IDEwMA=="]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQSgpLmNvbXB1dGUoNSkgPT0gMTAw"]],[["ICAgICMgT3RoZXIgbWV0aG9kcyB1bmFmZmVjdGVk"]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQigpLmNvbXB1dGUoNSkgPT0gMTU="]],[["ICAgIGFzc2VydCBjb21wdXRlKDUpID09IDEw"]],[[""]],[["IyBQYXRjaCBDYWxjdWxhdG9yQiBpbnN0YW5jZSBtZXRob2Q="]],[["QHBhdGNoKCJzZXJ2aWNlLkNhbGN1bGF0b3JCLmNvbXB1dGUiKQ=="]],[["ZGVmIHRlc3RfcGF0Y2hfY2FsY19iKG1vY2tfbWV0aG9kKTo="]],[["ICAgIG1vY2tfbWV0aG9kLnJldHVybl92YWx1ZSA9IDIwMA=="]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQigpLmNvbXB1dGUoNSkgPT0gMjAw"]],[["ICAgICMgT3RoZXIgbWV0aG9kcyB1bmFmZmVjdGVk"]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQSgpLmNvbXB1dGUoNSkgPT0gNg=="]],[["ICAgIGFzc2VydCBjb21wdXRlKDUpID09IDEw"]],[[""]],[["IyBQYXRjaCBDYWxjdWxhdG9yQSBzdGF0aWMgbWV0aG9k"]],[["QHBhdGNoKCJzZXJ2aWNlLkNhbGN1bGF0b3JBLmNvbXB1dGVfc3RhdGljIik="]],[["ZGVmIHRlc3RfcGF0Y2hfc3RhdGljKG1vY2tfc3RhdGljKTo="]],[["ICAgIG1vY2tfc3RhdGljLnJldHVybl92YWx1ZSA9IDk5OQ=="]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQS5jb21wdXRlX3N0YXRpYyg1KSA9PSA5OTk="]],[["ICAgICMgSW5zdGFuY2UgbWV0aG9kIGFuZCB0b3AtbGV2ZWwgZnVuY3Rpb24gdW5hZmZlY3RlZA=="]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQSgpLmNvbXB1dGUoNSkgPT0gNg=="]],[["ICAgIGFzc2VydCBjb21wdXRlKDUpID09IDEw"]],[[""]],[["IyBQYXRjaCBDYWxjdWxhdG9yQSBjbGFzcyBtZXRob2Q="]],[["QHBhdGNoKCJzZXJ2aWNlLkNhbGN1bGF0b3JBLmNvbXB1dGVfY2xhc3MiKQ=="]],[["ZGVmIHRlc3RfcGF0Y2hfY2xhc3MobW9ja19jbGFzcyk6"]],[["ICAgIG1vY2tfY2xhc3MucmV0dXJuX3ZhbHVlID0gNTU1"]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQS5jb21wdXRlX2NsYXNzKDUpID09IDU1NQ=="]],[["ICAgICMgTm90aGluZyBlbHNlIGFmZmVjdGVk"]],[["ICAgIGFzc2VydCBDYWxjdWxhdG9yQSgpLmNvbXB1dGUoNSkgPT0gNg=="]],[["ICAgIGFzc2VydCBjb21wdXRlKDUpID09IDEw"]],[[""]],[[""]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import pytest
+from unittest.mock import patch
+from service import compute, CalculatorA, CalculatorB
+
+# Patch top-level function
+@patch("service.compute")
+def test_patch_top(mock_compute):
+    mock_compute.return_value = 99
+    assert compute(5) == 99
+    # Class methods remain unaffected
+    assert CalculatorA().compute(5) == 6
+    assert CalculatorB().compute(5) == 15
+
+# Patch CalculatorA instance method
+@patch("service.CalculatorA.compute")
+def test_patch_calc_a(mock_method):
+    mock_method.return_value = 100
+    assert CalculatorA().compute(5) == 100
+    # Other methods unaffected
+    assert CalculatorB().compute(5) == 15
+    assert compute(5) == 10
+
+# Patch CalculatorB instance method
+@patch("service.CalculatorB.compute")
+def test_patch_calc_b(mock_method):
+    mock_method.return_value = 200
+    assert CalculatorB().compute(5) == 200
+    # Other methods unaffected
+    assert CalculatorA().compute(5) == 6
+    assert compute(5) == 10
+
+# Patch CalculatorA static method
+@patch("service.CalculatorA.compute_static")
+def test_patch_static(mock_static):
+    mock_static.return_value = 999
+    assert CalculatorA.compute_static(5) == 999
+    # Instance method and top-level function unaffected
+    assert CalculatorA().compute(5) == 6
+    assert compute(5) == 10
+
+# Patch CalculatorA class method
+@patch("service.CalculatorA.compute_class")
+def test_patch_class(mock_class):
+    mock_class.return_value = 555
+    assert CalculatorA.compute_class(5) == 555
+    # Nothing else affected
+    assert CalculatorA().compute(5) == 6
+    assert compute(5) == 10
+
+
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3️⃣ Observations: What Each Patch Affects</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Patch Target</th>
+<th>Affects</th>
+<th>Does NOT Affect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>service.compute</code></td>
+<td>top-level function</td>
+<td>CalculatorA/B methods</td>
+</tr>
+<tr>
+<td><code>service.CalculatorA.compute</code></td>
+<td>CalculatorA instance method</td>
+<td>top-level function, CalculatorB</td>
+</tr>
+<tr>
+<td><code>service.CalculatorB.compute</code></td>
+<td>CalculatorB instance method</td>
+<td>top-level function, CalculatorA</td>
+</tr>
+<tr>
+<td><code>service.CalculatorA.compute_static</code></td>
+<td>CalculatorA static method</td>
+<td>instance methods, CalculatorB, top-level function</td>
+</tr>
+<tr>
+<td><code>service.CalculatorA.compute_class</code></td>
+<td>CalculatorA class method</td>
+<td>instance methods, CalculatorB, top-level function</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">4️⃣ Why This Works</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python resolves names at <strong>runtime</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Top-level functions</strong> → module namespace</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Instance methods</strong> → class namespace</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Static methods / Class methods</strong> → class namespace</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Multiple classes with same method name</strong> → patch only affects the class specified</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Rule of thumb:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Always patch <strong>where Python looks up the object</strong>, not where it was defined.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">5️⃣ Bonus: Patch in Action</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHJpbnQoY29tcHV0ZSg1KSkgICAgICAgICAgICAgICAgICMgMTA="]],[["cHJpbnQoQ2FsY3VsYXRvckEoKS5jb21wdXRlKDUpKSAgICMgNg=="]],[["cHJpbnQoQ2FsY3VsYXRvckIoKS5jb21wdXRlKDUpKSAgICMgMTU="]],[["cHJpbnQoQ2FsY3VsYXRvckEuY29tcHV0ZV9zdGF0aWMoNSkpICAjIDUw"]],[["cHJpbnQoQ2FsY3VsYXRvckEuY29tcHV0ZV9jbGFzcyg1KSkgICAjIDUwMA=="]],[[""]],[[""]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>print(compute(5))                 # 10
+print(CalculatorA().compute(5))   # 6
+print(CalculatorB().compute(5))   # 15
+print(CalculatorA.compute_static(5))  # 50
+print(CalculatorA.compute_class(5))   # 500
+
+
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>After patching each target, only the patched object changes.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">✅ Key Takeaways</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Top-level function:</strong> patch <code>"module.function_name"</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Instance method:</strong> patch <code>"module.ClassName.method_name"</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Static method:</strong> patch <code>"module.ClassName.method_name"</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Class method:</strong> patch <code>"module.ClassName.method_name"</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Multiple classes or overlapping names:</strong> patch is <strong>scoped per class</strong>, does not interfere with others</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is a <strong>complete reference</strong> for patch targets in Python — covers top-level functions, instance methods, static methods, class methods, and multiple classes.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

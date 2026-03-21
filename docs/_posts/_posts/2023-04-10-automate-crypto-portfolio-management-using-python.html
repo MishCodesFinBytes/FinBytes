@@ -1,0 +1,174 @@
+---
+layout: post
+title: Automate Crypto Portfolio Management Using Python
+date: 2023-04-10 14:33:24.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- automation
+- crypto
+- investing
+- portfolio
+meta:
+  reader_suggested_tags: '["Crypto","Bitcoin","Blockchain","Cryptocurrency","Finance"]'
+  _last_editor_used_jetpack: block-editor
+  _edit_last: '257720953'
+  _yoast_wpseo_primary_category: '1376'
+  _yoast_wpseo_content_score: '60'
+  _yoast_wpseo_estimated-reading-time-minutes: '4'
+  _wp_old_date: '2024-11-11'
+  _thumbnail_id: '436'
+  _wp_page_template: default
+  _import_original_post_id: '430'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:49'
+  _publicize_shares: a:0:{}
+  _publicize_job_id: '112088253336'
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/04/10/automate-crypto-portfolio-management-using-python/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/CryptoPortfolioAnalysis_APIs","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph {"style":{"elements":{"link":{"color":{"text":"var:preset|color|vivid-red"}}}},"textColor":"vivid-red","fontSize":"x-small"} --></p>
+<p class="has-vivid-red-color has-text-color has-link-color has-x-small-font-size"><strong>PS: I have attached 2 variations of code using different APIs - both require registration and API key to be accessed. So you'll have to modify the code by a bit to get it to work.</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Cryptocurrencies have taken the financial world by storm, with their decentralized nature and potential for high returns attracting investors and traders alike. As the crypto market is highly volatile, it is essential for investors to keep track of their portfolio's performance in real-time. However, manually tracking and calculating gains and losses can be a tedious and time-consuming task. This is where Python comes in, with its versatile capabilities in automating financial tasks. In this blog post, we will explore how to build a Python script that tracks the value of a cryptocurrency portfolio in real-time, displaying gains, losses, and overall performance. We will also discuss how this concept can benefit the fintech industry and its potential for future applications.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Main Content:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>To begin, we will need to have a basic understanding of the Python programming language and its libraries for data analysis and visualization. We will be using the following libraries for our script:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>1. `requests`: for making HTTP requests to cryptocurrency APIs<br><br />
+2. `pandas`: for data manipulation and analysis<br><br />
+3. `matplotlib`: for data visualization</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Step 1: Setting up the Environment</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Before we dive into coding, we need to set up our development environment. We can use any text editor or IDE for this purpose; however, we recommend using Jupyter Notebook for its interactive and user-friendly interface. We also need to install the required libraries using the `pip` command in the terminal.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Step 2: Retrieving Cryptocurrency Data</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>To track the value of our cryptocurrency portfolio, we need to fetch the current prices of the cryptocurrencies we hold. We can do this by making HTTP requests to cryptocurrency APIs, such as CoinMarketCap, using the `requests` library. Let's take an example of tracking the value of Bitcoin and Ethereum.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import requests\n\n# Bitcoin API endpoint\n\nbtc_endpoint = 'https://api.coinmarketcap.com/v1/ticker/bitcoin/'\n\n# Ethereum API endpoint\n\neth_endpoint = 'https://api.coinmarketcap.com/v1/ticker/ethereum/'\n\n# Get Bitcoin and Ethereum data\n btc_data = requests.get(btc_endpoint).json()\n eth_data = requests.get(eth_endpoint).json()","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e requests\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Bitcoin API endpoint\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ebtc_endpoint = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;https://api.coinmarketcap.com/v1/ticker/bitcoin/\u0026#039;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Ethereum API endpoint\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eeth_endpoint = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;https://api.coinmarketcap.com/v1/ticker/ethereum/\u0026#039;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Get Bitcoin and Ethereum data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e btc_data = requests.get(btc_endpoint).json()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e eth_data = requests.get(eth_endpoint).json()\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> requests</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Bitcoin API endpoint</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">btc_endpoint = </span><span style="color: #A31515">'https://api.coinmarketcap.com/v1/ticker/bitcoin/'</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Ethereum API endpoint</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">eth_endpoint = </span><span style="color: #A31515">'https://api.coinmarketcap.com/v1/ticker/ethereum/'</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Get Bitcoin and Ethereum data</span></span>
+<span class="line"><span style="color: #000000"> btc_data = requests.get(btc_endpoint).json()</span></span>
+<span class="line"><span style="color: #000000"> eth_data = requests.get(eth_endpoint).json()</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>The `requests.get()` method returns a response object, which we convert to a JSON format using the `json()` method. We can now access the required data, such as the current price, using the key-value pairs in the JSON object.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Step 3: Creating a Portfolio</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we need to create a portfolio, which will hold the cryptocurrencies we want to track and their respective quantities. We can use a dictionary for this purpose, where the keys will be the cryptocurrency names, and the values will be their quantities.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Create a portfolio\nportfolio = {'BTC': 2, 'ETH': 5, 'ADA': 1000, 'SOL': 50}\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Create a portfolio\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eportfolio = {\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;BTC\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e2\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;ETH\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e5\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;ADA\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1000\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;SOL\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e50\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e}\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Create a portfolio</span></span>
+<span class="line"><span style="color: #000000">portfolio = {</span><span style="color: #A31515">'BTC'</span><span style="color: #000000">: </span><span style="color: #098658">2</span><span style="color: #000000">, </span><span style="color: #A31515">'ETH'</span><span style="color: #000000">: </span><span style="color: #098658">5</span><span style="color: #000000">, </span><span style="color: #A31515">'ADA'</span><span style="color: #000000">: </span><span style="color: #098658">1000</span><span style="color: #000000">, </span><span style="color: #A31515">'SOL'</span><span style="color: #000000">: </span><span style="color: #098658">50</span><span style="color: #000000">}</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Step 4: Calculating Portfolio Value</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now that we have the current prices of our cryptocurrencies and their quantities, we can calculate the total value of our portfolio. We will use the `pandas` library to create a DataFrame, which will hold the data.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import pandas as pd\n\n# Create DataFrame\n\ncrypto_data = pd.DataFrame([btc_data[0], eth_data[0]])\n\n# Add a 'Quantity' column to the DataFrame\n\ncrypto_data['Quantity'] = [portfolio['BTC'], portfolio['ETH']]\n\n# Add a 'Value' column, which is the product of 'Price' and 'Quantity'\ncrypto_data['Value'] = crypto_data['price_usd'] * crypto_data['Quantity']","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Create DataFrame\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecrypto_data = pd.DataFrame([btc_data[\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e], eth_data[\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Add a \u0026#039;Quantity\u0026#039; column to the DataFrame\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecrypto_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Quantity\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = [portfolio[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;BTC\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e], portfolio[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;ETH\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Add a \u0026#039;Value\u0026#039; column, which is the product of \u0026#039;Price\u0026#039; and \u0026#039;Quantity\u0026#039;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecrypto_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Value\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = crypto_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;price_usd\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] * crypto_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Quantity\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Create DataFrame</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">crypto_data = pd.DataFrame([btc_data[</span><span style="color: #098658">0</span><span style="color: #000000">], eth_data[</span><span style="color: #098658">0</span><span style="color: #000000">]])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Add a 'Quantity' column to the DataFrame</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">crypto_data[</span><span style="color: #A31515">'Quantity'</span><span style="color: #000000">] = [portfolio[</span><span style="color: #A31515">'BTC'</span><span style="color: #000000">], portfolio[</span><span style="color: #A31515">'ETH'</span><span style="color: #000000">]]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Add a 'Value' column, which is the product of 'Price' and 'Quantity'</span></span>
+<span class="line"><span style="color: #000000">crypto_data[</span><span style="color: #A31515">'Value'</span><span style="color: #000000">] = crypto_data[</span><span style="color: #A31515">'price_usd'</span><span style="color: #000000">] * crypto_data[</span><span style="color: #A31515">'Quantity'</span><span style="color: #000000">]</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Step 5: Visualizing Portfolio Performance</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>We can now visualize the performance of our portfolio using the `matplotlib` library. Let's plot a bar chart to compare the current value of each cryptocurrency to its value at the time of purchase.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import matplotlib.pyplot as plt\n\n# Plot a bar chart\n plt.bar(crypto_data['name'], crypto_data['Value'])\n plt.xlabel('Cryptocurrency')\n plt.ylabel('Value (USD)')\n plt.title('Portfolio Performance')\n plt.show()","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e matplotlib.pyplot \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Plot a bar chart\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt.bar(crypto_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;name\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e], crypto_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Value\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt.xlabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Cryptocurrency\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt.ylabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Value (USD)\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt.title(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Portfolio Performance\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt.show()\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> matplotlib.pyplot </span><span style="color: #AF00DB">as</span><span style="color: #000000"> plt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Plot a bar chart</span></span>
+<span class="line"><span style="color: #000000"> plt.bar(crypto_data[</span><span style="color: #A31515">'name'</span><span style="color: #000000">], crypto_data[</span><span style="color: #A31515">'Value'</span><span style="color: #000000">])</span></span>
+<span class="line"><span style="color: #000000"> plt.xlabel(</span><span style="color: #A31515">'Cryptocurrency'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000"> plt.ylabel(</span><span style="color: #A31515">'Value (USD)'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000"> plt.title(</span><span style="color: #A31515">'Portfolio Performance'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000"> plt.show()</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This chart will show us the gains or losses we have incurred on each cryptocurrency. We can also add a line chart to see the overall performance of our portfolio over time.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>        name    Quantity  price_usd  Value (USD)
+0    Bitcoin         2     16650.0   33300.0
+1   Ethereum         5      1250.0    6250.0
+2      Cardano      1000     0.40      400.0
+3       Solana       50      20.0     1000.0
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>Total Portfolio Value: $40950.00</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph {"fontSize":"x-small"} --></p>
+<p class="has-x-small-font-size">
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this blog post, we have learned how to build a Python script that tracks the value of a cryptocurrency portfolio in real-time, displaying gains, losses, and overall performance. This concept can be further expanded by incorporating more cryptocurrencies, automating the script to run at regular intervals, and implementing advanced data analysis and predictive modeling techniques. With the increasing popularity and adoption of cryptocurrencies, this Python concept has significant potential in the fintech industry. It can benefit investors and traders by providing them with real-time insights into their portfolio's performance and aiding in making informed decisions. As the crypto market continues to evolve, there is no doubt that Python will play a crucial role in its development and growth.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

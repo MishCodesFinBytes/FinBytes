@@ -1,0 +1,467 @@
+---
+layout: post
+title: Cache - Options and varieties available
+date: 2026-01-17 11:40:38.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- architecture
+- backend
+- caching
+- redis
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Art","Photography","Food","Books","Travel"]'
+  _wp_old_date: '2026-01-31'
+  _publicize_job_id: '111088070606'
+  firehose_sent: '1770551083'
+  timeline_notification: '1770551083'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 11:41:45'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/01/17/cache-options-and-varieties-available/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/redis_sample","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Below is practical, Redis-safe, and shows <strong>what to do instead</strong> of <code>lru_cache</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Redis-safe alternatives (what to use instead)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If the data can change and correctness matters, you need caching mechanisms that <strong>all servers agree on</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here are the safe options, from simplest to most robust.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1️⃣ Redis with TTL (the boring but correct default)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is the <strong>enterprise baseline</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why it’s safe</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Shared across all servers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Time-based expiry</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Easy to reason about</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Predictable failure modes</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Example</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVm","tok-keyword"],["IA=="],["Z2V0X3VzZXJfYmFsYW5jZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVkaXM=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZGI=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["a2V5","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZiJiYWxhbmNlOg==","tok-string2"],["ew==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"]],[],[["ICAgIA=="],["YmFsYW5jZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["YmFsYW5jZQ==","tok-variableName"],["IA=="],["aXM=","tok-keyword"],["IA=="],["bm90","tok-keyword"],["IA=="],["Tm9uZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICA="],["cmV0dXJu","tok-keyword"],["IA=="],["YmFsYW5jZQ==","tok-variableName"]],[],[["ICAgIA=="],["YmFsYW5jZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZGI=","tok-variableName"],["Lg==","tok-operator"],["ZmV0Y2hfYmFsYW5jZQ==","tok-propertyName"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["c2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["YmFsYW5jZQ==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZXg=","tok-variableName"],["PQ==","tok-operator"],["MzAw","tok-number"],["KQ==","tok-punctuation"],["ICA="],["IyA1LW1pbnV0ZSBUVEw=","tok-comment"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["YmFsYW5jZQ==","tok-variableName"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>def get_user_balance(user_id, redis, db):
+    key = f"balance:{user_id}"
+
+    balance = redis.get(key)
+    if balance is not None:
+        return balance
+
+    balance = db.fetch_balance(user_id)
+    redis.set(key, balance, ex=300)  # 5-minute TTL
+    return balance
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Use this when:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Data changes occasionally</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Being a few minutes stale is acceptable</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You want simplicity over cleverness</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2️⃣ Redis + dogpile (stampede protection)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Problem:<br>When a cache expires, <strong>100 requests hit the database at once</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Solution:<br>Let <strong>one worker refresh</strong>, others wait.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Pattern</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVm","tok-keyword"],["IA=="],["Z2V0X3VzZXJfYmFsYW5jZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVkaXM=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZGI=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["a2V5","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZiJiYWxhbmNlOg==","tok-string2"],["ew==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"]],[["ICAgIA=="],["bG9ja19rZXk=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["a2V5","tok-variableName"],["fQ==","tok-punctuation"],["OmxvY2si","tok-string2"]],[],[["ICAgIA=="],["dmFsdWU=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["dmFsdWU=","tok-variableName"],["IA=="],["aXM=","tok-keyword"],["IA=="],["bm90","tok-keyword"],["IA=="],["Tm9uZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICA="],["cmV0dXJu","tok-keyword"],["IA=="],["dmFsdWU=","tok-variableName"]],[],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["c2V0","tok-propertyName"],["KA==","tok-punctuation"],["bG9ja19rZXk=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["IjEi","tok-string"],["LA==","tok-punctuation"],["IA=="],["bng=","tok-variableName"],["PQ==","tok-operator"],["VHJ1ZQ==","tok-bool"],["LA==","tok-punctuation"],["IA=="],["ZXg=","tok-variableName"],["PQ==","tok-operator"],["NQ==","tok-number"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["IyBJIHdvbiB0aGUgbG9jaw==","tok-comment"]],[["ICAgICAgICA="],["dmFsdWU=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZGI=","tok-variableName"],["Lg==","tok-operator"],["ZmV0Y2hfYmFsYW5jZQ==","tok-propertyName"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["c2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["dmFsdWU=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZXg=","tok-variableName"],["PQ==","tok-operator"],["MzAw","tok-number"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["ZGVsZXRl","tok-propertyName"],["KA==","tok-punctuation"],["bG9ja19rZXk=","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["cmV0dXJu","tok-keyword"],["IA=="],["dmFsdWU=","tok-variableName"]],[],[["ICAgIA=="],["IyBTb21lb25lIGVsc2UgaXMgcmVmcmVzaGluZw==","tok-comment"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>def get_user_balance(user_id, redis, db):
+    key = f"balance:{user_id}"
+    lock_key = f"{key}:lock"
+
+    value = redis.get(key)
+    if value is not None:
+        return value
+
+    if redis.set(lock_key, "1", nx=True, ex=5):
+        # I won the lock
+        value = db.fetch_balance(user_id)
+        redis.set(key, value, ex=300)
+        redis.delete(lock_key)
+        return value
+
+    # Someone else is refreshing
+    return redis.get(key)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Why enterprises like this</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Prevents database meltdowns</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Still fully Redis-coherent</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Predictable under load</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3️⃣ Client-side caching with Redis (RESP3)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Some Redis clients support <strong>local cache with server invalidation</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This gives you:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Local speed</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Central correctness</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Conceptually</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["U2VydmVyIE1lbW9yeSAobG9jYWwp"]],[["ICAg4oaRICAgICAg4oaTICBpbnZhbGlkYXRpb24="]],[["UmVkaXMgKGF1dGhvcml0YXRpdmUp"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>Server Memory (local)
+   ↑      ↓  invalidation
+Redis (authoritative)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>When Redis changes a key, it tells clients to drop it.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Pros</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Very fast</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Correct across servers</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Cons</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Client-specific</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>More complex to operate</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Requires Redis ≥ 6 and proper client support</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is the <strong>only safe way</strong> to mix local memory + Redis for mutable data.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">4️⃣ <code>cachetools.TTLCache</code> (single-process only, but honest)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you are:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Single server</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Or background jobs</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Or batch pipelines</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is better than <code>lru_cache</code> because it has <strong>time expiry</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbQ==","tok-keyword"],["IA=="],["Y2FjaGV0b29scw==","tok-variableName"],["IA=="],["aW1wb3J0","tok-keyword"],["IA=="],["VFRMQ2FjaGU=","tok-variableName"]],[],[["Y2FjaGU=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["VFRMQ2FjaGU=","tok-variableName"],["KA==","tok-punctuation"],["bWF4c2l6ZQ==","tok-variableName"],["PQ==","tok-operator"],["MTAwMA==","tok-number"],["LA==","tok-punctuation"],["IA=="],["dHRs","tok-variableName"],["PQ==","tok-operator"],["MzAw","tok-number"],["KQ==","tok-punctuation"]],[],[["ZGVm","tok-keyword"],["IA=="],["Z2V0X2V4Y2hhbmdlX3JhdGU=","tok-variableName tok-definition"],["KA==","tok-punctuation"],["cGFpcg==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["cGFpcg==","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["Y2FjaGU=","tok-variableName"],["Og=="]],[["ICAgICAgICA="],["cmV0dXJu","tok-keyword"],["IA=="],["Y2FjaGU=","tok-variableName"],["Ww==","tok-punctuation"],["cGFpcg==","tok-variableName"],["XQ==","tok-punctuation"]],[],[["ICAgIA=="],["cmF0ZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZmV0Y2hfcmF0ZQ==","tok-variableName"],["KA==","tok-punctuation"],["cGFpcg==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["Y2FjaGU=","tok-variableName"],["Ww==","tok-punctuation"],["cGFpcg==","tok-variableName"],["XQ==","tok-punctuation"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmF0ZQ==","tok-variableName"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["cmF0ZQ==","tok-variableName"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>from cachetools import TTLCache
+
+cache = TTLCache(maxsize=1000, ttl=300)
+
+def get_exchange_rate(pair):
+    if pair in cache:
+        return cache[pair]
+
+    rate = fetch_rate(pair)
+    cache[pair] = rate
+    return rate
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>⚠️ <strong>Still not multi-server safe</strong><br>But at least:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>It expires</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>It behaves predictably</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">5️⃣ Async refresh (“serve stale, refresh in background”)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Used heavily in high-traffic systems.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Pattern</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Serve cached value (even if slightly stale)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Trigger background refresh</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Never block users</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVm","tok-keyword"],["IA=="],["Z2V0X3ByaWNl","tok-variableName tok-definition"],["KA==","tok-punctuation"],["cHJvZHVjdF9pZA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVkaXM=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["a2V5","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZiJwcmljZTo=","tok-string2"],["ew==","tok-punctuation"],["cHJvZHVjdF9pZA==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"]],[["ICAgIA=="],["dmFsdWU=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["dmFsdWU=","tok-variableName"],["IA=="],["aXM=","tok-keyword"],["IA=="],["Tm9uZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICA="],["ZW5xdWV1ZV9yZWZyZXNo","tok-variableName"],["KA==","tok-punctuation"],["cHJvZHVjdF9pZA==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["cmV0dXJu","tok-keyword"],["IA=="],["InVua25vd24i","tok-string"]],[],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["dHRs","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"],["IA=="],["PA==","tok-operator"],["IA=="],["MzA=","tok-number"],["Og=="]],[["ICAgICAgICA="],["ZW5xdWV1ZV9yZWZyZXNo","tok-variableName"],["KA==","tok-punctuation"],["cHJvZHVjdF9pZA==","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["dmFsdWU=","tok-variableName"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>def get_price(product_id, redis):
+    key = f"price:{product_id}"
+    value = redis.get(key)
+
+    if value is None:
+        enqueue_refresh(product_id)
+        return "unknown"
+
+    if redis.ttl(key) &lt; 30:
+        enqueue_refresh(product_id)
+
+    return value
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Why this works</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Users stay fast</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Data converges quickly</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Redis remains the source of truth</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">🚫 What NOT to do (even though it’s tempting)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QA==","tok-meta"],["bHJ1X2NhY2hl","tok-variableName"]],[["ZGVm","tok-keyword"],["IA=="],["cmVkaXNfZ2V0","tok-variableName tok-definition"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>@lru_cache
+def redis_get(key):
+    return redis.get(key)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Breaks invalidation</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Breaks consistency</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Breaks trust</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>If Redis is involved, <strong>do not hide it behind <code>lru_cache</code></strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The decision table (simple and honest)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Use this</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shared across servers</td>
+<td>Redis</td>
+</tr>
+<tr>
+<td>Needs TTL</td>
+<td>Redis</td>
+</tr>
+<tr>
+<td>Needs invalidation</td>
+<td>Redis</td>
+</tr>
+<tr>
+<td>Pure computation</td>
+<td><code>lru_cache</code></td>
+</tr>
+<tr>
+<td>User-specific data</td>
+<td>Redis</td>
+</tr>
+<tr>
+<td>Enterprise correctness</td>
+<td>Redis</td>
+</tr>
+<tr>
+<td>Micro-optimisation only</td>
+<td><code>lru_cache</code></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Final takeaway </h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><code>lru_cache</code> optimises <strong>CPU work</strong>.<br>Redis manages <strong>shared truth</strong>.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>When you mix them:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Redis must stay in charge</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Local memory must stay disposable</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Or, in the child version one last time:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>🟢 <strong>Rules in the drawer</strong><br>🔴 <strong>Facts in the fridge</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

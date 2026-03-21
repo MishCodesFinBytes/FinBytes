@@ -1,0 +1,480 @@
+---
+layout: post
+title: 'pytest Monkeypatch: A Practical Field Guide (with Inline Return Patterns)'
+date: 2025-11-15 19:41:00.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- best practices
+- monkeypatch
+- patterns
+- pytest
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Art","Design","Books","Photography","Flowers"]'
+  _wp_old_date: '2026-02-13'
+  _publicize_job_id: '111228432855'
+  firehose_sent: '1771011793'
+  _publicize_shares: a:0:{}
+  timeline_notification: '1771011793'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-13 19:42:19'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/11/15/pytest-monkeypatch-a-practical-field-guide-with-inline-return-patterns/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Most engineers don’t struggle with <em>what</em> monkeypatch does.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>They struggle with <strong>why it sometimes works perfectly — and sometimes appears to do nothing at all</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The difference is not pytest.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>It is Python’s import system.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This post walks from first principles to advanced patterns and gives you a reliable mental model you can reuse in any codebase.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The Real Rule Behind Monkeypatch</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Always patch where the dependency is <strong>looked up</strong>, not where it is defined.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>If <code>module1</code> imports a symbol from <code>module2</code>, your code never consults <code>module2</code> again.<br>It uses its local reference.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>So you patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9kdWxlMS5DbGFzczIubWV0aG9k"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>module1.Class2.method
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>NOT:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9kdWxlMi5DbGFzczIubWV0aG9k"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>module2.Class2.method
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>When tests mysteriously ignore your patch — this is almost always the cause.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Example Project (Runnable)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">module2.py</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2xhc3MgQ2xhc3MyOg=="]],[["ICAgICMgbGlicmFyeS1zdHlsZSBtZXRob2RzIChubyBzdGF0ZSk="]],[["ICAgIGRlZiBtdWx0aXBseSh4LCB5KTo="]],[["ICAgICAgICByZXR1cm4geCAqIHk="]],[[""]],[["ICAgIGRlZiBhZGQoeCwgeSk6"]],[["ICAgICAgICByZXR1cm4geCArIHk="]],[[""]],[["ICAgICMgaW5zdGFuY2Utc3R5bGUgbWV0aG9k"]],[["ICAgIGRlZiBpbnN0YW5jZV9kb3VibGUoc2VsZiwgdmFsdWUpOg=="]],[["ICAgICAgICByZXR1cm4gdmFsdWUgKiAy"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>class Class2:
+    # library-style methods (no state)
+    def multiply(x, y):
+        return x * y
+
+    def add(x, y):
+        return x + y
+
+    # instance-style method
+    def instance_double(self, value):
+        return value * 2
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">module1.py</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSBtb2R1bGUyIGltcG9ydCBDbGFzczI="]],[[""]],[["Y2xhc3MgQ2xhc3MxOg=="]],[["ICAgIGRlZiBfX2luaXRfXyhzZWxmKTo="]],[["ICAgICAgICBzZWxmLmhlbHBlciA9IENsYXNzMigp"]],[[""]],[["ICAgIGRlZiBjb21wdXRlX2xpYnJhcnkoc2VsZiwgYSwgYik6"]],[["ICAgICAgICByZXR1cm4gQ2xhc3MyLm11bHRpcGx5KGEsIGIpICsgQ2xhc3MyLmFkZChhLCBiKQ=="]],[[""]],[["ICAgIGRlZiBjb21wdXRlX2luc3RhbmNlKHNlbGYsIHZhbHVlKTo="]],[["ICAgICAgICByZXR1cm4gc2VsZi5oZWxwZXIuaW5zdGFuY2VfZG91YmxlKHZhbHVlKSArIDU="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from module2 import Class2
+
+class Class1:
+    def __init__(self):
+        self.helper = Class2()
+
+    def compute_library(self, a, b):
+        return Class2.multiply(a, b) + Class2.add(a, b)
+
+    def compute_instance(self, value):
+        return self.helper.instance_double(value) + 5
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Basic Monkeypatch Usage</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Patching “library style” methods (no self)</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHRlc3RfY29tcHV0ZV9saWJyYXJ5KG1vbmtleXBhdGNoKTo="]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIoIm1vZHVsZTEuQ2xhc3MyLm11bHRpcGx5IiwgbGFtYmRhIHgsIHk6IDEwMCk="]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIoIm1vZHVsZTEuQ2xhc3MyLmFkZCIsIGxhbWJkYSB4LCB5OiA1MCk="]],[[""]],[["ICAgIG9iaiA9IENsYXNzMSgp"]],[["ICAgIGFzc2VydCBvYmouY29tcHV0ZV9saWJyYXJ5KDMsIDUpID09IDE1MA=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def test_compute_library(monkeypatch):
+    monkeypatch.setattr("module1.Class2.multiply", lambda x, y: 100)
+    monkeypatch.setattr("module1.Class2.add", lambda x, y: 50)
+
+    obj = Class1()
+    assert obj.compute_library(3, 5) == 150
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Patching instance methods (requires <code>self</code>)</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHRlc3RfY29tcHV0ZV9pbnN0YW5jZShtb25rZXlwYXRjaCk6"]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIo"]],[["ICAgICAgICAibW9kdWxlMS5DbGFzczIuaW5zdGFuY2VfZG91YmxlIiw="]],[["ICAgICAgICBsYW1iZGEgc2VsZiwgdmFsdWU6IDk5OQ=="]],[["ICAgICk="]],[[""]],[["ICAgIG9iaiA9IENsYXNzMSgp"]],[["ICAgIGFzc2VydCBvYmouY29tcHV0ZV9pbnN0YW5jZSgxMCkgPT0gMTAwNA=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def test_compute_instance(monkeypatch):
+    monkeypatch.setattr(
+        "module1.Class2.instance_double",
+        lambda self, value: 999
+    )
+
+    obj = Class1()
+    assert obj.compute_instance(10) == 1004
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you forget <code>self</code> you’ll get:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["VHlwZUVycm9yOiA8bGFtYmRhPigpIHRha2VzIDEgcG9zaXRpb25hbCBhcmd1bWVudCBidXQgMiB3ZXJlIGdpdmVu"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>TypeError: &lt;lambda&gt;() takes 1 positional argument but 2 were given
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Patching Only One Object</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Sometimes you don’t want a global patch.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHRlc3Rfc2luZ2xlX2luc3RhbmNlKG1vbmtleXBhdGNoKTo="]],[["ICAgIG9iaiA9IENsYXNzMSgp"]],[[""]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIo"]],[["ICAgICAgICBvYmouaGVscGVyLA=="]],[["ICAgICAgICAiaW5zdGFuY2VfZG91YmxlIiw="]],[["ICAgICAgICBsYW1iZGEgdmFsdWU6IDUwMA=="]],[["ICAgICk="]],[[""]],[["ICAgIGFzc2VydCBvYmouY29tcHV0ZV9pbnN0YW5jZSgxMCkgPT0gNTA1"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def test_single_instance(monkeypatch):
+    obj = Class1()
+
+    monkeypatch.setattr(
+        obj.helper,
+        "instance_double",
+        lambda value: 500
+    )
+
+    assert obj.compute_instance(10) == 505
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Because the method is already bound to the instance, <code>self</code> is no longer needed.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Inline Return Patterns (Quick Reference)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"fontSize":"x-small"} --></p>
+<figure class="wp-block-table has-x-small-font-size">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Patch Target</th>
+<th>Inline Pattern</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Constant return (function)</td>
+<td>module1.Class2.multiply</td>
+<td><code>lambda x,y: 42</code></td>
+<td>deterministic output</td>
+</tr>
+<tr>
+<td>Constant return (instance)</td>
+<td>module1.Class2.method</td>
+<td><code>lambda self,x: 42</code></td>
+<td>override behaviour</td>
+</tr>
+<tr>
+<td>Input dependent</td>
+<td>same</td>
+<td><code>lambda x,y: x+y</code></td>
+<td>simulate alternate logic</td>
+</tr>
+<tr>
+<td>Conditional branch</td>
+<td>same</td>
+<td><code>lambda x,y: 0 if x&lt;0 else 1</code></td>
+<td>edge cases</td>
+</tr>
+<tr>
+<td>Raise exception</td>
+<td>same</td>
+<td><code>lambda *a: (_ for _ in ()).throw(ValueError())</code></td>
+<td>failure path</td>
+</tr>
+<tr>
+<td>Patch single object</td>
+<td>obj.helper.method</td>
+<td><code>lambda x: 9</code></td>
+<td>isolate test</td>
+</tr>
+<tr>
+<td>Replace dependency</td>
+<td>same</td>
+<td><code>lambda *a: Fake()</code></td>
+<td>fake service</td>
+</tr>
+<tr>
+<td>Retry simulation</td>
+<td>closure</td>
+<td>counter inside function</td>
+<td>flaky system</td>
+</tr>
+<tr>
+<td>Delay simulation</td>
+<td>same</td>
+<td><code>lambda *a: time.sleep(1)</code></td>
+<td>timeout handling</td>
+</tr>
+<tr>
+<td>Multiple patches</td>
+<td>several setattr</td>
+<td>multiple lambdas</td>
+<td>composite logic</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Cleaner Exception Pattern</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Prefer a real function for readability:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIGZhaWwoKmFyZ3MsICoqa3dhcmdzKTo="]],[["ICAgIHJhaXNlIFZhbHVlRXJyb3IoImZvcmNlZCBmYWlsdXJlIik="]],[[""]],[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlMS5DbGFzczIubXVsdGlwbHkiLCBmYWlsKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def fail(*args, **kwargs):
+    raise ValueError("forced failure")
+
+monkeypatch.setattr("module1.Class2.multiply", fail)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Stateful Patch (Testing Retries)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHRlc3RfcmV0cnkobW9ua2V5cGF0Y2gpOg=="]],[["ICAgIGNhbGxzID0geyJuIjogMH0="]],[[""]],[["ICAgIGRlZiBmYWtlKHgsIHkpOg=="]],[["ICAgICAgICBjYWxsc1sibiJdICs9IDE="]],[["ICAgICAgICBpZiBjYWxsc1sibiJdID09IDE6"]],[["ICAgICAgICAgICAgcmFpc2UgVmFsdWVFcnJvcigiZmFpbCBvbmNlIik="]],[["ICAgICAgICByZXR1cm4gMTAw"]],[[""]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIoIm1vZHVsZTEuQ2xhc3MyLm11bHRpcGx5IiwgZmFrZSk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def test_retry(monkeypatch):
+    calls = {"n": 0}
+
+    def fake(x, y):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ValueError("fail once")
+        return 100
+
+    monkeypatch.setattr("module1.Class2.multiply", fake)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now your test can verify retry logic.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Why Tests Sometimes Ignore Your Patch</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python import flow:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>module1 imports Class2</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Class1 stores reference locally</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Your code calls local reference</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Patching module2 changes nothing</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>You changed the source, not the pointer.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Monkeypatch modifies the pointer.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Lambda vs Function — When to Use Which</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"fontSize":"x-small"} --></p>
+<figure class="wp-block-table has-x-small-font-size">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Use Lambda</th>
+<th>Use Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Constant return</td>
+<td>Raising exceptions</td>
+</tr>
+<tr>
+<td>Simple arithmetic</td>
+<td>Stateful behaviour</td>
+</tr>
+<tr>
+<td>One-line override</td>
+<td>Multi-branch logic</td>
+</tr>
+<tr>
+<td>Quick test cases</td>
+<td>Readability important</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p>If it doesn’t fit on one line, don’t force a lambda.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Auto-Cleanup (Important)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>monkeypatch</code> automatically restores the original attribute after each test.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>No teardown needed.<br>No leaking mocks.<br>No decorators required.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Mental Model to Remember</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Monkeypatch is not mocking.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>It is <strong>temporary attribute reassignment in a namespace</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Once you internalize that, 90% of confusion disappears.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Final Takeaway</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Reliable monkeypatch usage comes down to three habits:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Patch where the symbol is used</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Include <code>self</code> only when patching class-level instance methods</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Prefer inline lambdas for deterministic overrides</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Everything else is composition.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>After this, monkeypatch stops feeling magical —<br>and starts feeling predictable.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

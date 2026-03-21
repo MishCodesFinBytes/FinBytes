@@ -1,0 +1,716 @@
+---
+layout: post
+title: Monkeypatch Edge Cases That Break Senior Engineers
+date: 2025-11-16 19:47:04.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- migration
+- monkeypatch
+- pytest
+- unittest
+meta:
+  _last_editor_used_jetpack: block-editor
+  _wp_old_date: '2026-02-13'
+  _publicize_job_id: '111228529927'
+  _publicize_shares: a:0:{}
+  firehose_sent: '1771012139'
+  timeline_notification: '1771012140'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-13 19:48:18'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Sports","Art","Politics","Food","Technology"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/11/16/monkeypatch-edge-cases-that-break-senior-engineers/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Monkeypatch is simple.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>It reassigns attributes and restores them after the test.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>And yet — even experienced engineers regularly lose hours to subtle edge cases.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This post covers the real-world scenarios that cause silent failures, flaky CI builds, and “why is this not patched?” debugging sessions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">1️⃣ Patching the Wrong Import Location</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The Classic Failure</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBtb2R1bGUxLnB5"]],[["ZnJvbSBtb2R1bGUyIGltcG9ydCBDbGFzczI="]],[[""]],[["ZGVmIHJ1bigpOg=="]],[["ICAgIHJldHVybiBDbGFzczIuZG9fd29yaygp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code># module1.py
+from module2 import Class2
+
+def run():
+    return Class2.do_work()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlMi5DbGFzczIuZG9fd29yayIsIGxhbWJkYTogNDIp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("module2.Class2.do_work", lambda: 42)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Test still calls the original function.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why?</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Because <code>module1</code> already holds its own reference to <code>Class2</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You must patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlMS5DbGFzczIuZG9fd29yayIsIGxhbWJkYTogNDIp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("module1.Class2.do_work", lambda: 42)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Diagnosis Tip</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Print the object identity:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IG1vZHVsZTEsIG1vZHVsZTI="]],[["cHJpbnQobW9kdWxlMS5DbGFzczIgaXMgbW9kdWxlMi5DbGFzczIp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import module1, module2
+print(module1.Class2 is module2.Class2)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>If it prints <code>True</code>, you’re safe.<br>If not — you’re patching the wrong namespace.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">2️⃣ Patching After the Object Was Bound</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If the dependency is stored in <code>__init__</code>, patching too late won’t work.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2xhc3MgU2VydmljZTo="]],[["ICAgIGRlZiBfX2luaXRfXyhzZWxmKTo="]],[["ICAgICAgICBzZWxmLmNsaWVudCA9IEV4dGVybmFsQ2xpZW50KCk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>class Service:
+    def __init__(self):
+        self.client = ExternalClient()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you do:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["b2JqID0gU2VydmljZSgp"]],[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlLkV4dGVybmFsQ2xpZW50IiwgRmFrZUNsaWVudCk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>obj = Service()
+monkeypatch.setattr("module.ExternalClient", FakeClient)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Too late. The instance already exists.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Correct Approach</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Patch first:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlLkV4dGVybmFsQ2xpZW50IiwgRmFrZUNsaWVudCk="]],[["b2JqID0gU2VydmljZSgp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("module.ExternalClient", FakeClient)
+obj = Service()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Order matters.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">3️⃣ Forgetting <code>self</code> on Instance Methods</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is subtle.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cig="]],[["ICAgICJtb2R1bGUuQ2xhc3MubWV0aG9kIiw="]],[["ICAgIGxhbWJkYSB4OiAxMCAgICMgV1JPTkc="]],[["KQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr(
+    "module.Class.method",
+    lambda x: 10   # WRONG
+)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You get:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["VHlwZUVycm9yOiB0YWtlcyAxIHBvc2l0aW9uYWwgYXJndW1lbnQgYnV0IDIgd2VyZSBnaXZlbg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>TypeError: takes 1 positional argument but 2 were given
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Because Python injects <code>self</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Correct version:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bGFtYmRhIHNlbGYsIHg6IDEw"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>lambda self, x: 10
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>If patching a specific instance:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cihvYmosICJtZXRob2QiLCBsYW1iZGEgeDogMTAp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr(obj, "method", lambda x: 10)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now <code>self</code> is already bound — so don’t include it.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">4️⃣ Staticmethod vs Classmethod Confusion</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If the original method is:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2xhc3MgQzo="]],[["ICAgIEBjbGFzc21ldGhvZA=="]],[["ICAgIGRlZiBmb28oY2xzLCB4KTo="]],[["ICAgICAgICAuLi4="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>class C:
+    @classmethod
+    def foo(cls, x):
+        ...
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Your patch must accept <code>cls</code>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bGFtYmRhIGNscywgeDogMTA="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>lambda cls, x: 10
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>If it’s a <code>@staticmethod</code>, no <code>self</code> or <code>cls</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Mismatch here causes misleading TypeErrors.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">5️⃣ Late Imports Inside Functions</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHJ1bigpOg=="]],[["ICAgIGZyb20gbW9kdWxlMiBpbXBvcnQgaGVscGVy"]],[["ICAgIHJldHVybiBoZWxwZXIoKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def run():
+    from module2 import helper
+    return helper()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlMi5oZWxwZXIiLCBsYW1iZGE6IDQyKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("module2.helper", lambda: 42)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This works — but only if patching occurs before <code>run()</code> is called.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>However, if <code>run()</code> was imported elsewhere before patching, behavior can differ depending on execution order.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Late imports complicate patch reasoning.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">6️⃣ Patching Builtins Incorrectly</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Example:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["b3BlbigiZmlsZS50eHQiKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>open("file.txt")
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Wrong:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigiYnVpbHRpbnMub3BlbiIsIGZha2Vfb3Blbik="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("builtins.open", fake_open)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Correct — but only if the module uses <code>open</code> directly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If the module does:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSBidWlsdGlucyBpbXBvcnQgb3Blbg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from builtins import open
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You must patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9kdWxlX25hbWUub3Blbg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>module_name.open
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Again: patch where looked up.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">7️⃣ Mutable Defaults and Shared State</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Monkeypatch restores attributes —<br>but it does not reset mutated objects.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Example:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Q09ORklHID0geyJ0aW1lb3V0IjogMTB9"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>CONFIG = {"timeout": 10}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>If your code mutates <code>CONFIG</code>, monkeypatch won’t protect you.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You must:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0aXRlbShDT05GSUcsICJ0aW1lb3V0IiwgMSk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setitem(CONFIG, "timeout", 1)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Or copy before use.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is a common CI-only flake source.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">8️⃣ Patching Properties</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Properties aren’t plain attributes.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2xhc3MgVXNlcjo="]],[["ICAgIEBwcm9wZXJ0eQ=="]],[["ICAgIGRlZiBuYW1lKHNlbGYpOg=="]],[["ICAgICAgICByZXR1cm4gInJlYWwi"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>class User:
+    @property
+    def name(self):
+        return "real"
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Naive patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlLlVzZXIubmFtZSIsIGxhbWJkYSBzZWxmOiAiZmFrZSIp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("module.User.name", lambda self: "fake")
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Won’t behave as expected.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Correct approach:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cig="]],[["ICAgICJtb2R1bGUuVXNlci5uYW1lIiw="]],[["ICAgIHByb3BlcnR5KGxhbWJkYSBzZWxmOiAiZmFrZSIp"]],[["KQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr(
+    "module.User.name",
+    property(lambda self: "fake")
+)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Properties must remain descriptors.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">9️⃣ Async Functions</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If the original function is async:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["YXN5bmMgZGVmIGZldGNoKCk6"]],[["ICAgIC4uLg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>async def fetch():
+    ...
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Patching with a normal lambda:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bGFtYmRhOiA0Mg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>lambda: 42
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Will break because it isn’t awaitable.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Correct:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["YXN5bmMgZGVmIGZha2UoKTo="]],[["ICAgIHJldHVybiA0Mg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>async def fake():
+    return 42
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>or</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlLmZldGNoIiwgQXN5bmNNb2NrKHJldHVybl92YWx1ZT00Mikp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("module.fetch", AsyncMock(return_value=42))
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">🔟 Silent Success, Wrong Behavior</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The most dangerous case:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You patch correctly.<br>The test passes.<br>But the real dependency was never used in that test path.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You think you tested failure handling — you didn’t.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Mitigation strategy:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Combine monkeypatch with <code>Mock</code>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9jayA9IE1vY2socmV0dXJuX3ZhbHVlPTQyKQ=="]],[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlLmZ1bmMiLCBtb2NrKQ=="]],[[""]],[["Li4u"]],[["bW9jay5hc3NlcnRfY2FsbGVkX29uY2UoKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>mock = Mock(return_value=42)
+monkeypatch.setattr("module.func", mock)
+
+...
+mock.assert_called_once()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Trust, but verify.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">1️⃣1️⃣ CI-Only Failures</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Why does monkeypatch work locally but fail in CI?</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Common causes:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Different import order</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Different working directory</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Implicit relative imports</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Module reloading via coverage tools</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Shared global state between tests</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>CI exposes weak isolation.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">1️⃣2️⃣ Reloading Modules (Advanced)</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If a module caches values at import time:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["VkFMVUUgPSBleHBlbnNpdmVfY2FsbCgp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>VALUE = expensive_call()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Patching <code>expensive_call</code> later won’t affect <code>VALUE</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You may need:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IGltcG9ydGxpYg=="]],[["aW1wb3J0IG1vZHVsZQ=="]],[["aW1wb3J0bGliLnJlbG9hZChtb2R1bGUp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import importlib
+import module
+importlib.reload(module)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is rare — but brutal when encountered.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Failure Pattern Summary</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"fontSize":"x-small"} --></p>
+<figure class="wp-block-table has-x-small-font-size">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Edge Case</th>
+<th>Root Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Patch ignored</td>
+<td>Wrong namespace</td>
+<td>Patch where looked up</td>
+</tr>
+<tr>
+<td>Instance error</td>
+<td>Missing self</td>
+<td>Include self</td>
+</tr>
+<tr>
+<td>Classmethod error</td>
+<td>Missing cls</td>
+<td>Include cls</td>
+</tr>
+<tr>
+<td>Async failure</td>
+<td>Non-awaitable patch</td>
+<td>Use async def</td>
+</tr>
+<tr>
+<td>Property failure</td>
+<td>Descriptor replaced incorrectly</td>
+<td>Wrap with property()</td>
+</tr>
+<tr>
+<td>Late binding issue</td>
+<td>Patch after instantiation</td>
+<td>Patch before object creation</td>
+</tr>
+<tr>
+<td>CI flake</td>
+<td>Shared mutable state</td>
+<td>Reset state explicitly</td>
+</tr>
+<tr>
+<td>Builtin patch fail</td>
+<td>Local import shadowing</td>
+<td>Patch local reference</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Senior-Level Debug Strategy</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>When a patch “doesn’t work,” ask:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Where is the symbol resolved?</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Was it bound earlier?</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Is it staticmethod/classmethod/property?</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Is it async?</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Am I mutating shared state instead?</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Did the code path even execute?</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Systematic diagnosis beats guessing.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">The Real Takeaway</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Monkeypatch is simple.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The Python object model is not.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Most failures aren’t about pytest —<br>they’re about:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>namespace resolution</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>descriptor behavior</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>object binding</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>import timing</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Once you understand those, monkeypatch becomes entirely predictable.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

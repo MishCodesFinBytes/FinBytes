@@ -1,0 +1,402 @@
+---
+layout: post
+title: Migrating from Python 3.6 to 3.11
+date: 2026-01-01 12:55:14.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Python migration &amp; tooling
+tags:
+- compatibility
+- migration
+- Python 3.11
+- upgrade
+meta:
+  _last_editor_used_jetpack: block-editor
+  _wp_old_date: '2026-01-25'
+  _publicize_job_id: '111067344783'
+  _publicize_shares: a:0:{}
+  firehose_sent: '1770470077'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:56:21'
+  timeline_notification: '1770470077'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Technology","Sports","News","Religion","Books"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/01/01/migrating-from-python-3-6-to-3-11/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:heading {"level":3} --><html><body></p>
+<h3 class="wp-block-heading">A Practical Enterprise Guide</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Upgrading Python in enterprise systems is rarely about syntax.<br>The challenge is <strong>implicit assumptions</strong> that worked in Python 3.6 but break in 3.11 — often silently or only in CI.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This guide summarises key differences, why they matter, and how to catch them before they cause production failures.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1. Dates and Datetimes</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Python 3.11 is stricter when mixing <code>date</code> and <code>datetime</code>.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Legacy code often did implicit coercion that 3.6 tolerated.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSBkYXRldGltZSBpbXBvcnQgZGF0ZSwgZGF0ZXRpbWU="]],[[""]],[["ZCA9IGRhdGUoMjAyNCwgMSwgMSk="]],[["ZHQgPSBkYXRldGltZSgyMDI0LCAxLCAxLCAwLCAwKQ=="]],[[""]],[["ZHQgLSBkICAjIFR5cGVFcnJvciBpbiBQeXRob24gMy4xMQ=="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from datetime import date, datetime
+
+d = date(2024, 1, 1)
+dt = datetime(2024, 1, 1, 0, 0)
+
+dt - d  # TypeError in Python 3.11
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong> Convert explicitly:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZHQgLSBkYXRldGltZS5jb21iaW5lKGQsIGRhdGV0aW1lLm1pbi50aW1lKCkp"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>dt - datetime.combine(d, datetime.min.time())
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Tip:</strong> Also convert Pandas columns with <code>pd.to_datetime</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2. Ordering Changes</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Sets</strong>: always unordered; 3.6 sometimes appeared stable.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Dict iteration</strong>: insertion order guaranteed in 3.7+, but implicit order assumptions still fail.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example failure:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["YXNzZXJ0IGxpc3Qoc2V0KFsiYSIsICJiIiwgImMiXSkpID09IFsiYSIsICJiIiwgImMiXSAgIyBNYXkgZmFpbCBpbiAzLjEx"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>assert list(set(["a", "b", "c"])) == ["a", "b", "c"]  # May fail in 3.11
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong> Compare <code>sorted()</code> lists or sets explicitly:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["YXNzZXJ0IHNvcnRlZChsaXN0KHNldCguLi4pKSkgPT0gWyJhIiwgImIiLCAiYyJd"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>assert sorted(list(set(...))) == ["a", "b", "c"]
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3. Truthiness and None Comparisons</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Ambiguous truthiness (<code>if df["column"]:</code>) now raises errors in Python 3.11.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<code>None</code> comparisons with <code>&lt;</code> or <code>&gt;</code> now reliably raise <code>TypeError</code>.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aWYgbm90IGRmWyJjb2x1bW4iXS5lbXB0eTo="]],[["aWYgeCBpcyBub3QgTm9uZSBhbmQgeSBpcyBub3QgTm9uZSBhbmQgeCA8IHk6"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>if not df["column"].empty:
+if x is not None and y is not None and x &lt; y:
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">4. Exception Messages</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Python 3.11 improved error reporting.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Tests relying on exact exception messages may fail.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong> Assert on exception type, not text:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["d2l0aCBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IpOg=="]],[["ICAgIGludCgiYWJjIik="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>with pytest.raises(ValueError):
+    int("abc")
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">5. Floats and Decimal Behaviour</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Exact float equality sometimes fails due to precision and rounding changes.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Python 3.11 makes numeric behaviour more visible.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong> Use tolerances:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IG1hdGg="]],[["YXNzZXJ0IG1hdGguaXNjbG9zZShyZXN1bHQsIGV4cGVjdGVkLCByZWxfdG9sPTFlLTkp"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import math
+assert math.isclose(result, expected, rel_tol=1e-9)
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">6. String and Bytes Handling</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Python 3.11 exposes implicit string/bytes mixing errors earlier.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Often happens in logging, serialization, or messaging pipelines.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong> Explicitly encode/decode:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["YiJhYmMiICsgImRlZiIuZW5jb2RlKCk="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>b"abc" + "def".encode()
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">7. Performance-Exposed Timing Issues</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Python 3.11 is faster.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Tests relying on <code>time.sleep()</code> or implicit ordering may fail.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong> Poll for conditions or use proper synchronisation instead of time-based sleeps.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">8. Warnings</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Deprecated or future warnings may now fail CI when run with <code>-W error</code>.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Python 3.11 surfaces them more aggressively.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong> Resolve warnings; do not ignore or suppress.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">9. <code>is</code> vs <code>==</code><br />
+</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Python 3.6 sometimes masked <code>is</code> used for value equality.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Python 3.11 exposes this reliably.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Fix:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aWYgc3RhdHVzID09ICJPSyI6"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>if status == "OK":
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3.6 → 3.11 Migration Checklist</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Area</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dates &amp; Datetimes</td>
+<td>Convert <code>date</code> ↔ <code>datetime</code> explicitly; use <code>pd.to_datetime</code> for DataFrames</td>
+</tr>
+<tr>
+<td>Ordering</td>
+<td>Sort lists or compare as sets; do not rely on set/dict iteration order</td>
+</tr>
+<tr>
+<td>Truthiness</td>
+<td>Avoid ambiguous truthiness; guard against <code>None</code> in comparisons</td>
+</tr>
+<tr>
+<td>Exception Handling</td>
+<td>Assert exception type, not exact message</td>
+</tr>
+<tr>
+<td>Floats &amp; Decimals</td>
+<td>Use tolerances (<code>math.isclose</code>)</td>
+</tr>
+<tr>
+<td>String &amp; Bytes</td>
+<td>Encode/decode explicitly; no implicit mixing</td>
+</tr>
+<tr>
+<td>Timing &amp; Concurrency</td>
+<td>Replace <code>sleep()</code> with polling or await patterns</td>
+</tr>
+<tr>
+<td>Warnings</td>
+<td>Run with <code>-W error</code>; fix deprecations</td>
+</tr>
+<tr>
+<td>Equality</td>
+<td>Use <code>==</code> for value comparison; avoid <code>is</code> for strings</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>Run tests on both Python 3.6 and 3.11 during transition; assert deterministic behaviour</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Optional CI Enforcement for Upgrade Safety</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Run tests under <strong>both Python 3.6 and 3.11</strong>.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Fail on:<!-- wp:list -->
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Mixing <code>date</code> and <code>datetime</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Ambiguous truthiness</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<code>None</code> comparisons in numeric operators</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Exact exception message assertions</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Example:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0ZXN0IC1XIGVycm9yIC0tc3RyaWN0LW1hcmtlcnM="]],[["cHl0aG9uIGNpX2NoZWNrcy9jaGVja19kYXRldGltZV9ub25lLnB5"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>pytest -W error --strict-markers
+python ci_checks/check_datetime_none.py
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Final Takeaway</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Python 3.11 doesn’t break your code — it exposes assumptions that 3.6 silently tolerated.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>Upgrading isn’t about syntax fixes; it’s about <strong>making implicit behaviour explicit, safe, and deterministic</strong>.<br>Following this checklist and enforcing it in CI can save <strong>days of debugging and unstable builds</strong> in enterprise systems.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

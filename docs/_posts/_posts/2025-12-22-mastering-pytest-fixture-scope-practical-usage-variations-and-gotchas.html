@@ -1,0 +1,714 @@
+---
+layout: post
+title: 'Mastering pytest.fixture Scope: Practical Usage, Variations, and Gotchas'
+date: 2025-12-22 17:08:25.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- fixtures
+- gotchas
+- pytest
+- scope
+- scope-creep
+meta:
+  wp_jp_foreign_id: 1A702742-A212-4D2F-9EAA-D8D8B4234FEB
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["AI","Artificial Intelligence","LLM","Technology","Python"]'
+  _wp_old_date: '2026-02-09'
+  _publicize_job_id: '111122664900'
+  _publicize_shares: a:0:{}
+  timeline_notification: '1770667827'
+  firehose_sent: '1770667827'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-09 20:08:24'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/12/22/mastering-pytest-fixture-scope-practical-usage-variations-and-gotchas/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you have used <code>pytest</code> long enough, you have used fixtures. And if you have used fixtures long enough, you have probably broken a test suite with them.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Fixture <em>scope</em> is one of the most misunderstood parts of <code>pytest</code>. It directly affects performance, test isolation, and—most dangerously—hidden state leakage between tests.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This post focuses specifically on:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>What fixture scope really means</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>How different scopes behave</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>When to use each scope</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Variations in usage</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Common mistakes and subtle loopholes</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">What Is a Fixture Scope?</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Fixture scope defines <strong>how long a fixture instance lives</strong> and <strong>how widely it is shared</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJmdW5jdGlvbiIp"]],[["ZGVmIGRiX2Nvbm5lY3Rpb24oKTo="]],[["ICAgIHJldHVybiBjb25uZWN0X3RvX2RiKCk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="function")
+def db_connection():
+    return connect_to_db()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The scope answers two questions:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li><em>When is this fixture created?</em></li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><em>When is it torn down?</em></li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The Five Fixture Scopes in <code>pytest</code><br />
+</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Scope</th>
+<th>Lifetime</th>
+<th>Shared Between</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>function</code></td>
+<td>One test function</td>
+<td>No tests</td>
+</tr>
+<tr>
+<td><code>class</code></td>
+<td>One test class</td>
+<td>Tests in the same class</td>
+</tr>
+<tr>
+<td><code>module</code></td>
+<td>One Python file</td>
+<td>Tests in the same file</td>
+</tr>
+<tr>
+<td><code>package</code></td>
+<td>One package</td>
+<td>All modules in the package</td>
+</tr>
+<tr>
+<td><code>session</code></td>
+<td>Entire test run</td>
+<td>All tests</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p>Default scope is <code>function</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Function Scope (Default and Safest)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJl"]],[["ZGVmIHVzZXIoKTo="]],[["ICAgIHJldHVybiB7Im5hbWUiOiAiQWxpY2UifQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture
+def user():
+    return {"name": "Alice"}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Each test gets a <strong>fresh instance</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">When to Use</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Most unit tests</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Mutable objects</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Anything that must be isolated</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why It’s Safe</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>No shared state. No surprises.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Class Scope</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJjbGFzcyIp"]],[["ZGVmIHNoYXJlZF91c2VyKCk6"]],[["ICAgIHJldHVybiB7Im5hbWUiOiAiQWxpY2UifQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="class")
+def shared_user():
+    return {"name": "Alice"}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Shared across all tests in the class.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">When to Use</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Expensive setup reused inside one test class</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Read-only data</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Hidden Risk</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Mutable objects can leak state between tests.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Module Scope</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJtb2R1bGUiKQ=="]],[["ZGVmIGRiX2VuZ2luZSgpOg=="]],[["ICAgIHJldHVybiBjcmVhdGVfZW5naW5lKCk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="module")
+def db_engine():
+    return create_engine()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Created once per test file.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Good For</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Database engines</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>External service clients</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Heavy setup logic</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Bad For</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Anything mutable without reset logic</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Package Scope (Rare but Powerful)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJwYWNrYWdlIik="]],[["ZGVmIGFwaV9jbGllbnQoKTo="]],[["ICAgIHJldHVybiBBUElDbGllbnQoKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="package")
+def api_client():
+    return APIClient()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Shared across <strong>all modules in a package</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Use Carefully</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Test utilities</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Static configuration</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Shared test infrastructure</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>⚠️ Package scope can cause <strong>unexpected cross-file coupling</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Session Scope (Most Dangerous)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJzZXNzaW9uIik="]],[["ZGVmIGdsb2JhbF9jb25maWcoKTo="]],[["ICAgIHJldHVybiBsb2FkX2NvbmZpZygp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="session")
+def global_config():
+    return load_config()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Created once per test run.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Legitimate Uses</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Reading configuration files</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Spinning up containers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Global test environments</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Common Anti-Pattern</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Session-scoped fixtures returning mutable objects.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Scope × Fixture Dependencies (Critical Concept)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A fixture <strong>cannot depend on a narrower-scoped fixture</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>❌ Invalid:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJzZXNzaW9uIik="]],[["ZGVmIHNlc3Npb25fZGF0YShmdW5jdGlvbl9kYXRhKTo="]],[["ICAgIC4uLg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="session")
+def session_data(function_data):
+    ...
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>✔️ Valid:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJmdW5jdGlvbiIp"]],[["ZGVmIGZ1bmNfZGF0YShzZXNzaW9uX2RhdGEpOg=="]],[["ICAgIC4uLg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="function")
+def func_data(session_data):
+    ...
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Rule</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Wider scope may not depend on narrower scope.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Yield Fixtures and Teardown Behavior</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJtb2R1bGUiKQ=="]],[["ZGVmIHRlbXBfZmlsZSgpOg=="]],[["ICAgIGYgPSBjcmVhdGVfZmlsZSgp"]],[["ICAgIHlpZWxkIGY="]],[["ICAgIGRlbGV0ZV9maWxlKGYp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="module")
+def temp_file():
+    f = create_file()
+    yield f
+    delete_file(f)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Teardown happens:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>After each test (<code>function</code>)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>After class/module/session ends (depending on scope)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Longer scopes delay cleanup.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Fixture Variations You Should Know</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Autouse Fixtures</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKGF1dG91c2U9VHJ1ZSk="]],[["ZGVmIHNldHVwX2VudigpOg=="]],[["ICAgIG9zLmVudmlyb25bIkVOViJdID0gInRlc3Qi"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(autouse=True)
+def setup_env():
+    os.environ["ENV"] = "test"
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Runs automatically without being requested.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Use Sparingly</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Autouse fixtures obscure test dependencies.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Parameterized Fixtures</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHBhcmFtcz1bMSwgMiwgM10p"]],[["ZGVmIG51bWJlcihyZXF1ZXN0KTo="]],[["ICAgIHJldHVybiByZXF1ZXN0LnBhcmFt"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(params=[1, 2, 3])
+def number(request):
+    return request.param
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Each scope multiplies test executions differently.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Scope</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>function</td>
+<td>Isolated per test</td>
+</tr>
+<tr>
+<td>module</td>
+<td>Shared per parameter</td>
+</tr>
+<tr>
+<td>session</td>
+<td>Very risky</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Dynamic Scope Selection</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPWxhbWJkYSBuYW1lLCBjb25maWc6ICJzZXNzaW9uIik="]],[["ZGVmIGNvbmZpZ19kYXRhKCk6"]],[["ICAgIC4uLg=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope=lambda name, config: "session")
+def config_data():
+    ...
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Advanced use case; avoid unless necessary.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Performance vs Safety Trade-Off</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Scope</th>
+<th>Performance</th>
+<th>Safety</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>function</td>
+<td>Slowest</td>
+<td>Safest</td>
+</tr>
+<tr>
+<td>class</td>
+<td>Medium</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>module</td>
+<td>Fast</td>
+<td>Risky</td>
+</tr>
+<tr>
+<td>session</td>
+<td>Fastest</td>
+<td>Dangerous</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p>Rule of thumb:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Optimize scope <strong>only when performance is measurably a problem</strong>.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Common Fixture Scope Mistakes</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">1. Mutable Session Fixtures</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJzZXNzaW9uIik="]],[["ZGVmIGNhY2hlKCk6"]],[["ICAgIHJldHVybiB7fQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="session")
+def cache():
+    return {}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>State leaks across the entire test suite.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">2. Hidden State via Class or Module Scope</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["QHB5dGVzdC5maXh0dXJlKHNjb3BlPSJjbGFzcyIp"]],[["ZGVmIHVzZXIoKTo="]],[["ICAgIHJldHVybiBVc2VyKCk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>@pytest.fixture(scope="class")
+def user():
+    return User()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Tests may pass alone but fail in sequence.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">3. Overusing Autouse Fixtures</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Tests become unreadable and order-dependent.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">4. Assuming Fixture Reset Between Tests</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Scope determines lifecycle, not test order.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Practical Tips &amp; Best Practices</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Prefer Function Scope by Default</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Make widening scope an explicit optimization.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Make Shared Fixtures Read-Only</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If it must be shared, ensure it cannot be mutated.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Reset State Explicitly</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If mutation is required, reset inside the fixture.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Document Fixture Intent</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Especially for module/session fixtures.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Debugging Scope Issues</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Symptom: Tests Pass Individually, Fail Together</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Likely shared mutable state.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Symptom: Order-Dependent Failures</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Fixture scope too wide.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Symptom: Random Failures in CI</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Session or package scope leaking state.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Final Takeaway</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Fixture scope is not a performance tweak — it is a <strong>design decision</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Use the narrowest scope possible</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Treat wider scopes as shared state</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Never assume isolation without checking scope</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>A well-scoped fixture suite is invisible. A poorly scoped one will waste days of debugging time.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

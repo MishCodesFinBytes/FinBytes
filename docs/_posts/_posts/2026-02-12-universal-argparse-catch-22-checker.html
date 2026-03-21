@@ -1,0 +1,234 @@
+---
+layout: post
+title: Universal Argparse Catch-22 Checker
+date: 2026-02-12 23:18:00.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- CLI &amp; argparse
+tags:
+- argparse
+- CLI
+- debugging
+- tooling
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["AI","Artificial Intelligence","Technology","LLM"]'
+  timeline_notification: '1770950412'
+  firehose_sent: '1770950410'
+  _publicize_job_id: '111210077647'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-10 11:29:33'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/02/12/universal-argparse-catch-22-checker/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/ArgParseCLI","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBjaGVja19wYXJzZXJfdW5pdmVyc2FsLnB5","tok-comment"]],[["aW1wb3J0","tok-keyword"],["IA=="],["YXJncGFyc2U=","tok-variableName"]],[["aW1wb3J0","tok-keyword"],["IA=="],["c3lz","tok-variableName"]],[["aW1wb3J0","tok-keyword"],["IA=="],["aW1wb3J0bGli","tok-variableName"]],[["aW1wb3J0","tok-keyword"],["IA=="],["aW5zcGVjdA==","tok-variableName"]],[],[["ZGVm","tok-keyword"],["IA=="],["Y2hlY2tfcGFyc2Vy","tok-variableName tok-definition"],["KA==","tok-punctuation"],["cGFyc2Vy","tok-variableName"],["OiA="],["YXJncGFyc2U=","tok-variableName"],["Lg==","tok-operator"],["QXJndW1lbnRQYXJzZXI=","tok-propertyName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["IiIi","tok-string"]],[["ICAgIENoZWNrIGZvciBjb21tb24gYXJncGFyc2UgQ2F0Y2gtMjJzOg==","tok-string"]],[["ICAgIDEuIHN0b3JlX3RydWUgLyBzdG9yZV9mYWxzZSBmbGFncyB0aGF0IGNhbm5vdCBjaGFuZ2UgdmFsdWU=","tok-string"]],[["ICAgIDIuIHR5cGU9Ym9vbCBtaXN1c2U=","tok-string"]],[["ICAgIDMuIFJlcXVpcmVkIGFyZ3VtZW50cyB3aXRoIGRlZmF1bHRz","tok-string"]],[["ICAgICIiIg==","tok-string"]],[["ICAgIA=="],["aXNzdWVzX2ZvdW5k","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["RmFsc2U=","tok-bool"]],[["ICAgIA=="],["YWN0aW9ucw==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Ww==","tok-punctuation"],["YQ==","tok-variableName"],["IA=="],["Zm9y","tok-keyword"],["IA=="],["YQ==","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["cGFyc2Vy","tok-variableName"],["Lg==","tok-operator"],["X2FjdGlvbnM=","tok-propertyName"],["IA=="],["aWY=","tok-keyword"],["IA=="],["YQ==","tok-variableName"],["Lg==","tok-operator"],["b3B0aW9uX3N0cmluZ3M=","tok-propertyName"],["XQ==","tok-punctuation"]],[],[["ICAgIA=="],["Zm9y","tok-keyword"],["IA=="],["YWN0aW9u","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["YWN0aW9ucw==","tok-variableName"],["Og=="]],[["ICAgICAgICA="],["ZGVzdA==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["YWN0aW9u","tok-variableName"],["Lg==","tok-operator"],["ZGVzdA==","tok-propertyName"]],[["ICAgICAgICA="],["ZmxhZw==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["YWN0aW9u","tok-variableName"],["Lg==","tok-operator"],["b3B0aW9uX3N0cmluZ3M=","tok-propertyName"],["Ww==","tok-punctuation"],["MA==","tok-number"],["XQ==","tok-punctuation"]],[],[["ICAgICAgICA="],["IyAx77iP4oOjIEJvb2xlYW4gQ2F0Y2gtMjIgZGV0ZWN0aW9u","tok-comment"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["aXNpbnN0YW5jZQ==","tok-variableName"],["KA==","tok-punctuation"],["YWN0aW9u","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["KA==","tok-punctuation"],["YXJncGFyc2U=","tok-variableName"],["Lg==","tok-operator"],["X1N0b3JlVHJ1ZUFjdGlvbg==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["YXJncGFyc2U=","tok-variableName"],["Lg==","tok-operator"],["X1N0b3JlRmFsc2VBY3Rpb24=","tok-propertyName"],["KQ==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAg"],["dmFsX2Fic2VudA==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Z2V0YXR0cg==","tok-variableName"],["KA==","tok-punctuation"],["cGFyc2Vy","tok-variableName"],["Lg==","tok-operator"],["cGFyc2VfYXJncw==","tok-propertyName"],["KA==","tok-punctuation"],["Ww==","tok-punctuation"],["XQ==","tok-punctuation"],["KQ==","tok-punctuation"],["LA==","tok-punctuation"],["IA=="],["ZGVzdA==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["dmFsX3ByZXNlbnQ=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Z2V0YXR0cg==","tok-variableName"],["KA==","tok-punctuation"],["cGFyc2Vy","tok-variableName"],["Lg==","tok-operator"],["cGFyc2VfYXJncw==","tok-propertyName"],["KA==","tok-punctuation"],["Ww==","tok-punctuation"],["ZmxhZw==","tok-variableName"],["XQ==","tok-punctuation"],["KQ==","tok-punctuation"],["LA==","tok-punctuation"],["IA=="],["ZGVzdA==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["aWY=","tok-keyword"],["IA=="],["dmFsX2Fic2VudA==","tok-variableName"],["IA=="],["PT0=","tok-operator"],["IA=="],["dmFsX3ByZXNlbnQ=","tok-variableName"],["Og=="]],[["ICAgICAgICAgICAgICAgIA=="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["ZiJbQ2F0Y2gtMjJdIEZsYWcg","tok-string2"],["ew==","tok-punctuation"],["ZmxhZw==","tok-variableName"],["fQ==","tok-punctuation"],["IGNhbm5vdCBjaGFuZ2UgdmFsdWUgKGFsd2F5cyA=","tok-string2"],["ew==","tok-punctuation"],["dmFsX2Fic2VudA==","tok-variableName"],["fQ==","tok-punctuation"],["KSI=","tok-string2"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAgICAgIA=="],["aXNzdWVzX2ZvdW5k","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["VHJ1ZQ==","tok-bool"]],[],[["ICAgICAgICA="],["IyAy77iP4oOjIHR5cGU9Ym9vbCBtaXN1c2U=","tok-comment"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["YWN0aW9u","tok-variableName"],["Lg==","tok-operator"],["dHlwZQ==","tok-propertyName"],["IA=="],["aXM=","tok-keyword"],["IA=="],["Ym9vbA==","tok-variableName"],["Og=="]],[["ICAgICAgICAgICAg"],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["ZiJbVHlwZSBFcnJvcl0gRmxhZyA=","tok-string2"],["ew==","tok-punctuation"],["ZmxhZw==","tok-variableName"],["fQ==","tok-punctuation"],["IHVzZXMgdHlwZT1ib29sOyB1c2Ugc3RvcmVfdHJ1ZSAvIHN0b3JlX2ZhbHNlIGluc3RlYWQi","tok-string2"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["aXNzdWVzX2ZvdW5k","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["VHJ1ZQ==","tok-bool"]],[],[["ICAgICAgICA="],["IyAz77iP4oOjIFJlcXVpcmVkICsgZGVmYXVsdCBjb250cmFkaWN0aW9u","tok-comment"]],[["ICAgICAgICA="],["aWY=","tok-keyword"],["IA=="],["Z2V0YXR0cg==","tok-variableName"],["KA==","tok-punctuation"],["YWN0aW9u","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["InJlcXVpcmVkIg==","tok-string"],["LA==","tok-punctuation"],["IA=="],["RmFsc2U=","tok-bool"],["KQ==","tok-punctuation"],["IA=="],["YW5k","tok-keyword"],["IA=="],["YWN0aW9u","tok-variableName"],["Lg==","tok-operator"],["ZGVmYXVsdA==","tok-propertyName"],["IA=="],["aXM=","tok-keyword"],["IA=="],["bm90","tok-keyword"],["IA=="],["Tm9uZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICAgICAg"],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["ZiJbUmVxdWlyZWQrRGVmYXVsdF0gRmxhZyA=","tok-string2"],["ew==","tok-punctuation"],["ZmxhZw==","tok-variableName"],["fQ==","tok-punctuation"],["IGlzIHJlcXVpcmVkIGJ1dCBoYXMgYSBkZWZhdWx0ICg=","tok-string2"],["ew==","tok-punctuation"],["YWN0aW9u","tok-variableName"],["Lg==","tok-operator"],["ZGVmYXVsdA==","tok-propertyName"],["fQ==","tok-punctuation"],["KSI=","tok-string2"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["aXNzdWVzX2ZvdW5k","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["VHJ1ZQ==","tok-bool"]],[],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["aXNzdWVzX2ZvdW5k","tok-variableName"],["Og=="]],[["ICAgICAgICA="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["Ig==","tok-string"],["XG4=","tok-string2"],["UGFyc2VyIHNhbml0eSBjaGVjayBGQUlMRUQi","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c3lz","tok-variableName"],["Lg==","tok-operator"],["ZXhpdA==","tok-propertyName"],["KA==","tok-punctuation"],["MQ==","tok-number"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["ZWxzZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICA="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["IlBhcnNlciBzYW5pdHkgY2hlY2sgUEFTU0VEIg==","tok-string"],["KQ==","tok-punctuation"]],[],[],[["ZGVm","tok-keyword"],["IA=="],["bG9hZF9wYXJzZXJfZnJvbV9wYXRo","tok-variableName tok-definition"],["KA==","tok-punctuation"],["cGF0aA==","tok-variableName"],["OiA="],["c3Ry","tok-variableName"],["KQ==","tok-punctuation"],["IC0+IA=="],["YXJncGFyc2U=","tok-variableName"],["Lg==","tok-operator"],["QXJndW1lbnRQYXJzZXI=","tok-propertyName"],["Og=="]],[["ICAgIA=="],["IiIi","tok-string"]],[["ICAgIExvYWQgcGFyc2VyIGZyb20gYSBtb2R1bGUgcGF0aC4=","tok-string"]],[["ICAgIFVzYWdlIGV4YW1wbGU6ICJteWFwcC5jbGkuYnVpbGRfcGFyc2VyIg==","tok-string"]],[["ICAgICIiIg==","tok-string"]],[["ICAgIA=="],["bW9kdWxlX3BhdGg=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZnVuY19uYW1l","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cGF0aA==","tok-variableName"],["Lg==","tok-operator"],["cnNwbGl0","tok-propertyName"],["KA==","tok-punctuation"],["Ii4i","tok-string"],["LA==","tok-punctuation"],["IA=="],["MQ==","tok-number"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["bW9kdWxl","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["aW1wb3J0bGli","tok-variableName"],["Lg==","tok-operator"],["aW1wb3J0X21vZHVsZQ==","tok-propertyName"],["KA==","tok-punctuation"],["bW9kdWxlX3BhdGg=","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["ZnVuY19vcl9jbGFzcw==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Z2V0YXR0cg==","tok-variableName"],["KA==","tok-punctuation"],["bW9kdWxl","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZnVuY19uYW1l","tok-variableName"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["aW5zcGVjdA==","tok-variableName"],["Lg==","tok-operator"],["aXNjbGFzcw==","tok-propertyName"],["KA==","tok-punctuation"],["ZnVuY19vcl9jbGFzcw==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["cGFyc2Vy","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZnVuY19vcl9jbGFzcw==","tok-variableName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["ZWxpZg==","tok-keyword"],["IA=="],["Y2FsbGFibGU=","tok-variableName"],["KA==","tok-punctuation"],["ZnVuY19vcl9jbGFzcw==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["cGFyc2Vy","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZnVuY19vcl9jbGFzcw==","tok-variableName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["ZWxzZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICA="],["cmFpc2U=","tok-keyword"],["IA=="],["VHlwZUVycm9y","tok-variableName"],["KA==","tok-punctuation"],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["cGF0aA==","tok-variableName"],["fQ==","tok-punctuation"],["IGlzIG5vdCBhIGNhbGxhYmxlIG9yIGNsYXNzIg==","tok-string2"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["bm90","tok-keyword"],["IA=="],["aXNpbnN0YW5jZQ==","tok-variableName"],["KA==","tok-punctuation"],["cGFyc2Vy","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["YXJncGFyc2U=","tok-variableName"],["Lg==","tok-operator"],["QXJndW1lbnRQYXJzZXI=","tok-propertyName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["cmFpc2U=","tok-keyword"],["IA=="],["VHlwZUVycm9y","tok-variableName"],["KA==","tok-punctuation"],["ZiI=","tok-string2"],["ew==","tok-punctuation"],["cGF0aA==","tok-variableName"],["fQ==","tok-punctuation"],["IGRpZCBub3QgcmV0dXJuIGFuIEFyZ3VtZW50UGFyc2VyIGluc3RhbmNlIg==","tok-string2"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["cGFyc2Vy","tok-variableName"]],[],[],[["aWY=","tok-keyword"],["IA=="],["X19uYW1lX18=","tok-variableName"],["IA=="],["PT0=","tok-operator"],["IA=="],["Il9fbWFpbl9fIg==","tok-string"],["Og=="]],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["bGVu","tok-variableName"],["KA==","tok-punctuation"],["c3lz","tok-variableName"],["Lg==","tok-operator"],["YXJndg==","tok-propertyName"],["KQ==","tok-punctuation"],["IA=="],["IT0=","tok-operator"],["IA=="],["Mg==","tok-number"],["Og=="]],[["ICAgICAgICA="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["IlVzYWdlOiBweXRob24gY2hlY2tfcGFyc2VyX3VuaXZlcnNhbC5weSBteWFwcC5jbGkuYnVpbGRfcGFyc2VyIg==","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["c3lz","tok-variableName"],["Lg==","tok-operator"],["ZXhpdA==","tok-propertyName"],["KA==","tok-punctuation"],["MQ==","tok-number"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["cGFyc2VyX3BhdGg=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["c3lz","tok-variableName"],["Lg==","tok-operator"],["YXJndg==","tok-propertyName"],["Ww==","tok-punctuation"],["MQ==","tok-number"],["XQ==","tok-punctuation"]],[["ICAgIA=="],["cGFyc2Vy","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["bG9hZF9wYXJzZXJfZnJvbV9wYXRo","tok-variableName"],["KA==","tok-punctuation"],["cGFyc2VyX3BhdGg=","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["Y2hlY2tfcGFyc2Vy","tok-variableName"],["KA==","tok-punctuation"],["cGFyc2Vy","tok-variableName"],["KQ==","tok-punctuation"]],[],[]],"language":"Python","languageConfidence":"certain","fontSize":"x-small"} --></p>
+<pre class="wp-block-code has-x-small-font-size"><code># check_parser_universal.py
+import argparse
+import sys
+import importlib
+import inspect
+
+def check_parser(parser: argparse.ArgumentParser):
+    """
+    Check for common argparse Catch-22s:
+    1. store_true / store_false flags that cannot change value
+    2. type=bool misuse
+    3. Required arguments with defaults
+    """
+    issues_found = False
+    actions = [a for a in parser._actions if a.option_strings]
+
+    for action in actions:
+        dest = action.dest
+        flag = action.option_strings[0]
+
+        # 1️⃣ Boolean Catch-22 detection
+        if isinstance(action, (argparse._StoreTrueAction, argparse._StoreFalseAction)):
+            val_absent = getattr(parser.parse_args([]), dest)
+            val_present = getattr(parser.parse_args([flag]), dest)
+            if val_absent == val_present:
+                print(f"[Catch-22] Flag {flag} cannot change value (always {val_absent})")
+                issues_found = True
+
+        # 2️⃣ type=bool misuse
+        if action.type is bool:
+            print(f"[Type Error] Flag {flag} uses type=bool; use store_true / store_false instead")
+            issues_found = True
+
+        # 3️⃣ Required + default contradiction
+        if getattr(action, "required", False) and action.default is not None:
+            print(f"[Required+Default] Flag {flag} is required but has a default ({action.default})")
+            issues_found = True
+
+    if issues_found:
+        print("\nParser sanity check FAILED")
+        sys.exit(1)
+    else:
+        print("Parser sanity check PASSED")
+
+
+def load_parser_from_path(path: str) -&gt; argparse.ArgumentParser:
+    """
+    Load parser from a module path.
+    Usage example: "myapp.cli.build_parser"
+    """
+    module_path, func_name = path.rsplit(".", 1)
+    module = importlib.import_module(module_path)
+    func_or_class = getattr(module, func_name)
+
+    if inspect.isclass(func_or_class):
+        parser = func_or_class()
+    elif callable(func_or_class):
+        parser = func_or_class()
+    else:
+        raise TypeError(f"{path} is not a callable or class")
+
+    if not isinstance(parser, argparse.ArgumentParser):
+        raise TypeError(f"{path} did not return an ArgumentParser instance")
+    return parser
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python check_parser_universal.py myapp.cli.build_parser")
+        sys.exit(1)
+
+    parser_path = sys.argv[1]
+    parser = load_parser_from_path(parser_path)
+    check_parser(parser)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">How to use</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Make sure your parser is exposed as a <strong>function or class</strong> returning an <code>ArgumentParser</code>.</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBteWFwcC9jbGkucHk=","tok-comment"]],[["aW1wb3J0IGFyZ3BhcnNl"]],[],[["ZGVmIGJ1aWxkX3BhcnNlcigpOg=="]],[["ICAgIHBhcnNlciA="],["PQ==","tok-operator"],["IGFyZ3BhcnNlLkFyZ3VtZW50UGFyc2VyKCk="]],[["ICAgIHBhcnNlci5hZGRfYXJndW1lbnQo"],["Ii0tdmVyYm9zZSI=","tok-string"],["LCA="],["YWN0aW9u","tok-variableName tok-definition"],["PQ==","tok-operator"],["InN0b3JlX3RydWUi","tok-string"],["KQ=="]],[["ICAgIHBhcnNlci5hZGRfYXJndW1lbnQo"],["Ii0tZm9yY2Ui","tok-string"],["LCA="],["YWN0aW9u","tok-variableName tok-definition"],["PQ==","tok-operator"],["InN0b3JlX2ZhbHNlIg==","tok-string"],["LCA="],["ZGVmYXVsdA==","tok-variableName tok-definition"],["PQ==","tok-operator"],["RmFsc2Up"]],[["ICAgIHBhcnNlci5hZGRfYXJndW1lbnQo"],["Ii0tbW9kZSI=","tok-string"],["LCA="],["Y2hvaWNlcw==","tok-variableName tok-definition"],["PQ==","tok-operator"],["Ww=="],["ImRldiI=","tok-string"],["LCA="],["InByb2Qi","tok-string"],["XSwg"],["cmVxdWlyZWQ=","tok-variableName tok-definition"],["PQ==","tok-operator"],["VHJ1ZSwg"],["ZGVmYXVsdA==","tok-variableName tok-definition"],["PQ==","tok-operator"],["ImRldiI=","tok-string"],["KQ=="]],[["ICAgIHBhcnNlci5hZGRfYXJndW1lbnQo"],["Ii0tZW5hYmxlZCI=","tok-string"],["LCA="],["dHlwZQ==","tok-variableName tok-definition"],["PQ==","tok-operator"],["Ym9vbCkgIA=="],["IyBicm9rZW4gZXhhbXBsZQ==","tok-comment"]],[["ICAgIHJldHVybiBwYXJzZXI="]],[],[]],"language":"Shell","languageConfidence":"certain","fontSize":"x-small"} --></p>
+<pre class="wp-block-code has-x-small-font-size"><code># myapp/cli.py
+import argparse
+
+def build_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--force", action="store_false", default=False)
+    parser.add_argument("--mode", choices=["dev", "prod"], required=True, default="dev")
+    parser.add_argument("--enabled", type=bool)  # broken example
+    return parser
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Run the checker from anywhere:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0aG9u","tok-variableName"],["IA=="],["Y2hlY2tfcGFyc2VyX3VuaXZlcnNhbA==","tok-variableName"],["Lg==","tok-operator"],["cHk=","tok-propertyName"],["IA=="],["bXlhcHA=","tok-variableName"],["Lg==","tok-operator"],["Y2xp","tok-propertyName"],["Lg==","tok-operator"],["YnVpbGRfcGFyc2Vy","tok-propertyName"]],[],[]],"language":"Python","languageConfidence":"certain","fontSize":"x-small"} --></p>
+<pre class="wp-block-code has-x-small-font-size"><code>python check_parser_universal.py myapp.cli.build_parser
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":3} --></p>
+<ol start="3" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Output:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0NhdGNoLTIyXSBGbGFnIA=="],["LS12ZXJib3Nl","tok-propertyName"],["IGNhbm5vdCBjaGFuZ2UgdmFsdWUgKGFsd2F5cyBGYWxzZSk="]],[["W1R5cGUgRXJyb3JdIEZsYWcg"],["LS1lbmFibGVk","tok-propertyName"],["IHVzZXMg"],["dHlwZQ==","tok-variableName tok-definition"],["PQ==","tok-operator"],["Ym9vbDsgdXNlIHN0b3JlX3RydWUgLyBzdG9yZV9mYWxzZSBpbnN0ZWFk"]],[["W1JlcXVpcmVk"],["Kw==","tok-operator"],["RGVmYXVsdF0gRmxhZyA="],["LS1tb2Rl","tok-propertyName"],["IGlzIHJlcXVpcmVkIGJ1dCBoYXMgYSBkZWZhdWx0IChkZXYp"]],[],[["UGFyc2VyIHNhbml0eSBjaGVjayBGQUlMRUQ="]],[],[]],"language":"Shell","languageConfidence":"certain","fontSize":"x-small"} --></p>
+<pre class="wp-block-code has-x-small-font-size"><code>[Catch-22] Flag --verbose cannot change value (always False)
+[Type Error] Flag --enabled uses type=bool; use store_true / store_false instead
+[Required+Default] Flag --mode is required but has a default (dev)
+
+Parser sanity check FAILED
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":4} --></p>
+<ol start="4" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Fix issues in your parser. Run again. ✅</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Benefits</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Works on <strong>any parser</strong> exposed as a function or class.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Detects <strong>broken boolean flags, type misuse, and required+default contradictions</strong>.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Runs <strong>without pytest</strong> — just a command-line tool.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Perfect for <strong>daily developer sanity checks</strong> or pre-commit hooks.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Optional Enhancement</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can even integrate this into a <strong>pre-commit hook</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyAucHJlLWNvbW1pdC1jb25maWcueWFtbA==","tok-comment"]],[["LQ==","tok-propertyName"],["ICAgcmVwbzogbG9jYWw="]],[["ICAgIGhvb2tzOg=="]],[["ICAgIA=="],["LQ==","tok-propertyName"],["ICAgaWQ6IGNoZWNrLWFyZ3BhcnNl"]],[["ICAgICAgICBuYW1lOiBDaGVjayBBcmdwYXJzZSBTYW5pdHk="]],[["ICAgICAgICBlbnRyeTogcHl0aG9uIGNoZWNrX3BhcnNlcl91bml2ZXJzYWwucHkgbXlhcHAuY2xpLmJ1aWxkX3BhcnNlcg=="]],[["ICAgICAgICBsYW5ndWFnZTogc3lzdGVt"]],[["ICAgICAgICB0eXBlczogW3B5dGhvbl0="]],[],[]],"language":"Shell","languageConfidence":"certain","fontSize":"x-small"} --></p>
+<pre class="wp-block-code has-x-small-font-size"><code># .pre-commit-config.yaml
+-   repo: local
+    hooks:
+    -   id: check-argparse
+        name: Check Argparse Sanity
+        entry: python check_parser_universal.py myapp.cli.build_parser
+        language: system
+        types: [python]
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now, <strong>every commit</strong> validates your CLI before it reaches production. :)</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>
