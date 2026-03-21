@@ -29,8 +29,10 @@ github_username:  MishCodesFinBytes
 # Build settings
 theme: minima
 
+logo: /assets/images/logo.png
+
 minima:
-  logo: /FinBytes/assets/logo.png
+  logo: /FinBytes/assets/images/logo.png
 
 plugins:
   - jekyll-feed
