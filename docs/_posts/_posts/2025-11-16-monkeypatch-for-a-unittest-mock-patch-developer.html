@@ -1,0 +1,602 @@
+---
+layout: post
+title: Monkeypatch for a unittest.mock.patch Developer
+date: 2025-11-16 19:44:55.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- migration
+- monkeypatch
+- pytest
+- unittest
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Politics","Technology","Music","Sports","Art"]'
+  _wp_old_date: '2026-02-13'
+  firehose_sent: '1771011983'
+  _publicize_job_id: '111228486824'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-13 19:46:02'
+  timeline_notification: '1771011984'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/11/16/monkeypatch-for-a-unittest-mock-patch-developer/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you are comfortable with:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBwYXRjaA=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import patch
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>…then <code>pytest</code>’s <code>monkeypatch</code> will feel both familiar and slightly unsettling.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>It does less.<br>It looks simpler.<br>It has no decorators.<br>It has no context manager.<br>It auto-reverts.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>And yet — it solves 90% of patching problems cleanly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This guide explains monkeypatch in terms a <code>unittest.mock.patch</code> user already understands.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Mental Model Shift</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><code>unittest.mock.patch</code></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Creates a mock object</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Replaces a target with that mock</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Tracks calls</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Can autospec</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Can assert calls</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Requires decorator/context manager</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><code>pytest.monkeypatch</code></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Reassigns an attribute</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Does not create mocks for you</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Does not track calls</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Automatically restores state after the test</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>In short:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><code>patch</code> = mocking + patching<br><code>monkeypatch</code> = patching only</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Side-by-Side Comparison</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Example Code</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">module2.py</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2xhc3MgQ2xhc3MyOg=="]],[["ICAgIGRlZiBtdWx0aXBseSh4LCB5KTo="]],[["ICAgICAgICByZXR1cm4geCAqIHk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>class Class2:
+    def multiply(x, y):
+        return x * y
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">module1.py</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSBtb2R1bGUyIGltcG9ydCBDbGFzczI="]],[[""]],[["Y2xhc3MgQ2xhc3MxOg=="]],[["ICAgIGRlZiBjb21wdXRlKHNlbGYsIGEsIGIpOg=="]],[["ICAgICAgICByZXR1cm4gQ2xhc3MyLm11bHRpcGx5KGEsIGIpICsgMTA="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from module2 import Class2
+
+class Class1:
+    def compute(self, a, b):
+        return Class2.multiply(a, b) + 10
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Using <code>unittest.mock.patch</code><br />
+</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBwYXRjaA=="]],[["ZnJvbSBtb2R1bGUxIGltcG9ydCBDbGFzczE="]],[[""]],[["ZGVmIHRlc3Rfd2l0aF9wYXRjaCgpOg=="]],[["ICAgIHdpdGggcGF0Y2goIm1vZHVsZTEuQ2xhc3MyLm11bHRpcGx5IiwgcmV0dXJuX3ZhbHVlPTEwMCkgYXMgbW9ja19tdWw6"]],[["ICAgICAgICBvYmogPSBDbGFzczEoKQ=="]],[["ICAgICAgICByZXN1bHQgPSBvYmouY29tcHV0ZSgzLCA1KQ=="]],[[""]],[["ICAgICAgICBhc3NlcnQgcmVzdWx0ID09IDExMA=="]],[["ICAgICAgICBtb2NrX211bC5hc3NlcnRfY2FsbGVkX29uY2Vfd2l0aCgzLCA1KQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import patch
+from module1 import Class1
+
+def test_with_patch():
+    with patch("module1.Class2.multiply", return_value=100) as mock_mul:
+        obj = Class1()
+        result = obj.compute(3, 5)
+
+        assert result == 110
+        mock_mul.assert_called_once_with(3, 5)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You get:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>automatic mock object</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>return_value</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>call assertions</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Using <code>monkeypatch</code><br />
+</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHRlc3Rfd2l0aF9tb25rZXlwYXRjaChtb25rZXlwYXRjaCk6"]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIoIm1vZHVsZTEuQ2xhc3MyLm11bHRpcGx5IiwgbGFtYmRhIHgsIHk6IDEwMCk="]],[[""]],[["ICAgIG9iaiA9IENsYXNzMSgp"]],[["ICAgIHJlc3VsdCA9IG9iai5jb21wdXRlKDMsIDUp"]],[[""]],[["ICAgIGFzc2VydCByZXN1bHQgPT0gMTEw"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def test_with_monkeypatch(monkeypatch):
+    monkeypatch.setattr("module1.Class2.multiply", lambda x, y: 100)
+
+    obj = Class1()
+    result = obj.compute(3, 5)
+
+    assert result == 110
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Notice what’s missing:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>no mock object</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>no assert_called</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>no return_value kwarg</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>no context manager</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>It’s just reassignment.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">How to Replicate <code>return_value=...</code><br />
+</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>patch(..., return_value=100)</code> becomes:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cigibW9kdWxlMS5DbGFzczIubXVsdGlwbHkiLCBsYW1iZGEgeCwgeTogMTAwKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr("module1.Class2.multiply", lambda x, y: 100)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>That’s it.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">How to Replicate Call Assertions</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you need call tracking, you combine monkeypatch with <code>Mock</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBNb2Nr"]],[[""]],[["ZGVmIHRlc3RfY2FsbF90cmFja2luZyhtb25rZXlwYXRjaCk6"]],[["ICAgIG1vY2tfbXVsID0gTW9jayhyZXR1cm5fdmFsdWU9MTAwKQ=="]],[[""]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIoIm1vZHVsZTEuQ2xhc3MyLm11bHRpcGx5IiwgbW9ja19tdWwp"]],[[""]],[["ICAgIG9iaiA9IENsYXNzMSgp"]],[["ICAgIHJlc3VsdCA9IG9iai5jb21wdXRlKDMsIDUp"]],[[""]],[["ICAgIGFzc2VydCByZXN1bHQgPT0gMTEw"]],[["ICAgIG1vY2tfbXVsLmFzc2VydF9jYWxsZWRfb25jZV93aXRoKDMsIDUp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import Mock
+
+def test_call_tracking(monkeypatch):
+    mock_mul = Mock(return_value=100)
+
+    monkeypatch.setattr("module1.Class2.multiply", mock_mul)
+
+    obj = Class1()
+    result = obj.compute(3, 5)
+
+    assert result == 110
+    mock_mul.assert_called_once_with(3, 5)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now you have both:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>monkeypatch lifecycle management</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>full mock inspection</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Instance Method Differences</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If patching an instance method at class level:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0YXR0cig="]],[["ICAgICJtb2R1bGUxLkNsYXNzMi5zb21lX21ldGhvZCIs"]],[["ICAgIGxhbWJkYSBzZWxmLCB4OiA0Mg=="]],[["KQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setattr(
+    "module1.Class2.some_method",
+    lambda self, x: 42
+)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You must include <code>self</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If patching a specific instance:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["b2JqID0gQ2xhc3MxKCk="]],[[""]],[["bW9ua2V5cGF0Y2guc2V0YXR0cig="]],[["ICAgIG9iai5oZWxwZXIs"]],[["ICAgICJzb21lX21ldGhvZCIs"]],[["ICAgIGxhbWJkYSB4OiA0Mg=="]],[["KQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>obj = Class1()
+
+monkeypatch.setattr(
+    obj.helper,
+    "some_method",
+    lambda x: 42
+)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>No <code>self</code> required (already bound).</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Constructor Patching</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Equivalent to:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["d2l0aCBwYXRjaCgibW9kdWxlMS5DbGFzczIiKSBhcyBNb2NrQ2xhc3M6"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>with patch("module1.Class2") as MockClass:
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Monkeypatch version:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBNb2Nr"]],[[""]],[["ZGVmIHRlc3RfY29uc3RydWN0b3IobW9ua2V5cGF0Y2gpOg=="]],[["ICAgIGZha2VfaW5zdGFuY2UgPSBNb2NrKCk="]],[["ICAgIGZha2VfaW5zdGFuY2UubXVsdGlwbHkucmV0dXJuX3ZhbHVlID0gMTAw"]],[[""]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIoIm1vZHVsZTEuQ2xhc3MyIiwgbGFtYmRhOiBmYWtlX2luc3RhbmNlKQ=="]],[[""]],[["ICAgIG9iaiA9IENsYXNzMSgp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import Mock
+
+def test_constructor(monkeypatch):
+    fake_instance = Mock()
+    fake_instance.multiply.return_value = 100
+
+    monkeypatch.setattr("module1.Class2", lambda: fake_instance)
+
+    obj = Class1()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You replace the class with a callable returning your fake.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Feature Comparison Table</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"fontSize":"x-small"} --></p>
+<figure class="wp-block-table has-x-small-font-size">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Capability</th>
+<th>unittest.mock.patch</th>
+<th>pytest monkeypatch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Replace attribute</td>
+<td>✔</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Auto cleanup</td>
+<td>✔</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Context manager required</td>
+<td>✔</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>Decorator stacking</td>
+<td>✔</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>Call tracking built-in</td>
+<td>✔</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>Autospec</td>
+<td>✔</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>Simple inline override</td>
+<td>Less clean</td>
+<td>Very clean</td>
+</tr>
+<tr>
+<td>Patching env vars</td>
+<td>Manual</td>
+<td>Built-in</td>
+</tr>
+<tr>
+<td>Patching dicts</td>
+<td>Manual</td>
+<td>Built-in</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Where Monkeypatch Is Actually Better</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">1️⃣ Environment Variables</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0ZW52KCJBUElfS0VZIiwgInRlc3Qta2V5Iik="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setenv("API_KEY", "test-key")
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>No need for <code>patch.dict(os.environ, ...)</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">2️⃣ Dictionary Overrides</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9ua2V5cGF0Y2guc2V0aXRlbShjb25maWdfZGljdCwgInRpbWVvdXQiLCAxKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>monkeypatch.setitem(config_dict, "timeout", 1)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">3️⃣ Cleaner Test Flow</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>No indentation nesting.<br>No decorator stacking.<br>Less visual noise.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">The Import Rule Still Applies</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Exactly the same rule as <code>patch</code>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Patch where the symbol is looked up.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>If <code>module1</code> imports <code>Class2</code>, patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9kdWxlMS5DbGFzczI="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>module1.Class2
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Never:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["bW9kdWxlMi5DbGFzczI="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>module2.Class2
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This rule does not change between the two systems.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">When To Use Which</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Use <code>unittest.mock.patch</code> when:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>You need autospec</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You want heavy mock inspection</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You rely heavily on call assertions</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Use <code>monkeypatch</code> when:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>You want simpler tests</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You’re overriding deterministic behavior</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You’re patching environment/config</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You prefer flat test structure</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>In practice, many mature codebases combine both.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">The Big Realization</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>patch</code> feels powerful because it bundles:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>replacement</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>mock creation</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>lifecycle</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>introspection</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>monkeypatch</code> is intentionally minimal.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>It modifies attributes.<br>It restores them.<br>It gets out of your way.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Once you separate “mocking” from “patching” conceptually, monkeypatch becomes predictable and elegant.</p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

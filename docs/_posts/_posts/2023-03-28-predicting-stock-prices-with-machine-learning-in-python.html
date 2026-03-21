@@ -1,0 +1,176 @@
+---
+layout: post
+title: Predicting Stock Prices with Machine Learning in Python
+date: 2023-03-28 12:16:51.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- Machine Learning
+- ML
+- prediction
+- stocks
+meta:
+  reader_suggested_tags: '["Machine Learning","AI","Artificial Intelligence","Data
+    Science","Technology"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '361'
+  _wp_old_date: '2024-10-30'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _yoast_wpseo_primary_category: '1377'
+  _yoast_wpseo_content_score: '30'
+  _yoast_wpseo_estimated-reading-time-minutes: '4'
+  _import_original_post_id: '114'
+  _publicize_job_id: '112088254759'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:47'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/03/28/predicting-stock-prices-with-machine-learning-in-python/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/PredictStockPrices","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Stock prices are a crucial aspect of the financial world, with billions of dollars being invested and traded in the stock market every day. As a result, accurately predicting stock prices can be incredibly valuable for investors, traders, and financial institutions. However, with the constantly changing market conditions and an overwhelming amount of data, predicting stock prices can be a challenging and time-consuming task. This is where machine learning and regression analysis come into play.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In recent years, there has been a significant increase in the use of machine learning techniques in the financial industry, particularly in fintech. From automating calculations to building predictive models, machine learning has revolutionized the way financial tasks are performed. In this blog post, we will explore how regression analysis, a popular machine learning technique, can be used to predict stock prices, with a focus on its applications in fintech, using the Python programming language.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Regression Analysis:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Regression analysis is a statistical method used to identify and analyze the relationship between a dependent variable and one or more independent variables. In simpler terms, it helps us understand how the dependent variable changes when one or more independent variables are varied. In the context of stock prices, the dependent variable would be the stock price, and the independent variables could be factors like market trends, company performance, economic indicators, etc.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>There are various types of regression analysis, such as linear regression, polynomial regression, and logistic regression. In this blog post, we will focus on linear regression, which is commonly used for predicting numerical values, making it well-suited for predicting stock prices.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Linear Regression in Python:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python has become the go-to language for data analysis and machine learning, with its vast collection of libraries and frameworks. Let's take a look at how we can use Python to perform linear regression and predict stock prices.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>First, we need to import the necessary libraries, such as Pandas, NumPy, and Scikit-learn, which provide powerful tools for data manipulation and machine learning.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Import Libraries</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import pandas as pd\nimport numpy as np\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import mean_squared_error, r2_score","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e numpy \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e np\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.linear_model \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e LinearRegression\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.model_selection \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e train_test_split\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.metrics \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e mean_squared_error, r2_score\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> numpy </span><span style="color: #AF00DB">as</span><span style="color: #000000"> np</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.linear_model </span><span style="color: #AF00DB">import</span><span style="color: #000000"> LinearRegression</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.model_selection </span><span style="color: #AF00DB">import</span><span style="color: #000000"> train_test_split</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.metrics </span><span style="color: #AF00DB">import</span><span style="color: #000000"> mean_squared_error, r2_score</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we need to load the data into a Pandas dataframe. For this example, we will use the stock price data of Apple Inc. from Yahoo Finance. The dataset contains the stock price, volume, and other financial indicators for each day from 2015 to 2020.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Load Data</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"df = pd.read_csv(\u0022AAPL.csv\u0022)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;AAPL.csv\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">"AAPL.csv"</span><span style="color: #000000">)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Before we can build a predictive model, we need to preprocess the data. This involves handling missing values, converting categorical data into numerical data, and splitting the dataset into training and test sets. The training set will be used to train the model, while the test set will be used to evaluate its performance.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Data Preprocessing</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"#Handle missing values\ndf = df.dropna()\n\n#Convert categorical data into numerical data\ndf[\u0022Date\u0022] = pd.to_datetime(df[\u0022Date\u0022])\ndf[\u0022Date\u0022] = df[\u0022Date\u0022].dt.strftime(\u0022%Y%m%d\u0022).astype(int)\n\n#Split dataset into training and test sets\nX = df.drop([\u0022Close\u0022], axis=1)\ny = df[\u0022Close\u0022]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e#Handle missing values\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = df.dropna()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e#Convert categorical data into numerical data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Date\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = pd.to_datetime(df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Date\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Date\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Date\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e].dt.strftime(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;%Y%m\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e%d\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e).astype(\u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003eint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e#Split dataset into training and test sets\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eX = df.drop([\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Close\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e], \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eaxis\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ey = df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Close\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eX_train, X_test, y_train, y_test = train_test_split(X, y, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003etest_size\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.2\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003erandom_state\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e42\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000">#Handle missing values</span></span>
+<span class="line"><span style="color: #000000">df = df.dropna()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000">#Convert categorical data into numerical data</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">"Date"</span><span style="color: #000000">] = pd.to_datetime(df[</span><span style="color: #A31515">"Date"</span><span style="color: #000000">])</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">"Date"</span><span style="color: #000000">] = df[</span><span style="color: #A31515">"Date"</span><span style="color: #000000">].dt.strftime(</span><span style="color: #A31515">"%Y%m</span><span style="color: #0000FF">%d</span><span style="color: #A31515">"</span><span style="color: #000000">).astype(</span><span style="color: #267F99">int</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000">#Split dataset into training and test sets</span></span>
+<span class="line"><span style="color: #000000">X = df.drop([</span><span style="color: #A31515">"Close"</span><span style="color: #000000">], </span><span style="color: #001080">axis</span><span style="color: #000000">=</span><span style="color: #098658">1</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">y = df[</span><span style="color: #A31515">"Close"</span><span style="color: #000000">]</span></span>
+<span class="line"><span style="color: #000000">X_train, X_test, y_train, y_test = train_test_split(X, y, </span><span style="color: #001080">test_size</span><span style="color: #000000">=</span><span style="color: #098658">0.2</span><span style="color: #000000">, </span><span style="color: #001080">random_state</span><span style="color: #000000">=</span><span style="color: #098658">42</span><span style="color: #000000">)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Once the data is preprocessed, we can train our linear regression model using the training set.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Train the Model</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"lr = LinearRegression()\nlr.fit(X_train, y_train)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003elr = LinearRegression()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003elr.fit(X_train, y_train)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">lr = LinearRegression()</span></span>
+<span class="line"><span style="color: #000000">lr.fit(X_train, y_train)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now that our model is trained, we can use it to make predictions on the test set.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Make Predictions</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"y_pred = lr.predict(X_test)","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ey_pred = lr.predict(X_test)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #000000">y_pred = lr.predict(X_test)</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Finally, we can evaluate the performance of our model by calculating the mean squared error and the coefficient of determination (R²).</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Evaluate Model Performance</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"print(\u0022Mean Squared Error: \u0022, mean_squared_error(y_test, y_pred))\nprint(\u0022Coefficient of Determination (R²): \u0022, r2_score(y_test, y_pred))","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Mean Squared Error: \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, mean_squared_error(y_test, y_pred))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Coefficient of Determination (R²): \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, r2_score(y_test, y_pred))\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Mean Squared Error: "</span><span style="color: #000000">, mean_squared_error(y_test, y_pred))</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Coefficient of Determination (R²): "</span><span style="color: #000000">, r2_score(y_test, y_pred))</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Our model has an R² value of 0.997, which is close to 1, indicating a strong linear relationship between the independent and dependent variables. This means that our model can accurately predict stock prices, making it a valuable tool for investors and traders.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Applications in Fintech:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The use of regression analysis in fintech goes beyond predicting stock prices. It can be applied to various financial tasks, such as credit risk assessment, fraud detection, and market trend analysis. By automating these tasks, machine learning can save time and reduce human error, making it a valuable tool for financial institutions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In addition, with the rise of fintech startups, there is a growing need for innovative solutions to improve financial services. Regression analysis, along with other machine learning techniques, can help these startups develop predictive models and gain valuable insights from data, making them more competitive in the market.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:image {"id":595,"sizeSlug":"full","linkDestination":"none"} --></p>
+<figure class="wp-block-image size-full"><img src="{{site.baseurl}}/assets/2023/03/a77cd-figure_11.png" alt="" class="wp-image-595"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:paragraph --></p>
+<p>In conclusion, regression analysis is a powerful machine learning technique that can be used to predict stock prices and perform various financial tasks. With the help of Python, financial institutions and fintech startups can leverage this technique to automate tasks, make accurate predictions, and gain valuable insights from data. As technology continues to advance, we can expect to see more applications of regression analysis in the fintech industry, leading to more efficient and data-driven financial decisions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

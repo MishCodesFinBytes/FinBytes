@@ -1,0 +1,276 @@
+---
+layout: post
+title: 'Clustering Techniques for Fintech: Enhancing Customer Insight'
+date: 2023-04-05 12:42:32.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- clustering
+- customer data
+- Machine Learning
+- ML
+meta:
+  reader_suggested_tags: '["Machine Learning","Data Science","AI","Artificial Intelligence","Python"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '325'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _wp_old_date: '2024-11-07'
+  _yoast_wpseo_primary_category: '1377'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '5'
+  _import_original_post_id: '150'
+  _publicize_job_id: '112088253904'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:49'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/04/05/clustering-techniques-for-fintech-enhancing-customer-insight/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/Clustering","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p><br> In today's digital age, the finance industry is rapidly evolving, and fintech companies are at the forefront of this change. With the increasing availability of large amounts of customer data and advancements in technology, fintech companies are constantly looking for ways to enhance their customer segmentation strategies. This is where clustering techniques in Python come into play. By utilizing these techniques, fintech companies can gain valuable insights into their customers, better tailor their services, and ultimately improve their overall performance. In this blog post, we will explore the concept of clustering and its various applications in fintech using Python.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Clustering Techniques in Fintech</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Clustering is a commonly used unsupervised machine learning technique that aims to group similar data points together. In the context of fintech, this can be applied to segment customers based on their financial behavior, preferences, and needs. By grouping customers with similar characteristics, fintech companies can tailor their products and services to better suit their needs, leading to improved customer satisfaction and increased revenue.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Python Applications in Fintech</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python is a popular programming language in the fintech industry due to its ease of use, powerful libraries, and data analysis capabilities. Let's explore some use cases of clustering techniques in fintech using Python.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">1. Customer Segmentation</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>One of the primary applications of clustering in fintech is customer segmentation. By clustering customers based on their financial behavior, transaction history, and demographics, fintech companies can identify patterns and segments within their customer base. This enables them to personalize their services and marketing strategies, leading to better customer retention and increased profitability.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let's take a look at an example of customer segmentation using Python and its popular library, scikit-learn. We will use a sample dataset of customer transactions and cluster them into three segments using K-means clustering.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>First, we import the necessary libraries and read the dataset into a Pandas DataFrame.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import pandas as pd\nfrom sklearn.cluster import KMeans\n\n# Read dataset\ndf = pd.read_csv('customer_transactions.csv')\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.cluster \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e KMeans\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Read dataset\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;customer_transactions.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.cluster </span><span style="color: #AF00DB">import</span><span style="color: #000000"> KMeans</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Read dataset</span></span>
+<span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">'customer_transactions.csv'</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we select the relevant features and scale the data to ensure the clustering algorithm's accuracy.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Select features\nX = df[['age', 'income', 'transaction_amount']]\n\n# Scale the data\nfrom sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Select features\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eX = df[[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;age\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;income\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;transaction_amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Scale the data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.preprocessing \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e StandardScaler\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003escaler = StandardScaler()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eX_scaled = scaler.fit_transform(X)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Select features</span></span>
+<span class="line"><span style="color: #000000">X = df[[</span><span style="color: #A31515">'age'</span><span style="color: #000000">, </span><span style="color: #A31515">'income'</span><span style="color: #000000">, </span><span style="color: #A31515">'transaction_amount'</span><span style="color: #000000">]]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Scale the data</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.preprocessing </span><span style="color: #AF00DB">import</span><span style="color: #000000"> StandardScaler</span></span>
+<span class="line"><span style="color: #000000">scaler = StandardScaler()</span></span>
+<span class="line"><span style="color: #000000">X_scaled = scaler.fit_transform(X)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now, we can apply the K-means algorithm to cluster the customers into three segments.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Apply K-means clustering\nkmeans = KMeans(n_clusters=3, random_state=0).fit(X_scaled)\n\n# Add cluster labels to the dataset\ndf['cluster'] = kmeans.labels_\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Apply K-means clustering\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ekmeans = KMeans(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003en_clusters\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e3\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003erandom_state\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e).fit(X_scaled)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Add cluster labels to the dataset\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;cluster\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = kmeans.labels_\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Apply K-means clustering</span></span>
+<span class="line"><span style="color: #000000">kmeans = KMeans(</span><span style="color: #001080">n_clusters</span><span style="color: #000000">=</span><span style="color: #098658">3</span><span style="color: #000000">, </span><span style="color: #001080">random_state</span><span style="color: #000000">=</span><span style="color: #098658">0</span><span style="color: #000000">).fit(X_scaled)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Add cluster labels to the dataset</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">'cluster'</span><span style="color: #000000">] = kmeans.labels_</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:image {"id":654,"sizeSlug":"full","linkDestination":"none"} --></p>
+<figure class="wp-block-image size-full"><img src="{{site.baseurl}}/assets/2023/04/b7002-figure_1-1.png" alt="" class="wp-image-654"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:paragraph --></p>
+<p>We can then visualize the clusters and analyze the characteristics of each segment to better understand our customers' behavior.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">2. Fraud Detection</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Fraud detection is another vital application of clustering in fintech. By clustering transactions based on their similarity, fraud detection algorithms can identify suspicious transactions and flag them for further investigation. This can help fintech companies prevent financial losses and protect their customers' data and assets.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let's see how we can use Python to detect fraudulent credit card transactions using the K-means clustering algorithm.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>First, we import the necessary libraries and read the dataset into a Pandas DataFrame.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import pandas as pd\nfrom sklearn.cluster import KMeans\n\n# Read dataset\ndf = pd.read_csv('credit_card_transactions.csv')\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.cluster \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e KMeans\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Read dataset\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;credit_card_transactions.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.cluster </span><span style="color: #AF00DB">import</span><span style="color: #000000"> KMeans</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Read dataset</span></span>
+<span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">'credit_card_transactions.csv'</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we select the relevant features and scale the data.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Select features\nX = df[['time', 'amount']]\n\n# Scale the data\nfrom sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Select features\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eX = df[[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;time\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Scale the data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.preprocessing \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e StandardScaler\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003escaler = StandardScaler()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eX_scaled = scaler.fit_transform(X)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Select features</span></span>
+<span class="line"><span style="color: #000000">X = df[[</span><span style="color: #A31515">'time'</span><span style="color: #000000">, </span><span style="color: #A31515">'amount'</span><span style="color: #000000">]]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Scale the data</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.preprocessing </span><span style="color: #AF00DB">import</span><span style="color: #000000"> StandardScaler</span></span>
+<span class="line"><span style="color: #000000">scaler = StandardScaler()</span></span>
+<span class="line"><span style="color: #000000">X_scaled = scaler.fit_transform(X)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Then, we apply the K-means algorithm and label the transactions as either normal or fraudulent based on their cluster.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Apply K-means clustering\nkmeans = KMeans(n_clusters=2, random_state=0).fit(X_scaled)\n\n# Add labels to the dataset\ndf['label'] = kmeans.labels_\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Apply K-means clustering\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ekmeans = KMeans(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003en_clusters\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e2\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003erandom_state\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e).fit(X_scaled)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Add labels to the dataset\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;label\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = kmeans.labels_\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Apply K-means clustering</span></span>
+<span class="line"><span style="color: #000000">kmeans = KMeans(</span><span style="color: #001080">n_clusters</span><span style="color: #000000">=</span><span style="color: #098658">2</span><span style="color: #000000">, </span><span style="color: #001080">random_state</span><span style="color: #000000">=</span><span style="color: #098658">0</span><span style="color: #000000">).fit(X_scaled)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Add labels to the dataset</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">'label'</span><span style="color: #000000">] = kmeans.labels_</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:image {"id":657,"sizeSlug":"full","linkDestination":"none"} --></p>
+<figure class="wp-block-image size-full"><img src="{{site.baseurl}}/assets/2023/04/736c9-figure_2-2.png" alt="" class="wp-image-657"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:paragraph --></p>
+<p>Finally, we can evaluate the performance of the clustering algorithm by comparing the predicted labels with the actual labels.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">3. Risk Assessment</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>In the fintech industry, risk assessment is crucial for making informed decisions about investments and loans. Clustering techniques can help identify patterns in financial data and assist in risk assessment by predicting potential defaulters or high-risk customers.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let's take a look at an example of using Python to assess credit risk using hierarchical clustering.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>First, we import the necessary libraries and read the dataset into a Pandas DataFrame.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import pandas as pd\nfrom scipy.cluster.hierarchy import dendrogram, linkage\n\n# Read dataset\ndf = pd.read_csv('credit_risk.csv')\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e scipy.cluster.hierarchy \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e dendrogram, linkage\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Read dataset\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;credit_risk.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> scipy.cluster.hierarchy </span><span style="color: #AF00DB">import</span><span style="color: #000000"> dendrogram, linkage</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Read dataset</span></span>
+<span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">'credit_risk.csv'</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we select the relevant features and perform hierarchical clustering on the data.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Select features\nX = df[['credit_score', 'income', 'debt']]\n\n# Perform hierarchical clustering\nZ = linkage(X, 'single')\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Select features\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eX = df[[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;credit_score\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;income\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;debt\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Perform hierarchical clustering\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eZ = linkage(X, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;single\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Select features</span></span>
+<span class="line"><span style="color: #000000">X = df[[</span><span style="color: #A31515">'credit_score'</span><span style="color: #000000">, </span><span style="color: #A31515">'income'</span><span style="color: #000000">, </span><span style="color: #A31515">'debt'</span><span style="color: #000000">]]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Perform hierarchical clustering</span></span>
+<span class="line"><span style="color: #000000">Z = linkage(X, </span><span style="color: #A31515">'single'</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:image {"id":659,"sizeSlug":"large","linkDestination":"none"} --></p>
+<figure class="wp-block-image size-large"><img src="{{site.baseurl}}/assets/2023/04/0753f-figure_3-1.png?w=1024&amp;h=508" alt="" class="wp-image-659"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:paragraph --></p>
+<p>We can then visualize the clusters using a dendrogram and identify the high-risk clusters based on the distance between them.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Highlights:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Customer Segmentation:</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>K-Means clustering is applied to segment customers into three groups based on age, income, and transaction amount.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Clusters are visualized in a scatter plot to show the segmentation.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Fraud Detection:</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>K-Means clustering identifies normal and fraudulent transactions (2 clusters).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Fraudulent and normal transactions are visualized in a scatter plot, offering clear insights.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Risk Assessment:</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Hierarchical clustering is used to group customers based on credit risk.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>The dendrogram visually demonstrates the hierarchical relationships and clusters among data points.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><br> In conclusion, clustering techniques in Python have numerous applications in the fintech industry, including customer segmentation, fraud detection, and risk assessment. By utilizing these techniques, fintech companies can gain valuable insights into their customers and make data-driven decisions to improve their performance. As technology continues to advance, we can expect to see more applications of clustering techniques in fintech, making it an essential tool for the industry's growth and success.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

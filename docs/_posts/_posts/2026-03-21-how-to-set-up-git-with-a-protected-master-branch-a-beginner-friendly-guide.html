@@ -1,0 +1,334 @@
+---
+layout: post
+title: How to Set Up Git with a Protected Master Branch (A Beginner-Friendly Guide)
+date: 2026-03-21 08:59:42.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Setup
+tags:
+- beginner-guide
+- dev-tools
+- devops
+- git
+- github
+- programming
+- technology
+- version-control
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Git","Technology","Github","DevOps","Programming"]'
+  _publicize_job_id: '112101970299'
+  firehose_sent: '1774083583'
+  _publicize_shares: a:0:{}
+  timeline_notification: '1774083583'
+  _elasticsearch_data_sharing_indexed_on: '2026-03-21 08:56:51'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/03/21/how-to-set-up-git-with-a-protected-master-branch-a-beginner-friendly-guide/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph --><html><body></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><em>A step-by-step walkthrough for connecting a local folder to GitHub, creating a working branch, and locking master so you never accidentally overwrite your clean code.</em></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The Setup We're Building</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you've ever accidentally committed broken code to your main branch, this guide is for you. We're going to set up a simple but powerful workflow:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>working</strong> branch → where you write and experiment freely</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>master</strong> branch → clean, stable, connected to GitHub — locked from direct edits</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Prerequisites</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Git installed on your machine</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>A GitHub account with an existing repo</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Git Bash (Windows) or Terminal (Mac/Linux)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Step 1 — Clone Your GitHub Repo Locally</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Navigate in your terminal to where you want the project to live, then run:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z2l0IGNsb25lIGh0dHBzOi8vZ2l0aHViLmNvbS95b3VyLXVzZXJuYW1lL3lvdXItcmVwby5naXQ="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>git clone https://github.com/your-username/your-repo.git
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This downloads all your files and automatically sets up the remote connection. To confirm it worked:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z2l0IHJlbW90ZSAtdg=="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>git remote -v
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You should see your GitHub URL listed against <code>origin</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Step 2 — Create a Working Branch</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Right now you're on <code>master</code>. Create a separate branch for all your day-to-day work:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z2l0IGNoZWNrb3V0IC1iIHdvcmtpbmc="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>git checkout -b working
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You're now on the <code>working</code> branch. This is where all your editing happens from now on.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Step 3 — Make Your First Commit</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Add your files and commit:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z2l0IGFkZCAu"]],[["Z2l0IGNvbW1pdCAtbSAiSW5pdGlhbCBjb21taXQi"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>git add .
+git commit -m "Initial commit"
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Then push <code>working</code> up to GitHub:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z2l0IHB1c2ggb3JpZ2luIHdvcmtpbmc="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>git push origin working
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Step 4 — Lock Master Locally Using a Git Hook</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is the key step. A git hook is a small script that runs automatically before every commit. We'll use it to block any commits directly to <code>master</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Open Git Bash inside your repo folder (on Windows: right-click the folder → "Git Bash Here") and run:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2F0ID4gLmdpdC9ob29rcy9wcmUtY29tbWl0IDw8ICdFT0Yn"]],[["IyEvYmluL2Jhc2g="]],[["YnJhbmNoPSQoZ2l0IHN5bWJvbGljLXJlZiBIRUFEIDI+L2Rldi9udWxsIHwgc2VkICdzfHJlZnMvaGVhZHMvfHwnKQ=="]],[["aWYgWyAiJGJyYW5jaCIgPSAibWFzdGVyIiBdOyB0aGVu"]],[["ICBlY2hvICLinYwgRGlyZWN0IGNvbW1pdHMgdG8gbWFzdGVyIGFyZSBub3QgYWxsb3dlZC4gVXNlIHdvcmtpbmcgYnJhbmNoLiI="]],[["ICBleGl0IDE="]],[["Zmk="]],[["RU9G"]],[[""]],[["Y2htb2QgK3ggLmdpdC9ob29rcy9wcmUtY29tbWl0"]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>cat &gt; .git/hooks/pre-commit &lt;&lt; 'EOF'
+#!/bin/bash
+branch=$(git symbolic-ref HEAD 2&gt;/dev/null | sed 's|refs/heads/||')
+if [ "$branch" = "master" ]; then
+  echo "❌ Direct commits to master are not allowed. Use working branch."
+  exit 1
+fi
+EOF
+
+chmod +x .git/hooks/pre-commit
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Test it works:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z2l0IGNoZWNrb3V0IG1hc3Rlcg=="]],[["Z2l0IGNvbW1pdCAtLWFsbG93LWVtcHR5IC1tICJ0ZXN0Ig=="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>git checkout master
+git commit --allow-empty -m "test"
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You should see: <code>❌ Direct commits to master are not allowed. Use working branch.</code></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Switch back to working:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z2l0IGNoZWNrb3V0IHdvcmtpbmc="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>git checkout working
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Step 5 — Also Protect Master on GitHub</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>For an extra layer of protection, lock master on the remote too:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Go to your repo on GitHub</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Click <strong>Settings → Branches → Add branch protection rule</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Set branch name pattern to <code>master</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Tick <strong>"Require a pull request before merging"</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Save</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Your Day-to-Day Workflow</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>From here on, this is your loop:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["MS4gV3JpdGUgYW5kIGVkaXQgY29kZSBvbiB0aGUgd29ya2luZyBicmFuY2g="]],[["Mi4gZ2l0IGFkZCAu"]],[["My4gZ2l0IGNvbW1pdCAtbSAieW91ciBtZXNzYWdlIg=="]],[["NC4gV2hlbiByZWFkeSB0byByZWxlYXNlIOKGkiBzd2l0Y2ggdG8gbWFzdGVy"]],[["NS4gZ2l0IGNoZWNrb3V0IG1hc3Rlcg=="]],[["Ni4gZ2l0IG1lcmdlIHdvcmtpbmc="]],[["Ny4gZ2l0IHB1c2ggb3JpZ2luIG1hc3Rlcg=="]],[["OC4gZ2l0IGNoZWNrb3V0IHdvcmtpbmcgIOKGkCBhbHdheXMgY29tZSBiYWNrIGhlcmU="]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>1. Write and edit code on the working branch
+2. git add .
+3. git commit -m "your message"
+4. When ready to release → switch to master
+5. git checkout master
+6. git merge working
+7. git push origin master
+8. git checkout working  ← always come back here
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Master stays clean. GitHub stays in sync. You never lose stable code.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Quick Command Reference</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Action</th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Check current branch</td>
+<td><code>git branch</code></td>
+</tr>
+<tr>
+<td>Switch to working</td>
+<td><code>git checkout working</code></td>
+</tr>
+<tr>
+<td>Switch to master</td>
+<td><code>git checkout master</code></td>
+</tr>
+<tr>
+<td>Stage all changes</td>
+<td><code>git add .</code></td>
+</tr>
+<tr>
+<td>Commit</td>
+<td><code>git commit -m "message"</code></td>
+</tr>
+<tr>
+<td>Push to GitHub</td>
+<td><code>git push origin master</code></td>
+</tr>
+<tr>
+<td>Check remote connection</td>
+<td><code>git remote -v</code></td>
+</tr>
+<tr>
+<td>See all branches</td>
+<td><code>git branch -a</code></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Common Gotchas</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>"pathspec did not match"</strong> — your branch probably doesn't exist yet because there are no commits. Run <code>git add . &amp;&amp; git commit -m "Initial commit"</code> first.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Embedded repo warning</strong> — if you get a warning about an embedded git repository, check if there's a <code>.git</code> folder inside a subfolder and delete it.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>main vs master</strong> — GitHub sometimes defaults to <code>main</code>. Check with <code>git branch</code> and update the hook script to match whichever name you're using.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p><em>Happy coding — and never fear the master branch again.</em></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

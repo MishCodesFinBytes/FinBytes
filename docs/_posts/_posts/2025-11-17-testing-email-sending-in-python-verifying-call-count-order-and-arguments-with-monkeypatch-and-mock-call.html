@@ -1,0 +1,553 @@
+---
+layout: post
+title: 'Testing Email Sending in Python: Verifying Call Count, Order, and Arguments
+  with monkeypatch and mock.call'
+date: 2025-11-17 19:53:09.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- email
+- mocking
+- monkeypatch
+- pytest
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Internet","Internet Marketing","WordPress","Marketing","Blogger"]'
+  _wp_old_date: '2026-02-13'
+  _publicize_job_id: '111228634095'
+  _publicize_shares: a:0:{}
+  firehose_sent: '1771012525'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-13 19:54:16'
+  timeline_notification: '1771012526'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/11/17/testing-email-sending-in-python-verifying-call-count-order-and-arguments-with-monkeypatch-and-mock-call/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>You have a library function that sends emails.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>It’s called inside <code>ClassA</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You want to test:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>How many times it was called</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>The order of calls</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>The exact <code>to</code>, <code>cc</code>, <code>from</code>, <code>subject</code>, and <code>body</code> used</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>And you want to do it properly — not by guessing, not by printing, not by over-mocking.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This guide walks through:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Using <code>monkeypatch</code> + <code>Mock</code> (pytest-native style)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Using <code>unittest.mock.patch</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>How <code>mock.call</code> fits into both</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Clean patterns for senior-level tests</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Example Setup</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">email_lib.py</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHNlbmRfZW1haWwodG8sIGNjLCBzZW5kZXIsIHN1YmplY3QsIGJvZHkpOg=="]],[["ICAgICMgUmVhbCBpbXBsZW1lbnRhdGlvbiBzZW5kcyBlbWFpbA=="]],[["ICAgIHBhc3M="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def send_email(to, cc, sender, subject, body):
+    # Real implementation sends email
+    pass
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">class_a.py</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSBlbWFpbF9saWIgaW1wb3J0IHNlbmRfZW1haWw="]],[[""]],[[""]],[["Y2xhc3MgQ2xhc3NBOg=="]],[[""]],[["ICAgIGRlZiBwcm9jZXNzKHNlbGYpOg=="]],[["ICAgICAgICBzZW5kX2VtYWlsKA=="]],[["ICAgICAgICAgICAgdG89WyJ1c2VyMUB0ZXN0LmNvbSJdLA=="]],[["ICAgICAgICAgICAgY2M9W10s"]],[["ICAgICAgICAgICAgc2VuZGVyPSJub3JlcGx5QHRlc3QuY29tIiw="]],[["ICAgICAgICAgICAgc3ViamVjdD0iUmVwb3J0IDEiLA=="]],[["ICAgICAgICAgICAgYm9keT0iRmlyc3QgcmVwb3J0Ig=="]],[["ICAgICAgICAp"]],[[""]],[["ICAgICAgICBzZW5kX2VtYWlsKA=="]],[["ICAgICAgICAgICAgdG89WyJ1c2VyMkB0ZXN0LmNvbSJdLA=="]],[["ICAgICAgICAgICAgY2M9WyJtYW5hZ2VyQHRlc3QuY29tIl0s"]],[["ICAgICAgICAgICAgc2VuZGVyPSJub3JlcGx5QHRlc3QuY29tIiw="]],[["ICAgICAgICAgICAgc3ViamVjdD0iUmVwb3J0IDIiLA=="]],[["ICAgICAgICAgICAgYm9keT0iU2Vjb25kIHJlcG9ydCI="]],[["ICAgICAgICAp"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from email_lib import send_email
+
+
+class ClassA:
+
+    def process(self):
+        send_email(
+            to=["user1@test.com"],
+            cc=[],
+            sender="noreply@test.com",
+            subject="Report 1",
+            body="First report"
+        )
+
+        send_email(
+            to=["user2@test.com"],
+            cc=["manager@test.com"],
+            sender="noreply@test.com",
+            subject="Report 2",
+            body="Second report"
+        )
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">🔑 Critical Rule (Before We Continue)</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Always patch <strong>where the function is used</strong>, not where it is defined.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You must patch:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2xhc3NfYS5zZW5kX2VtYWls"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>class_a.send_email
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>NOT:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZW1haWxfbGliLnNlbmRfZW1haWw="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>email_lib.send_email
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Because <code>ClassA</code> imported it directly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you patch the wrong namespace, the test may pass while your patch does nothing.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Part 1 — Using <code>mock.call</code> with <code>monkeypatch</code><br />
+</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>monkeypatch</code> does not create mocks.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You supply the mock yourself.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Test Using Monkeypatch + Mock</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBNb2NrLCBjYWxs"]],[["ZnJvbSBjbGFzc19hIGltcG9ydCBDbGFzc0E="]],[[""]],[[""]],[["ZGVmIHRlc3RfZW1haWxfY2FsbHMobW9ua2V5cGF0Y2gpOg=="]],[[""]],[["ICAgICMgQ3JlYXRlIGEgbW9jayBtYW51YWxseQ=="]],[["ICAgIGVtYWlsX21vY2sgPSBNb2NrKG5hbWU9InNlbmRfZW1haWxfbW9jayIp"]],[[""]],[["ICAgICMgUGF0Y2ggd2hlcmUgQ2xhc3NBIGxvb2tzIHVwIHNlbmRfZW1haWw="]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIoImNsYXNzX2Euc2VuZF9lbWFpbCIsIGVtYWlsX21vY2sp"]],[[""]],[["ICAgIG9iaiA9IENsYXNzQSgp"]],[["ICAgIG9iai5wcm9jZXNzKCk="]],[[""]],[["ICAgICMgMe+4j+KDoyBWZXJpZnkgY2FsbCBjb3VudA=="]],[["ICAgIGFzc2VydCBlbWFpbF9tb2NrLmNhbGxfY291bnQgPT0gMg=="]],[[""]],[["ICAgICMgMu+4j+KDoyBWZXJpZnkgb3JkZXIgYW5kIGV4YWN0IGFyZ3VtZW50cw=="]],[["ICAgIGV4cGVjdGVkX2NhbGxzID0gWw=="]],[["ICAgICAgICBjYWxsKA=="]],[["ICAgICAgICAgICAgdG89WyJ1c2VyMUB0ZXN0LmNvbSJdLA=="]],[["ICAgICAgICAgICAgY2M9W10s"]],[["ICAgICAgICAgICAgc2VuZGVyPSJub3JlcGx5QHRlc3QuY29tIiw="]],[["ICAgICAgICAgICAgc3ViamVjdD0iUmVwb3J0IDEiLA=="]],[["ICAgICAgICAgICAgYm9keT0iRmlyc3QgcmVwb3J0Ig=="]],[["ICAgICAgICApLA=="]],[["ICAgICAgICBjYWxsKA=="]],[["ICAgICAgICAgICAgdG89WyJ1c2VyMkB0ZXN0LmNvbSJdLA=="]],[["ICAgICAgICAgICAgY2M9WyJtYW5hZ2VyQHRlc3QuY29tIl0s"]],[["ICAgICAgICAgICAgc2VuZGVyPSJub3JlcGx5QHRlc3QuY29tIiw="]],[["ICAgICAgICAgICAgc3ViamVjdD0iUmVwb3J0IDIiLA=="]],[["ICAgICAgICAgICAgYm9keT0iU2Vjb25kIHJlcG9ydCI="]],[["ICAgICAgICAp"]],[["ICAgIF0="]],[[""]],[["ICAgIGFzc2VydCBlbWFpbF9tb2NrLmNhbGxfYXJnc19saXN0ID09IGV4cGVjdGVkX2NhbGxz"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import Mock, call
+from class_a import ClassA
+
+
+def test_email_calls(monkeypatch):
+
+    # Create a mock manually
+    email_mock = Mock(name="send_email_mock")
+
+    # Patch where ClassA looks up send_email
+    monkeypatch.setattr("class_a.send_email", email_mock)
+
+    obj = ClassA()
+    obj.process()
+
+    # 1️⃣ Verify call count
+    assert email_mock.call_count == 2
+
+    # 2️⃣ Verify order and exact arguments
+    expected_calls = [
+        call(
+            to=["user1@test.com"],
+            cc=[],
+            sender="noreply@test.com",
+            subject="Report 1",
+            body="First report"
+        ),
+        call(
+            to=["user2@test.com"],
+            cc=["manager@test.com"],
+            sender="noreply@test.com",
+            subject="Report 2",
+            body="Second report"
+        )
+    ]
+
+    assert email_mock.call_args_list == expected_calls
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Understanding <code>mock.call</code><br />
+</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>call(...)</code> constructs a structured representation of a function call.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Internally, each call captures:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Positional args</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Keyword args</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Order of invocation</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>email_mock.call_args_list</code> is a list of <code>call(...)</code> objects in execution order.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>That is what enables exact verification.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Cleaner Assertion Pattern</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Instead of manually comparing lists:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZW1haWxfbW9jay5hc3NlcnRfaGFzX2NhbGxzKGV4cGVjdGVkX2NhbGxzLCBhbnlfb3JkZXI9RmFsc2Up"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>email_mock.assert_has_calls(expected_calls, any_order=False)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Validates order</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Produces clearer failure messages</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Inspecting Individual Calls</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Sometimes you don’t want strict matching.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can inspect directly:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Zmlyc3RfY2FsbCA9IGVtYWlsX21vY2suY2FsbF9hcmdzX2xpc3RbMF0="]],[[""]],[["YXNzZXJ0IGZpcnN0X2NhbGwua3dhcmdzWyJzdWJqZWN0Il0gPT0gIlJlcG9ydCAxIg=="]],[["YXNzZXJ0IGZpcnN0X2NhbGwua3dhcmdzWyJ0byJdID09IFsidXNlcjFAdGVzdC5jb20iXQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>first_call = email_mock.call_args_list[0]
+
+assert first_call.kwargs["subject"] == "Report 1"
+assert first_call.kwargs["to"] == ["user1@test.com"]
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is useful when:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Body contains dynamic content</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You only care about certain fields</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Part 2 — Same Test Using <code>unittest.mock.patch</code><br />
+</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now the equivalent using <code>patch</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBwYXRjaCwgY2FsbA=="]],[["ZnJvbSBjbGFzc19hIGltcG9ydCBDbGFzc0E="]],[[""]],[[""]],[["ZGVmIHRlc3RfZW1haWxfY2FsbHNfcGF0Y2goKTo="]],[[""]],[["ICAgIHdpdGggcGF0Y2goImNsYXNzX2Euc2VuZF9lbWFpbCIpIGFzIGVtYWlsX21vY2s6"]],[["ICAgICAgICBvYmogPSBDbGFzc0EoKQ=="]],[["ICAgICAgICBvYmoucHJvY2Vzcygp"]],[[""]],[["ICAgICAgICBleHBlY3RlZF9jYWxscyA9IFs="]],[["ICAgICAgICAgICAgY2FsbCg="]],[["ICAgICAgICAgICAgICAgIHRvPVsidXNlcjFAdGVzdC5jb20iXSw="]],[["ICAgICAgICAgICAgICAgIGNjPVtdLA=="]],[["ICAgICAgICAgICAgICAgIHNlbmRlcj0ibm9yZXBseUB0ZXN0LmNvbSIs"]],[["ICAgICAgICAgICAgICAgIHN1YmplY3Q9IlJlcG9ydCAxIiw="]],[["ICAgICAgICAgICAgICAgIGJvZHk9IkZpcnN0IHJlcG9ydCI="]],[["ICAgICAgICAgICAgKSw="]],[["ICAgICAgICAgICAgY2FsbCg="]],[["ICAgICAgICAgICAgICAgIHRvPVsidXNlcjJAdGVzdC5jb20iXSw="]],[["ICAgICAgICAgICAgICAgIGNjPVsibWFuYWdlckB0ZXN0LmNvbSJdLA=="]],[["ICAgICAgICAgICAgICAgIHNlbmRlcj0ibm9yZXBseUB0ZXN0LmNvbSIs"]],[["ICAgICAgICAgICAgICAgIHN1YmplY3Q9IlJlcG9ydCAyIiw="]],[["ICAgICAgICAgICAgICAgIGJvZHk9IlNlY29uZCByZXBvcnQi"]],[["ICAgICAgICAgICAgKQ=="]],[["ICAgICAgICBd"]],[[""]],[["ICAgICAgICBlbWFpbF9tb2NrLmFzc2VydF9oYXNfY2FsbHMoZXhwZWN0ZWRfY2FsbHMsIGFueV9vcmRlcj1GYWxzZSk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import patch, call
+from class_a import ClassA
+
+
+def test_email_calls_patch():
+
+    with patch("class_a.send_email") as email_mock:
+        obj = ClassA()
+        obj.process()
+
+        expected_calls = [
+            call(
+                to=["user1@test.com"],
+                cc=[],
+                sender="noreply@test.com",
+                subject="Report 1",
+                body="First report"
+            ),
+            call(
+                to=["user2@test.com"],
+                cc=["manager@test.com"],
+                sender="noreply@test.com",
+                subject="Report 2",
+                body="Second report"
+            )
+        ]
+
+        email_mock.assert_has_calls(expected_calls, any_order=False)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Differences:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>patch</code> automatically creates the mock</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Requires context manager or decorator</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Otherwise identical in verification logic</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Comparison Table</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"fontSize":"x-small"} --></p>
+<figure class="wp-block-table has-x-small-font-size">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Feature</th>
+<th>monkeypatch + Mock</th>
+<th>unittest.mock.patch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Creates mock automatically</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Explicit mock control</td>
+<td>✅</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>Requires context manager</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Auto restore after test</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Works naturally with pytest fixtures</td>
+<td>✅</td>
+<td>Neutral</td>
+</tr>
+<tr>
+<td>Call tracking</td>
+<td>Via Mock</td>
+<td>Built-in</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Advanced Pattern: Partial Matching</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If subject must match but body is dynamic:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBBTlk="]],[[""]],[["ZW1haWxfbW9jay5hc3NlcnRfaGFzX2NhbGxzKFs="]],[["ICAgIGNhbGwo"]],[["ICAgICAgICB0bz1bInVzZXIxQHRlc3QuY29tIl0s"]],[["ICAgICAgICBjYz1bXSw="]],[["ICAgICAgICBzZW5kZXI9Im5vcmVwbHlAdGVzdC5jb20iLA=="]],[["ICAgICAgICBzdWJqZWN0PSJSZXBvcnQgMSIs"]],[["ICAgICAgICBib2R5PUFOWQ=="]],[["ICAgICk="]],[["XSk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import ANY
+
+email_mock.assert_has_calls([
+    call(
+        to=["user1@test.com"],
+        cc=[],
+        sender="noreply@test.com",
+        subject="Report 1",
+        body=ANY
+    )
+])
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>ANY</code> ignores that field.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Advanced Pattern: Preventing Duplicate Emails</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["YXNzZXJ0IGVtYWlsX21vY2suY2FsbF9jb3VudCA9PSAx"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>assert email_mock.call_count == 1
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Simple but powerful guard against accidental double-send.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Senior-Level Testing Strategy</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>When testing side effects like email:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Verify number of calls</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Verify order</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Verify key arguments</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Use <code>ANY</code> for non-deterministic fields</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Fail loudly on mismatch</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Do not just assert <code>call_count</code>.<br>That misses argument integrity.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Key Takeaway</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>To use <code>mock.call</code> in a monkeypatch scenario:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Create a <code>Mock()</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Patch the dependency with that mock</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Use <code>call(...)</code> to define expected invocations</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Assert via <code>call_args_list</code> or <code>assert_has_calls</code>
+</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Monkeypatch handles lifecycle.<br>Mock handles introspection.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Together, they give you full observability of side effects.</p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

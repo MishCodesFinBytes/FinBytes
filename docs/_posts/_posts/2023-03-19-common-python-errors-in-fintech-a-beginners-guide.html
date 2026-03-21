@@ -1,0 +1,154 @@
+---
+layout: post
+title: 'Common Python Errors in Fintech: A Beginner''s Guide'
+date: 2023-03-19 11:16:54.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Python fundamentals
+tags:
+- beginner
+- debugging
+- errors
+- fundamentals
+meta:
+  reader_suggested_tags: '["Beauty","Lifestyle","Books","Health","Photography"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '301'
+  _wp_old_date: '2024-10-21'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _yoast_wpseo_primary_category: '1376'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '4'
+  _import_original_post_id: '78'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:46'
+  _publicize_shares: a:0:{}
+  _publicize_job_id: '112088265445'
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/03/19/common-python-errors-in-fintech-a-beginners-guide/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong><strong>All code used in the article below is downloadable as a single file via the github link below: </strong></strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/blob/main/Errors.py","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python has become one of the most popular programming languages in the fintech industry, with its versatile and powerful capabilities. From automating calculations to data analysis and predictive modeling, Python has become an essential tool for financial tasks. However, like any other programming language, Python is prone to errors that can hinder its smooth functioning. As a fintech professional, it is crucial to be familiar with these errors and know how to handle them effectively to ensure the accuracy and efficiency of financial tasks.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this blog post, we will guide you through the common types of errors that can occur in Python, namely syntax, name, and value errors. We will also provide beginner-friendly troubleshooting tips to help you resolve these errors and continue your fintech projects seamlessly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Syntax Errors:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Syntax errors are the most common type of errors that occur in Python. They occur when there is a mistake in the code's structure, such as a missing punctuation mark, a misspelled keyword, or a misplaced operator. These errors are detected by the Python interpreter during the compilation process and can be easily fixed by correcting the syntax.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>For example, let's say you want to create a function to calculate the interest rate on a loan, but you misspell the "return" keyword as "retun." This will result in a syntax error, as shown below:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\ndef calculate_interest(principal, rate, time):\n    retun principal * rate * time\n\nSyntaxError: invalid syntax\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ecalculate_interest\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eprincipal\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003erate\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003etime\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    retun principal * rate * time\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #267F99\u0022\u003eSyntaxError\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: invalid syntax\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">calculate_interest</span><span style="color: #000000">(</span><span style="color: #001080">principal</span><span style="color: #000000">, </span><span style="color: #001080">rate</span><span style="color: #000000">, </span><span style="color: #001080">time</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    retun principal * rate * time</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #267F99">SyntaxError</span><span style="color: #000000">: invalid syntax</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>To fix this error, simply correct the spelling of the "return" keyword, and the code will run without any errors.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Name Errors:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Name errors occur when the interpreter cannot recognize a variable or a function name used in the code. This can happen due to various reasons, such as misspelling the name or using a variable that has not been defined yet. Name errors are often challenging to spot, especially in complex codes, but they can be easily resolved by carefully examining the code.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>For instance, let's say you are working on a program to calculate the return on investment (ROI) for a portfolio, and you accidentally misspell the variable name "portfolio" as "portfolo." This will result in a name error, as shown below:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nportfolio_value = 50000\nroi = (portfolio_value - cost) / cost * 100\nNameError: name 'cost' is not defined\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eportfolio_value = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e50000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eroi = (portfolio_value - cost) / cost * \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #267F99\u0022\u003eNameError\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: name \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;cost\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eis\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003enot\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e defined\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">portfolio_value = </span><span style="color: #098658">50000</span></span>
+<span class="line"><span style="color: #000000">roi = (portfolio_value - cost) / cost * </span><span style="color: #098658">100</span></span>
+<span class="line"><span style="color: #267F99">NameError</span><span style="color: #000000">: name </span><span style="color: #A31515">'cost'</span><span style="color: #000000"> </span><span style="color: #0000FF">is</span><span style="color: #000000"> </span><span style="color: #0000FF">not</span><span style="color: #000000"> defined</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>To fix this error, you need to correct the spelling of the variable name "portfolio" and define the variable "cost" with a value. The code should look like this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nportfolio_value = 50000\ncost = 40000\nroi = (portfolio_value - cost) / cost * 100\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eportfolio_value = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e50000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecost = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e40000\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eroi = (portfolio_value - cost) / cost * \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">portfolio_value = </span><span style="color: #098658">50000</span></span>
+<span class="line"><span style="color: #000000">cost = </span><span style="color: #098658">40000</span></span>
+<span class="line"><span style="color: #000000">roi = (portfolio_value - cost) / cost * </span><span style="color: #098658">100</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Value Errors:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Value errors occur when the data type of a variable or function does not match the expected type. For example, you might be trying to perform mathematical operations on a string variable, which is not allowed in Python. These errors can also occur when the input is out of the expected range, such as trying to divide a number by zero.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let's say you are working on a program to calculate the average stock price for a given period, and you accidentally input a string value instead of a numerical value. This will result in a value error, as shown below:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nprices = [100, 110, 120, \u0022130\u0022, 140]\naverage_price = sum(prices) / len(prices)\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprices = [\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e110\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e120\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;130\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e140\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eaverage_price = \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003esum\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(prices) / \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003elen\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(prices)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #267F99\u0022\u003eTypeError\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e: unsupported operand \u003c/span\u003e\u003cspan style=\u0022color: #267F99\u0022\u003etype\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(s) \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e +: \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;int\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eand\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;str\u0026#039;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">prices = [</span><span style="color: #098658">100</span><span style="color: #000000">, </span><span style="color: #098658">110</span><span style="color: #000000">, </span><span style="color: #098658">120</span><span style="color: #000000">, </span><span style="color: #A31515">"130"</span><span style="color: #000000">, </span><span style="color: #098658">140</span><span style="color: #000000">]</span></span>
+<span class="line"><span style="color: #000000">average_price = </span><span style="color: #795E26">sum</span><span style="color: #000000">(prices) / </span><span style="color: #795E26">len</span><span style="color: #000000">(prices)</span></span>
+<span class="line"><span style="color: #267F99">TypeError</span><span style="color: #000000">: unsupported operand </span><span style="color: #267F99">type</span><span style="color: #000000">(s) </span><span style="color: #AF00DB">for</span><span style="color: #000000"> +: </span><span style="color: #A31515">'int'</span><span style="color: #000000"> </span><span style="color: #0000FF">and</span><span style="color: #000000"> </span><span style="color: #A31515">'str'</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>To fix this error, you need to remove the string value from the list and convert all the values to integers using the `int()` function. The code should look like this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nprices = [100, 110, 120, 130, 140]\naverage_price = sum(prices) / len(prices)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eprices = [\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e110\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e120\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e130\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e140\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eaverage_price = \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003esum\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(prices) / \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003elen\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(prices)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">prices = [</span><span style="color: #098658">100</span><span style="color: #000000">, </span><span style="color: #098658">110</span><span style="color: #000000">, </span><span style="color: #098658">120</span><span style="color: #000000">, </span><span style="color: #098658">130</span><span style="color: #000000">, </span><span style="color: #098658">140</span><span style="color: #000000">]</span></span>
+<span class="line"><span style="color: #000000">average_price = </span><span style="color: #795E26">sum</span><span style="color: #000000">(prices) / </span><span style="color: #795E26">len</span><span style="color: #000000">(prices)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Practical Application in Fintech:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now, let's see how these error-handling techniques can be applied in the fintech industry. Python is widely used in fintech for tasks such as automating calculations, data analysis, and predictive modeling. For example, many financial institutions use Python to automate complex calculations, such as mortgage payments, loan interest rates, and investment returns. In such cases, handling errors efficiently is crucial to ensure the accuracy and reliability of the results.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Moreover, data analysis and predictive modeling are vital components of fintech, and Python's libraries such as Pandas, NumPy, and Scikit-learn make it an ideal language for these tasks. However, these tasks involve handling large datasets, and errors can occur due to missing or incorrect data. By understanding and effectively handling the types of errors mentioned above, fintech professionals can ensure the accuracy of their data analysis and predictive models, leading to better decision-making.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In conclusion, Python has become an integral part of the fintech industry, and as a fintech professional, it is essential to be familiar with the common errors that can occur in Python. In this blog post, we discussed the three types of errors – syntax, name, and value errors – and provided troubleshooting tips to handle them effectively. By being aware of these errors and how to resolve them, you can ensure the smooth functioning of your financial tasks and contribute to the growth and success of the fintech industry.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

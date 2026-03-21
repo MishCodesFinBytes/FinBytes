@@ -1,0 +1,258 @@
+---
+layout: post
+title: Automate Stock Analysis with Python Libraries
+date: 2023-04-07 12:08:07.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- automation
+- Data Analysis
+- investing
+- stocks
+meta:
+  reader_suggested_tags: '["Investing","Finance","Stocks","Stock Market","Investment"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '382'
+  _wp_old_date: '2024-11-08'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _yoast_wpseo_primary_category: '1377'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '4'
+  _import_original_post_id: '376'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:49'
+  _publicize_job_id: '112088253707'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/04/07/automate-stock-analysis-with-python-libraries/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/StockAnalysis","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>In today's fast-paced world, the stock market is constantly evolving, and it can be challenging for investors to make informed decisions. With thousands of stocks available, it can be overwhelming to analyze and identify potential investment opportunities. This is where Python-based tools can come in handy. Python, with its powerful libraries and data analysis capabilities, has become a popular choice in the fintech industry. In this blog post, we will explore how to create a Python-based tool that filters stocks based on financial metrics and ratios, making it easier for users to identify potential investment opportunities.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Concept Explanation:</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Financial metrics and ratios such as price-to-earnings (P/E) ratio and dividend yield are crucial factors in evaluating a stock's performance and potential. The P/E ratio, also known as the price-earnings ratio, is the ratio of a company's stock price to its earnings per share. It helps investors determine if a stock is overvalued or undervalued. On the other hand, the dividend yield measures the percentage return on a stock's dividend payments relative to its share price. These metrics, along with many others, can provide valuable insights into a company's financial health and future prospects.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>To create our Python-based tool, we will be using the Pandas library, which is widely used for data analysis and manipulation. We will also be using the yfinance library, which allows us to access financial data from Yahoo Finance. Let's dive into the code and see how we can filter stocks based on these financial metrics.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">P/E Ratio:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The first step is to import the necessary libraries and specify the stocks we want to analyze. For this example, let's consider three technology giants - Apple, Amazon, and Microsoft.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Import Libraries and Define Stocks</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nimport pandas as pd\nimport yfinance as yf\n\nstocks = ['AAPL', 'AMZN', 'MSFT']\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e yfinance \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e yf\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003estocks = [\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;AAPL\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;AMZN\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;MSFT\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> yfinance </span><span style="color: #AF00DB">as</span><span style="color: #000000"> yf</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">stocks = [</span><span style="color: #A31515">'AAPL'</span><span style="color: #000000">, </span><span style="color: #A31515">'AMZN'</span><span style="color: #000000">, </span><span style="color: #A31515">'MSFT'</span><span style="color: #000000">]</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we will use the yfinance library to get the financial data for these stocks and store it in a Pandas DataFrame.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Get Financial Data</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nfinancial_data = yf.download(stocks, start='2021-01-01', end='2021-05-31')['Adj Close']\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003efinancial_data = yf.download(stocks, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003estart\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-01-01\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eend\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-05-31\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Adj Close\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">financial_data = yf.download(stocks, </span><span style="color: #001080">start</span><span style="color: #000000">=</span><span style="color: #A31515">'2021-01-01'</span><span style="color: #000000">, </span><span style="color: #001080">end</span><span style="color: #000000">=</span><span style="color: #A31515">'2021-05-31'</span><span style="color: #000000">)[</span><span style="color: #A31515">'Adj Close'</span><span style="color: #000000">]</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now, we can calculate the P/E ratio for each stock by dividing its stock price by its earnings per share. We will also add this ratio as a new column to our DataFrame.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Calculate P/E Ratio</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nfinancial_data['P/E Ratio'] = financial_data['Adj Close'] / financial_data['Earnings']\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003efinancial_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;P/E Ratio\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = financial_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Adj Close\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] / financial_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Earnings\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">financial_data[</span><span style="color: #A31515">'P/E Ratio'</span><span style="color: #000000">] = financial_data[</span><span style="color: #A31515">'Adj Close'</span><span style="color: #000000">] / financial_data[</span><span style="color: #A31515">'Earnings'</span><span style="color: #000000">]</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>We can then use the Pandas `sort_values()` function to sort the stocks based on their P/E ratio in ascending order.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Sort by P/E Ratio</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nfinancial_data.sort_values(by='P/E Ratio', ascending=True)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003efinancial_data.sort_values(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eby\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;P/E Ratio\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eascending\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eTrue\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">financial_data.sort_values(</span><span style="color: #001080">by</span><span style="color: #000000">=</span><span style="color: #A31515">'P/E Ratio'</span><span style="color: #000000">, </span><span style="color: #001080">ascending</span><span style="color: #000000">=</span><span style="color: #0000FF">True</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This will give us a list of stocks with the lowest P/E ratios, indicating that they may be undervalued and could potentially be good investment opportunities.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Dividend Yield:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now, let's see how we can filter stocks based on dividend yield. Similar to the previous example, we will start by importing the necessary libraries and defining our stocks.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Import Libraries and Define Stocks</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nimport pandas as pd\nimport yfinance as yf\n\nstocks = ['AAPL', 'AMZN', 'MSFT']\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e yfinance \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e yf\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003estocks = [\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;AAPL\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;AMZN\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;MSFT\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> yfinance </span><span style="color: #AF00DB">as</span><span style="color: #000000"> yf</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">stocks = [</span><span style="color: #A31515">'AAPL'</span><span style="color: #000000">, </span><span style="color: #A31515">'AMZN'</span><span style="color: #000000">, </span><span style="color: #A31515">'MSFT'</span><span style="color: #000000">]</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we will use the yfinance library to get the financial data for these stocks and store it in a Pandas DataFrame.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Get Financial Data</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nfinancial_data = yf.download(stocks, start='2021-01-01', end='2021-05-31')['Adj Close']\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003efinancial_data = yf.download(stocks, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003estart\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-01-01\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eend\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-05-31\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Adj Close\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">financial_data = yf.download(stocks, </span><span style="color: #001080">start</span><span style="color: #000000">=</span><span style="color: #A31515">'2021-01-01'</span><span style="color: #000000">, </span><span style="color: #001080">end</span><span style="color: #000000">=</span><span style="color: #A31515">'2021-05-31'</span><span style="color: #000000">)[</span><span style="color: #A31515">'Adj Close'</span><span style="color: #000000">]</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>To calculate the dividend yield, we need to get the dividend payments for each stock. We can do this using the `get_dividends()` function from the yfinance library.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Get Dividend Payments</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\ndividends = yf.Ticker(stocks).get_dividends(start='2021-01-01', end='2021-05-31')\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edividends = yf.Ticker(stocks).get_dividends(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003estart\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-01-01\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eend\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-05-31\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">dividends = yf.Ticker(stocks).get_dividends(</span><span style="color: #001080">start</span><span style="color: #000000">=</span><span style="color: #A31515">'2021-01-01'</span><span style="color: #000000">, </span><span style="color: #001080">end</span><span style="color: #000000">=</span><span style="color: #A31515">'2021-05-31'</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next, we will merge the dividend payments with our financial data using the `merge()` function from Pandas. This will add a new column to our DataFrame, showing the dividend payment for each stock on a particular day.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Merge Dividend Payments</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nfinancial_data = pd.merge(financial_data, dividends, how='left', on='Date')\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003efinancial_data = pd.merge(financial_data, dividends, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ehow\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;left\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eon\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Date\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">financial_data = pd.merge(financial_data, dividends, </span><span style="color: #001080">how</span><span style="color: #000000">=</span><span style="color: #A31515">'left'</span><span style="color: #000000">, </span><span style="color: #001080">on</span><span style="color: #000000">=</span><span style="color: #A31515">'Date'</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Finally, we can calculate the dividend yield by dividing the dividend payment by the stock price and adding it as a new column to our DataFrame.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Calculate Dividend Yield</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nfinancial_data['Dividend Yield'] = financial_data['Dividends'] / financial_data['Adj Close']\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003efinancial_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Dividend Yield\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = financial_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Dividends\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] / financial_data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Adj Close\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">financial_data[</span><span style="color: #A31515">'Dividend Yield'</span><span style="color: #000000">] = financial_data[</span><span style="color: #A31515">'Dividends'</span><span style="color: #000000">] / financial_data[</span><span style="color: #A31515">'Adj Close'</span><span style="color: #000000">]</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>We can then use the `sort_values()` function again, this time sorting the stocks based on their dividend yield in descending order.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Sort by Dividend Yield</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nfinancial_data.sort_values(by='Dividend Yield', ascending=False)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003efinancial_data.sort_values(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eby\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Dividend Yield\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eascending\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eFalse\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #000000">financial_data.sort_values(</span><span style="color: #001080">by</span><span style="color: #000000">=</span><span style="color: #A31515">'Dividend Yield'</span><span style="color: #000000">, </span><span style="color: #001080">ascending</span><span style="color: #000000">=</span><span style="color: #0000FF">False</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This will give us a list of stocks with the highest dividend yields, indicating that they may be good investment opportunities for those seeking regular income from their investments.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:image {"id":679,"sizeSlug":"large","linkDestination":"none"} --></p>
+<figure class="wp-block-image size-large"><img src="{{site.baseurl}}/assets/2023/04/5e4f8-figure_1-3.png?w=1024&amp;h=512" alt="" class="wp-image-679"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:image {"id":681,"sizeSlug":"full","linkDestination":"none"} --></p>
+<figure class="wp-block-image size-full"><img src="{{site.baseurl}}/assets/2023/04/cc947-figure_2-4.png" alt="" class="wp-image-681"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:code {"align":"wide"} --></p>
+<pre class="wp-block-code alignwide"><code>Financial Data (Adjusted Close):
+Ticker                           AAPL        AMZN        MSFT
+Date
+2021-01-04 00:00:00+00:00  126.544205  159.331497  210.844284
+2021-01-05 00:00:00+00:00  128.108780  160.925507  211.047699
+2021-01-06 00:00:00+00:00  123.796448  156.919006  205.575378
+2021-01-07 00:00:00+00:00  128.020782  158.108002  211.425415
+2021-01-08 00:00:00+00:00  129.125748  159.134995  212.713608
+
+Financial Data with P/E Ratios:
+Ticker                           AAPL        AMZN        MSFT  AAPL P/E Ratio  AMZN P/E Ratio  MSFT P/E Ratio
+Date
+2021-05-24 00:00:00+00:00  124.682510  162.249496  244.015274       24.399708        3.878783       30.312456
+2021-05-25 00:00:00+00:00  124.486305  162.952499  244.929916       24.361312        3.895589       30.426077
+2021-05-26 00:00:00+00:00  124.437286  163.257996  244.706146       24.351719        3.902893       30.398279
+2021-05-27 00:00:00+00:00  122.897141  161.505493  242.584930       24.050321        3.860997       30.134774
+2021-05-28 00:00:00+00:00  122.239868  161.153503  242.944946       23.921696        3.852582       30.179496
+
+Stocks Sorted by P/E Ratio (Lowest to Highest):
+AMZN     3.852024
+AAPL    24.674437
+MSFT    28.915622
+dtype: float64
+
+Dividend Yields Sorted (Highest to Lowest):
+      Dividend Yield
+MSFT        0.004812
+AAPL        0.003371
+AMZN        0.000000</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this blog post, we have seen how to create a Python-based tool that can filter stocks based on financial metrics and ratios such as P/E ratio and dividend yield. Python's powerful libraries, such as Pandas and yfinance, make it an ideal choice for financial tasks, allowing investors to automate calculations, perform data analysis, and even build predictive models. This tool can be beneficial for investors, especially in the fintech industry, as it can save time and effort while providing valuable insights into potential investment opportunities. With the continuous advancements in Python and its applications in fintech, we can expect to see more innovative tools and solutions in the future.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

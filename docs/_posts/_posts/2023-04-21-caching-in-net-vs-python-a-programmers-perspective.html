@@ -1,0 +1,272 @@
+---
+layout: post
+title: 'Caching in .NET vs Python: A Programmer''s Perspective'
+date: 2023-04-21 09:01:00.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- ".NET"
+- caching
+- comparison
+- Python
+meta:
+  reader_suggested_tags: '["Technology","AI","Python","Cloud","Streamlit"]'
+  _last_editor_used_jetpack: block-editor
+  _wp_old_date: '2025-01-22'
+  _thumbnail_id: '956'
+  _edit_last: '257720953'
+  _yoast_wpseo_primary_category: '1376'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '3'
+  _import_original_post_id: '932'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:52'
+  _publicize_job_id: '112088108678'
+  _publicize_shares: a:0:{}
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2023/04/21/caching-in-net-vs-python-a-programmers-perspective/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph --><html><body></p>
+<p>As someone who began their career in the structured ecosystem of .NET and later transitioned to the flexibility of Python, I’ve encountered both the strengths and quirks of caching in these two environments. This blog dives into how caching works in .NET versus Python, exploring app-level, session-level, and memory-based limitations in .NET, the flexibility of TTL (Time-To-Live) caching, and memoization in Python.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Caching in .NET: Structured and Configurable</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>1. App-Level and Session-Level Caching</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>In .NET, caching is tightly integrated with the application lifecycle, offering multiple levels:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>App-Level Caching:</strong> Typically implemented using <code>MemoryCache</code> or output caching in ASP.NET. It stores data globally within the application's memory and is shared across all sessions.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Session-Level Caching:</strong> Scoped to individual user sessions, managed using the <code>HttpSessionState</code> object in web applications. This ensures session-specific data is stored and isolated.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example (Session Caching):</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"Session[\u0022UserData\u0022] = userData;  \nvar data = Session[\u0022UserData\u0022];  \n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #001080\u0022\u003eSession\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;UserData\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003euserData\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e;  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003evar\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003edata\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e = \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eSession\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;UserData\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e];  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"csharp","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #001080">Session</span><span style="color: #000000">[</span><span style="color: #A31515">"UserData"</span><span style="color: #000000">] = </span><span style="color: #001080">userData</span><span style="color: #000000">;  </span></span>
+<span class="line"><span style="color: #0000FF">var</span><span style="color: #000000"> </span><span style="color: #001080">data</span><span style="color: #000000"> = </span><span style="color: #001080">Session</span><span style="color: #000000">[</span><span style="color: #A31515">"UserData"</span><span style="color: #000000">];  </span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>2. Configurable Memory Size in <code>.config</code> Files</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>In .NET, cache memory usage can be explicitly limited by configuring the application's <code>.config</code> file. This is particularly useful for preventing excessive memory usage in high-traffic applications.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example (web.config for MemoryCache):</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\u0026lt;configuration\u0026gt;\n  \u0026lt;system.runtime.caching\u0026gt;\n    \u0026lt;memoryCache\u0026gt;\n      \u0026lt;namedCaches\u0026gt;\n        \u0026lt;add name=\u0022default\u0022 cacheMemoryLimitMegabytes=\u0022100\u0022 physicalMemoryLimitPercentage=\u002250\u0022 pollingInterval=\u002200:02:00\u0022 /\u0026gt;\n      \u0026lt;/namedCaches\u0026gt;\n    \u0026lt;/memoryCache\u0026gt;\n  \u0026lt;/system.runtime.caching\u0026gt;\n\u0026lt;/configuration\u0026gt;\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;configuration\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;system.runtime.caching\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;memoryCache\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e      \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;namedCaches\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;add\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #E50000\u0022\u003ename\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e\u0026quot;default\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #E50000\u0022\u003ecacheMemoryLimitMegabytes\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e\u0026quot;100\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #E50000\u0022\u003ephysicalMemoryLimitPercentage\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e\u0026quot;50\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #E50000\u0022\u003epollingInterval\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003e\u0026quot;00:02:00\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e/\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e      \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;/namedCaches\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;/memoryCache\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;/system.runtime.caching\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #800000\u0022\u003e\u0026lt;/configuration\u0026gt;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"xml","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #800000">&lt;configuration&gt;</span></span>
+<span class="line"><span style="color: #000000">  </span><span style="color: #800000">&lt;system.runtime.caching&gt;</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #800000">&lt;memoryCache&gt;</span></span>
+<span class="line"><span style="color: #000000">      </span><span style="color: #800000">&lt;namedCaches&gt;</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #800000">&lt;add</span><span style="color: #000000"> </span><span style="color: #E50000">name</span><span style="color: #000000">=</span><span style="color: #0000FF">"default"</span><span style="color: #000000"> </span><span style="color: #E50000">cacheMemoryLimitMegabytes</span><span style="color: #000000">=</span><span style="color: #0000FF">"100"</span><span style="color: #000000"> </span><span style="color: #E50000">physicalMemoryLimitPercentage</span><span style="color: #000000">=</span><span style="color: #0000FF">"50"</span><span style="color: #000000"> </span><span style="color: #E50000">pollingInterval</span><span style="color: #000000">=</span><span style="color: #0000FF">"00:02:00"</span><span style="color: #000000"> </span><span style="color: #800000">/&gt;</span></span>
+<span class="line"><span style="color: #000000">      </span><span style="color: #800000">&lt;/namedCaches&gt;</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #800000">&lt;/memoryCache&gt;</span></span>
+<span class="line"><span style="color: #000000">  </span><span style="color: #800000">&lt;/system.runtime.caching&gt;</span></span>
+<span class="line"><span style="color: #800000">&lt;/configuration&gt;</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>This ensures the cache stays within specified limits, providing a predictable memory footprint.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Caching in Python: Lightweight, Flexible, and Memoized</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>In contrast, Python takes a lightweight and flexible approach to caching. Beyond TTL caching, Python excels at memoization, a technique for optimizing function calls by caching their results.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>1. Memoization in Python</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Memoization is a specific caching technique where the results of expensive function calls are stored, allowing subsequent calls with the same inputs to retrieve results from the cache rather than recomputing. Python’s <code>functools.lru_cache</code> is a simple yet powerful tool for implementing memoization.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example (Memoization with <code>functools.lru_cache</code>):</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"from functools import lru_cache\n\n@lru_cache(maxsize=128)  # Cache up to 128 unique calls\ndef compute_factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    return n * compute_factorial(n - 1)\n\nprint(compute_factorial(10))  # Computed and cached\nprint(compute_factorial(10))  # Retrieved from cache\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e functools \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e lru_cache\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003e@lru_cache\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003emaxsize\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e128\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Cache up to 128 unique calls\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003edef\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003ecompute_factorial\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003en\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e):\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eif\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e n == \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #0000FF\u0022\u003eor\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e n == \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e:\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e        \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e    \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003ereturn\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e n * compute_factorial(n - \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(compute_factorial(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Computed and cached\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(compute_factorial(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Retrieved from cache\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> functools </span><span style="color: #AF00DB">import</span><span style="color: #000000"> lru_cache</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">@lru_cache</span><span style="color: #000000">(</span><span style="color: #001080">maxsize</span><span style="color: #000000">=</span><span style="color: #098658">128</span><span style="color: #000000">)  </span><span style="color: #008000"># Cache up to 128 unique calls</span></span>
+<span class="line"><span style="color: #0000FF">def</span><span style="color: #000000"> </span><span style="color: #795E26">compute_factorial</span><span style="color: #000000">(</span><span style="color: #001080">n</span><span style="color: #000000">):</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">if</span><span style="color: #000000"> n == </span><span style="color: #098658">0</span><span style="color: #000000"> </span><span style="color: #0000FF">or</span><span style="color: #000000"> n == </span><span style="color: #098658">1</span><span style="color: #000000">:</span></span>
+<span class="line"><span style="color: #000000">        </span><span style="color: #AF00DB">return</span><span style="color: #000000"> </span><span style="color: #098658">1</span></span>
+<span class="line"><span style="color: #000000">    </span><span style="color: #AF00DB">return</span><span style="color: #000000"> n * compute_factorial(n - </span><span style="color: #098658">1</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(compute_factorial(</span><span style="color: #098658">10</span><span style="color: #000000">))  </span><span style="color: #008000"># Computed and cached</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(compute_factorial(</span><span style="color: #098658">10</span><span style="color: #000000">))  </span><span style="color: #008000"># Retrieved from cache</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>Memoization reduces redundant computation and significantly improves performance for recursive or frequently-called functions with immutable arguments.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>2. TTL Caches in Python</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python provides third-party libraries like <code>cachetools</code> for implementing TTL (Time-To-Live) caches. These automatically expire cache entries after a specified duration, ideal for time-sensitive data.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example (TTL Cache with <code>cachetools</code>):</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"from cachetools import TTLCache  \n\n# Create a cache with a max size of 100 and a TTL of 300 seconds  \ncache = TTLCache(maxsize=100, ttl=300)  \n\ncache[\u0022key\u0022] = \u0022value\u0022  \nprint(cache.get(\u0022key\u0022))  # Outputs \u0022value\u0022  \n\n# After 300 seconds, \u0022key\u0022 will be automatically removed from the cache  \n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e cachetools \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e TTLCache  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Create a cache with a max size of 100 and a TTL of 300 seconds  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecache = TTLCache(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003emaxsize\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e100\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ettl\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e300\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecache[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;key\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;value\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(cache.get(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;key\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Outputs \u0026quot;value\u0026quot;  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# After 300 seconds, \u0026quot;key\u0026quot; will be automatically removed from the cache  \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> cachetools </span><span style="color: #AF00DB">import</span><span style="color: #000000"> TTLCache  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Create a cache with a max size of 100 and a TTL of 300 seconds  </span></span>
+<span class="line"><span style="color: #000000">cache = TTLCache(</span><span style="color: #001080">maxsize</span><span style="color: #000000">=</span><span style="color: #098658">100</span><span style="color: #000000">, </span><span style="color: #001080">ttl</span><span style="color: #000000">=</span><span style="color: #098658">300</span><span style="color: #000000">)  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">cache[</span><span style="color: #A31515">"key"</span><span style="color: #000000">] = </span><span style="color: #A31515">"value"</span><span style="color: #000000">  </span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(cache.get(</span><span style="color: #A31515">"key"</span><span style="color: #000000">))  </span><span style="color: #008000"># Outputs "value"  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># After 300 seconds, "key" will be automatically removed from the cache  </span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>3. Memory-Based Caching</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>For in-memory caching, Python often uses a simple <code>dict</code> or specialized tools like Redis when distributed caching is required.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example (Redis Cache):</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"import redis\n\ncache = redis.Redis(host='localhost', port=6379, db=0)\ncache.set(\u0022key\u0022, \u0022value\u0022, ex=300)  # TTL of 5 minutes\nprint(cache.get(\u0022key\u0022).decode())  # Outputs \u0022value\u0022\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e redis\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecache = redis.Redis(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003ehost\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;localhost\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e6379\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003edb\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ecache.set(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;key\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;value\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eex\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e300\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# TTL of 5 minutes\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(cache.get(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;key\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e).decode())  \u003c/span\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Outputs \u0026quot;value\u0026quot;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".75rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.75rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> redis</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #000000">cache = redis.Redis(</span><span style="color: #001080">host</span><span style="color: #000000">=</span><span style="color: #A31515">'localhost'</span><span style="color: #000000">, </span><span style="color: #001080">port</span><span style="color: #000000">=</span><span style="color: #098658">6379</span><span style="color: #000000">, </span><span style="color: #001080">db</span><span style="color: #000000">=</span><span style="color: #098658">0</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">cache.set(</span><span style="color: #A31515">"key"</span><span style="color: #000000">, </span><span style="color: #A31515">"value"</span><span style="color: #000000">, </span><span style="color: #001080">ex</span><span style="color: #000000">=</span><span style="color: #098658">300</span><span style="color: #000000">)  </span><span style="color: #008000"># TTL of 5 minutes</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(cache.get(</span><span style="color: #A31515">"key"</span><span style="color: #000000">).decode())  </span><span style="color: #008000"># Outputs "value"</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Key Differences Between .NET and Python Caching</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"hasFixedLayout":false,"className":"is-style-stripes","style":{"typography":{"lineHeight":"1.2"}},"fontSize":"small"} --></p>
+<figure class="wp-block-table is-style-stripes has-small-font-size" style="line-height:1.2">
+<table>
+<thead>
+<tr>
+<th class="has-text-align-left" data-align="left">Feature</th>
+<th class="has-text-align-left" data-align="left">.NET Framework</th>
+<th class="has-text-align-left" data-align="left">Python</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="has-text-align-left" data-align="left"><strong>Caching Levels</strong></td>
+<td class="has-text-align-left" data-align="left">App-level, session-level</td>
+<td class="has-text-align-left" data-align="left">No native levels; managed via frameworks</td>
+</tr>
+<tr>
+<td class="has-text-align-left" data-align="left"><strong>Memory Limits</strong></td>
+<td class="has-text-align-left" data-align="left">Configurable via <code>.config</code> files</td>
+<td class="has-text-align-left" data-align="left">Requires custom implementation</td>
+</tr>
+<tr>
+<td class="has-text-align-left" data-align="left"><strong>Memoization</strong></td>
+<td class="has-text-align-left" data-align="left">Not natively built-in</td>
+<td class="has-text-align-left" data-align="left"><code>functools.lru_cache</code></td>
+</tr>
+<tr>
+<td class="has-text-align-left" data-align="left"><strong>TTL Support</strong></td>
+<td class="has-text-align-left" data-align="left">Not natively built into MemoryCache</td>
+<td class="has-text-align-left" data-align="left">Supported via <code>cachetools</code>
+</td>
+</tr>
+<tr>
+<td class="has-text-align-left" data-align="left"><strong>Web Integration</strong></td>
+<td class="has-text-align-left" data-align="left">Deep integration in ASP.NET</td>
+<td class="has-text-align-left" data-align="left">Framework-specific (Flask, Django)</td>
+</tr>
+<tr>
+<td class="has-text-align-left" data-align="left"><strong>Distributed Caching</strong></td>
+<td class="has-text-align-left" data-align="left">Azure Redis, SQL Server Cache</td>
+<td class="has-text-align-left" data-align="left">Redis, Memcached</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Lessons Learned: Structured vs. Flexible Caching</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Why .NET Stands Out</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Structured and Configurable:</strong> The app and session-level caching hierarchy, combined with memory limits in <code>.config</code> files, offers predictability and control.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Enterprise-Ready:</strong> Features like dependency caching, sliding expiration, and integration with Azure Redis Cache make it ideal for large-scale applications.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Why Python Shines</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Memoization and Flexibility:</strong> Python’s memoization tools like <code>functools.lru_cache</code> and TTL-based caching (<code>cachetools</code>) are excellent for quick and custom caching solutions.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Lightweight:</strong> For small projects or microservices, Python’s caching solutions are simple and quick to implement.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading"><strong>Choosing the Right Ecosystem for Caching</strong></h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>For developers working in .NET, the structured approach to caching—complete with app-level and session-level caching, configurable memory limits, and enterprise-grade tools—is a powerful advantage. However, Python offers unparalleled flexibility, particularly with tools like TTL caches and memoization for optimizing function calls - <em>although I'd personally consider LRU caches pretty unpredictable.</em></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>As I’ve learned, the choice between .NET and Python depends on your project’s scale, requirements, and trade-offs. Whether you prefer .NET’s predictability or Python’s adaptability, mastering caching in both ecosystems will significantly improve performance and user experience.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

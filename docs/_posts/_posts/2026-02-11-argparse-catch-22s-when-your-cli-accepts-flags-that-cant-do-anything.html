@@ -1,0 +1,588 @@
+---
+layout: post
+title: 'Argparse Catch-22s: When Your CLI Accepts Flags That Can’t Do Anything'
+date: 2026-02-11 23:10:00.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- CLI &amp; argparse
+tags:
+- argparse
+- CLI
+- debugging
+- flags
+meta:
+  _last_editor_used_jetpack: block-editor
+  _publicize_job_id: '111181558761'
+  firehose_sent: '1770854741'
+  _publicize_shares: a:0:{}
+  timeline_notification: '1770854741'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-10 11:18:45'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Travel","Technology","Personal","Inspiration","Design"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/02/11/argparse-catch-22s-when-your-cli-accepts-flags-that-cant-do-anything/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/ArgParseCLI","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python’s <code>argparse</code> is powerful, flexible, and — in quiet ways — dangerously permissive.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>It will happily let you define command-line arguments that:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>parse correctly</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>appear in <code>--help</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>pass unit tests</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>and yet cannot change program behavior under any circumstance</strong></li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>These are <em>Catch-22 arguments</em>: options that promise control but mathematically cannot deliver it.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This post catalogs the most common argparse Catch-22s, explains <strong>why they happen</strong>, and shows <strong>how to avoid them</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">What is an argparse Catch-22?</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><strong>An argparse Catch-22 exists when no valid user input can change the resulting value or behavior of an argument.</strong></p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>Argparse validates syntax — not semantics.<br>Logical dead ends are your responsibility.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1. Boolean flags that cannot change state</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is the most common and most dangerous category.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCg="]],[["ICAgICItLWZlYXR1cmUiLA=="]],[["ICAgIGFjdGlvbj0ic3RvcmVfdHJ1ZSIs"]],[["ICAgIGRlZmF1bHQ9VHJ1ZQ=="]],[["KQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument(
+    "--feature",
+    action="store_true",
+    default=True
+)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Result</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>CLI usage</th>
+<th>feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(absent)</td>
+<td>True</td>
+</tr>
+<tr>
+<td><code>--feature</code></td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p>The flag exists, appears useful, and does nothing.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The same problem exists in reverse:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCg="]],[["ICAgICItLW5vLWxvZ2dpbmciLA=="]],[["ICAgIGFjdGlvbj0ic3RvcmVfZmFsc2UiLA=="]],[["ICAgIGRlZmF1bHQ9RmFsc2U="]],[["KQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument(
+    "--no-logging",
+    action="store_false",
+    default=False
+)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this happens</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>store_true</code> already defaults to <code>False</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<code>store_false</code> already defaults to <code>True</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Overriding these defaults can eliminate all state transitions</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let argparse own the default — or use <code>BooleanOptionalAction</code> when symmetry is required.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2. Mutually exclusive groups that aren’t actually choices</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z3JvdXAgPSBwYXJzZXIuYWRkX211dHVhbGx5X2V4Y2x1c2l2ZV9ncm91cCgp"]],[["Z3JvdXAuYWRkX2FyZ3VtZW50KCItLWZhc3QiLCBhY3Rpb249InN0b3JlX3RydWUiLCBkZWZhdWx0PVRydWUp"]],[["Z3JvdXAuYWRkX2FyZ3VtZW50KCItLXNsb3ciLCBhY3Rpb249InN0b3JlX2ZhbHNlIiwgZGVzdD0iZmFzdCIp"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>group = parser.add_mutually_exclusive_group()
+group.add_argument("--fast", action="store_true", default=True)
+group.add_argument("--slow", action="store_false", dest="fast")
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Result</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>CLI usage</th>
+<th>fast</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(none)</td>
+<td>True</td>
+</tr>
+<tr>
+<td><code>--fast</code></td>
+<td>True</td>
+</tr>
+<tr>
+<td><code>--slow</code></td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>--fast</code> exists but is meaningless.<br>Mutual exclusivity implies a choice that does not exist.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Remove the useless flag or use <code>BooleanOptionalAction</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3. Required arguments that aren’t actually required</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCg="]],[["ICAgICItLW1vZGUiLA=="]],[["ICAgIGNob2ljZXM9WyJkZXYiLCAicHJvZCJdLA=="]],[["ICAgIHJlcXVpcmVkPVRydWUs"]],[["ICAgIGRlZmF1bHQ9ImRldiI="]],[["KQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument(
+    "--mode",
+    choices=["dev", "prod"],
+    required=True,
+    default="dev"
+)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this is a Catch-22</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Help text says the argument is required</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Default value already satisfies the requirement</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Humans, scripts, and validators receive conflicting signals</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Use <strong>either</strong> <code>required=True</code> <strong>or</strong> <code>default</code>, never both.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">4. <code>choices</code> that collapse to a single value</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCg="]],[["ICAgICItLWVudiIs"]],[["ICAgIGNob2ljZXM9WyJwcm9kIl0s"]],[["ICAgIGRlZmF1bHQ9InByb2Qi"]],[["KQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument(
+    "--env",
+    choices=["prod"],
+    default="prod"
+)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this is broken</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The argument accepts only one value and already defaults to it.<br>User input cannot influence behavior.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This commonly appears after partial refactors.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Remove the argument or restore meaningful alternatives.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">5. <code>nargs="?"</code> with identical <code>default</code> and <code>const</code><br />
+</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCg="]],[["ICAgICItLWxldmVsIiw="]],[["ICAgIG5hcmdzPSI/Iiw="]],[["ICAgIGRlZmF1bHQ9MSw="]],[["ICAgIGNvbnN0PTE="]],[["KQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument(
+    "--level",
+    nargs="?",
+    default=1,
+    const=1
+)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Result</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>CLI usage</th>
+<th>level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(absent)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>--level</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>--level 1</code></td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p>Every path yields the same value.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Ensure <code>const</code> and <code>default</code> differ — or remove the flag.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">6. Mutable defaults that create state illusions</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCg="]],[["ICAgICItLXRhZyIs"]],[["ICAgIGFjdGlvbj0iYXBwZW5kIiw="]],[["ICAgIGRlZmF1bHQ9W10="]],[["KQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument(
+    "--tag",
+    action="append",
+    default=[]
+)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this is dangerous</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>The list is shared across parses</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Tests or repeated runs leak state</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Users believe flags reset per invocation — they don’t</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is not a logical Catch-22, but it produces equally baffling behavior.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Use <code>default=None</code> and normalize after parsing.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">7. Flags silently overridden by environment variables</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCgiLS10aW1lb3V0IiwgdHlwZT1pbnQsIGRlZmF1bHQ9MzAp"]],[["YXJncyA9IHBhcnNlci5wYXJzZV9hcmdzKCk="]],[[""]],[["dGltZW91dCA9IGludChvcy5nZXRlbnYoIlRJTUVPVVQiLCBhcmdzLnRpbWVvdXQpKQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument("--timeout", type=int, default=30)
+args = parser.parse_args()
+
+timeout = int(os.getenv("TIMEOUT", args.timeout))
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this is a Catch-22</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>CLI flag appears to work</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Environment variable silently wins</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Users cannot enforce behavior from the command line</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Define and document precedence explicitly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">8. <code>type=bool</code> (the impossible boolean)</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGFyc2VyLmFkZF9hcmd1bWVudCgiLS1lbmFibGVkIiwgdHlwZT1ib29sKQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>parser.add_argument("--enabled", type=bool)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:code {"tokenizedLines":[[["LS1lbmFibGVkIGZhbHNlICAgIyBldmFsdWF0ZXMgdG8gVHJ1ZQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>--enabled false   # evaluates to True
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this is broken</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><code>bool("false")</code> is <code>True</code>.<br>Users cannot express falsehood via the CLI.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Never use <code>type=bool</code>.<br>Use <code>store_true</code>, <code>store_false</code>, or explicit choices.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">9. Defaults that bypass mutually exclusive groups</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">The trap</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Z3JvdXAgPSBwYXJzZXIuYWRkX211dHVhbGx5X2V4Y2x1c2l2ZV9ncm91cCgp"]],[["Z3JvdXAuYWRkX2FyZ3VtZW50KCItLWpzb24iLCBhY3Rpb249InN0b3JlX3RydWUiKQ=="]],[["Z3JvdXAuYWRkX2FyZ3VtZW50KCItLXlhbWwiLCBhY3Rpb249InN0b3JlX3RydWUiKQ=="]],[[""]],[["cGFyc2VyLnNldF9kZWZhdWx0cyhqc29uPVRydWUp"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>group = parser.add_mutually_exclusive_group()
+group.add_argument("--json", action="store_true")
+group.add_argument("--yaml", action="store_true")
+
+parser.set_defaults(json=True)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why this is misleading</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Group implies a choice</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Default already fixes the outcome</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Help text does not reflect actual behavior</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Fix</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Set defaults inside the group or require explicit selection.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">The unifying principle</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>All argparse Catch-22s reduce to one rule:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><strong>If there exists no valid CLI input that changes program behavior, the argument is broken.</strong></p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>Argparse will not warn you.<br>Only design discipline will.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">A practical pre-commit checklist</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Before shipping a CLI:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>For every argument, ask: <em>“What input changes behavior?”</em>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>If the answer is “none”, remove the argument</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Never override boolean defaults casually</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Avoid symmetric-looking flags unless symmetry truly exists</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Test <strong>both</strong> sides of every flag in CI</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Final takeaway</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Argparse won’t protect you from semantic dead ends.<br>It assumes you know what you’re doing.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>When your CLI lies, users don’t blame argparse — they blame you.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Design accordingly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

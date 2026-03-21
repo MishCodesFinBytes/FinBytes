@@ -1,0 +1,615 @@
+---
+layout: post
+title: Testing File Output in Python Without Touching the Filesystem
+date: 2025-11-18 23:56:00.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- pytest &amp; testing
+tags:
+- filesystem
+- mocking
+- pytest
+- testing
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Photography","Art","Travel","Technology","Books"]'
+  _wp_old_date: '2026-02-13'
+  _publicize_job_id: '111228756987'
+  firehose_sent: '1771012950'
+  _publicize_shares: a:0:{}
+  timeline_notification: '1771012950'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-13 20:00:08'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2025/11/18/testing-file-output-in-python-without-touching-the-filesystem/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/test_samples","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>File I/O is a side effect.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Side effects are where tests become slow, flaky, and fragile.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If your code saves a pandas DataFrame to Excel, CSV, JSON, or any file path, you should not be writing real files in most unit tests.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This guide walks through:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>How to test file output without creating files</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>When to patch vs when to use buffers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>How to verify Excel contents in memory</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>When a real temporary file is actually the correct choice</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>We’ll use pandas + Excel as the working example.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Example Production Code</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">report_writer.py</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IHBhbmRhcyBhcyBwZA=="]],[[""]],[[""]],[["Y2xhc3MgUmVwb3J0V3JpdGVyOg=="]],[[""]],[["ICAgIGRlZiBzYXZlX3JlcG9ydChzZWxmLCBkZjogcGQuRGF0YUZyYW1lLCBmaWxlX3BhdGg6IHN0cik6"]],[["ICAgICAgICBkZi50b19leGNlbChmaWxlX3BhdGgsIGluZGV4PUZhbHNlKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import pandas as pd
+
+
+class ReportWriter:
+
+    def save_report(self, df: pd.DataFrame, file_path: str):
+        df.to_excel(file_path, index=False)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This writes directly to disk.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In unit tests, that’s unnecessary.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Strategy 1 — Patch <code>DataFrame.to_excel</code> (Pure Unit Test)</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If your goal is simply:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Did we call <code>to_excel</code>?</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Was the correct file path used?</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Was <code>index=False</code> passed?</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>You patch the method.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Using pytest <code>monkeypatch</code><br />
+</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBNb2Nr"]],[["aW1wb3J0IHBhbmRhcyBhcyBwZA=="]],[["ZnJvbSByZXBvcnRfd3JpdGVyIGltcG9ydCBSZXBvcnRXcml0ZXI="]],[[""]],[[""]],[["ZGVmIHRlc3Rfc2F2ZV9yZXBvcnRfY2FsbHNfdG9fZXhjZWwobW9ua2V5cGF0Y2gpOg=="]],[[""]],[["ICAgIG1vY2tfdG9fZXhjZWwgPSBNb2NrKCk="]],[[""]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIo"]],[["ICAgICAgICBwZC5EYXRhRnJhbWUs"]],[["ICAgICAgICAidG9fZXhjZWwiLA=="]],[["ICAgICAgICBtb2NrX3RvX2V4Y2Vs"]],[["ICAgICk="]],[[""]],[["ICAgIGRmID0gcGQuRGF0YUZyYW1lKHsiYSI6IFsxLCAyXX0p"]],[["ICAgIHdyaXRlciA9IFJlcG9ydFdyaXRlcigp"]],[[""]],[["ICAgIHdyaXRlci5zYXZlX3JlcG9ydChkZiwgIm91dHB1dC54bHN4Iik="]],[[""]],[["ICAgIG1vY2tfdG9fZXhjZWwuYXNzZXJ0X2NhbGxlZF9vbmNlX3dpdGgoIm91dHB1dC54bHN4IiwgaW5kZXg9RmFsc2Up"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import Mock
+import pandas as pd
+from report_writer import ReportWriter
+
+
+def test_save_report_calls_to_excel(monkeypatch):
+
+    mock_to_excel = Mock()
+
+    monkeypatch.setattr(
+        pd.DataFrame,
+        "to_excel",
+        mock_to_excel
+    )
+
+    df = pd.DataFrame({"a": [1, 2]})
+    writer = ReportWriter()
+
+    writer.save_report(df, "output.xlsx")
+
+    mock_to_excel.assert_called_once_with("output.xlsx", index=False)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>No file is created.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You verified:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Call count</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Arguments</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Execution path</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is a proper unit test.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Strategy 2 — Redirect to an In-Memory Buffer</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Sometimes you want to verify the Excel output is correct.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can use <code>BytesIO</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Testing Excel Round-Trip Without Files</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSBpbyBpbXBvcnQgQnl0ZXNJTw=="]],[["aW1wb3J0IHBhbmRhcyBhcyBwZA=="]],[["ZnJvbSByZXBvcnRfd3JpdGVyIGltcG9ydCBSZXBvcnRXcml0ZXI="]],[[""]],[[""]],[["ZGVmIHRlc3Rfc2F2ZV9yZXBvcnRfdG9fYnVmZmVyKG1vbmtleXBhdGNoKTo="]],[[""]],[["ICAgIGJ1ZmZlciA9IEJ5dGVzSU8oKQ=="]],[[""]],[["ICAgIG9yaWdpbmFsX3RvX2V4Y2VsID0gcGQuRGF0YUZyYW1lLnRvX2V4Y2Vs"]],[[""]],[["ICAgIGRlZiBmYWtlX3RvX2V4Y2VsKHNlbGYsIGZpbGVfcGF0aCwgaW5kZXg9RmFsc2UpOg=="]],[["ICAgICAgICBvcmlnaW5hbF90b19leGNlbChzZWxmLCBidWZmZXIsIGluZGV4PWluZGV4KQ=="]],[[""]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIo"]],[["ICAgICAgICBwZC5EYXRhRnJhbWUs"]],[["ICAgICAgICAidG9fZXhjZWwiLA=="]],[["ICAgICAgICBmYWtlX3RvX2V4Y2Vs"]],[["ICAgICk="]],[[""]],[["ICAgIGRmID0gcGQuRGF0YUZyYW1lKHsiYSI6IFsxLCAyXX0p"]],[["ICAgIHdyaXRlciA9IFJlcG9ydFdyaXRlcigp"]],[[""]],[["ICAgIHdyaXRlci5zYXZlX3JlcG9ydChkZiwgImlnbm9yZWQueGxzeCIp"]],[[""]],[["ICAgIGJ1ZmZlci5zZWVrKDAp"]],[["ICAgIHJlc3VsdF9kZiA9IHBkLnJlYWRfZXhjZWwoYnVmZmVyKQ=="]],[[""]],[["ICAgIGFzc2VydCByZXN1bHRfZGYuZXF1YWxzKGRmKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from io import BytesIO
+import pandas as pd
+from report_writer import ReportWriter
+
+
+def test_save_report_to_buffer(monkeypatch):
+
+    buffer = BytesIO()
+
+    original_to_excel = pd.DataFrame.to_excel
+
+    def fake_to_excel(self, file_path, index=False):
+        original_to_excel(self, buffer, index=index)
+
+    monkeypatch.setattr(
+        pd.DataFrame,
+        "to_excel",
+        fake_to_excel
+    )
+
+    df = pd.DataFrame({"a": [1, 2]})
+    writer = ReportWriter()
+
+    writer.save_report(df, "ignored.xlsx")
+
+    buffer.seek(0)
+    result_df = pd.read_excel(buffer)
+
+    assert result_df.equals(df)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>No filesystem involved</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Real Excel binary generated</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Full round-trip validation</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is a high-confidence test without disk I/O.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Strategy 3 — Patch Your Own Abstraction Layer</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A better architectural pattern:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Y2xhc3MgUmVwb3J0V3JpdGVyOg=="]],[[""]],[["ICAgIGRlZiBfd3JpdGVfZXhjZWwoc2VsZiwgZGYsIHBhdGgpOg=="]],[["ICAgICAgICBkZi50b19leGNlbChwYXRoLCBpbmRleD1GYWxzZSk="]],[[""]],[["ICAgIGRlZiBzYXZlX3JlcG9ydChzZWxmLCBkZiwgcGF0aCk6"]],[["ICAgICAgICBzZWxmLl93cml0ZV9leGNlbChkZiwgcGF0aCk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>class ReportWriter:
+
+    def _write_excel(self, df, path):
+        df.to_excel(path, index=False)
+
+    def save_report(self, df, path):
+        self._write_excel(df, path)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now your test patches <code>_write_excel</code>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBNb2Nr"]],[[""]],[["ZGVmIHRlc3Rfc2F2ZV9yZXBvcnQobW9ua2V5cGF0Y2gpOg=="]],[[""]],[["ICAgIG1vY2tfd3JpdGUgPSBNb2NrKCk="]],[[""]],[["ICAgIG1vbmtleXBhdGNoLnNldGF0dHIo"]],[["ICAgICAgICBSZXBvcnRXcml0ZXIs"]],[["ICAgICAgICAiX3dyaXRlX2V4Y2VsIiw="]],[["ICAgICAgICBtb2NrX3dyaXRl"]],[["ICAgICk="]],[[""]],[["ICAgIGRmID0gcGQuRGF0YUZyYW1lKHsiYSI6IFsxLCAyXX0p"]],[["ICAgIHdyaXRlciA9IFJlcG9ydFdyaXRlcigp"]],[[""]],[["ICAgIHdyaXRlci5zYXZlX3JlcG9ydChkZiwgImZpbGUueGxzeCIp"]],[[""]],[["ICAgIG1vY2tfd3JpdGUuYXNzZXJ0X2NhbGxlZF9vbmNlKCk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import Mock
+
+def test_save_report(monkeypatch):
+
+    mock_write = Mock()
+
+    monkeypatch.setattr(
+        ReportWriter,
+        "_write_excel",
+        mock_write
+    )
+
+    df = pd.DataFrame({"a": [1, 2]})
+    writer = ReportWriter()
+
+    writer.save_report(df, "file.xlsx")
+
+    mock_write.assert_called_once()
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>You avoid patching pandas internals entirely.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This scales better in large systems.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Strategy 4 — Using <code>unittest.mock.patch</code> Instead</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Equivalent to Strategy 1:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBwYXRjaA=="]],[["aW1wb3J0IHBhbmRhcyBhcyBwZA=="]],[["ZnJvbSByZXBvcnRfd3JpdGVyIGltcG9ydCBSZXBvcnRXcml0ZXI="]],[[""]],[[""]],[["ZGVmIHRlc3Rfc2F2ZV9yZXBvcnRfcGF0Y2goKTo="]],[[""]],[["ICAgIHdpdGggcGF0Y2gub2JqZWN0KHBkLkRhdGFGcmFtZSwgInRvX2V4Y2VsIikgYXMgbW9ja190b19leGNlbDo="]],[[""]],[["ICAgICAgICBkZiA9IHBkLkRhdGFGcmFtZSh7ImEiOiBbMSwgMl19KQ=="]],[["ICAgICAgICB3cml0ZXIgPSBSZXBvcnRXcml0ZXIoKQ=="]],[[""]],[["ICAgICAgICB3cml0ZXIuc2F2ZV9yZXBvcnQoZGYsICJmaWxlLnhsc3giKQ=="]],[[""]],[["ICAgICAgICBtb2NrX3RvX2V4Y2VsLmFzc2VydF9jYWxsZWRfb25jZV93aXRoKCJmaWxlLnhsc3giLCBpbmRleD1GYWxzZSk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from unittest.mock import patch
+import pandas as pd
+from report_writer import ReportWriter
+
+
+def test_save_report_patch():
+
+    with patch.object(pd.DataFrame, "to_excel") as mock_to_excel:
+
+        df = pd.DataFrame({"a": [1, 2]})
+        writer = ReportWriter()
+
+        writer.save_report(df, "file.xlsx")
+
+        mock_to_excel.assert_called_once_with("file.xlsx", index=False)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Functionally identical.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Difference:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>patch</code> creates the mock automatically</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<code>monkeypatch</code> requires you to supply it</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Strategy 5 — When You Actually Should Use the Filesystem</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you want a safe, real integration-style test:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Use pytest’s <code>tmp_path</code>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIHRlc3Rfc2F2ZV9yZXBvcnRfdG1wKHRtcF9wYXRoKTo="]],[[""]],[["ICAgIGRmID0gcGQuRGF0YUZyYW1lKHsiYSI6IFsxLCAyXX0p"]],[["ICAgIHdyaXRlciA9IFJlcG9ydFdyaXRlcigp"]],[[""]],[["ICAgIGZpbGVfcGF0aCA9IHRtcF9wYXRoIC8gInJlcG9ydC54bHN4Ig=="]],[[""]],[["ICAgIHdyaXRlci5zYXZlX3JlcG9ydChkZiwgZmlsZV9wYXRoKQ=="]],[[""]],[["ICAgIHJlc3VsdCA9IHBkLnJlYWRfZXhjZWwoZmlsZV9wYXRoKQ=="]],[[""]],[["ICAgIGFzc2VydCByZXN1bHQuZXF1YWxzKGRmKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def test_save_report_tmp(tmp_path):
+
+    df = pd.DataFrame({"a": [1, 2]})
+    writer = ReportWriter()
+
+    file_path = tmp_path / "report.xlsx"
+
+    writer.save_report(df, file_path)
+
+    result = pd.read_excel(file_path)
+
+    assert result.equals(df)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Writes a real file</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Uses a temporary directory</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Leaves no residue</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Is appropriate for integration-level validation</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Strategy Comparison</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"fontSize":"x-small"} --></p>
+<figure class="wp-block-table has-x-small-font-size">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Goal</th>
+<th>Recommended Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verify function call only</td>
+<td>Patch <code>to_excel</code>
+</td>
+</tr>
+<tr>
+<td>Verify arguments</td>
+<td>Patch + assert_called_with</td>
+</tr>
+<tr>
+<td>Validate Excel binary</td>
+<td>Redirect to <code>BytesIO</code>
+</td>
+</tr>
+<tr>
+<td>Avoid patching pandas internals</td>
+<td>Patch wrapper method</td>
+</tr>
+<tr>
+<td>Full integration behavior</td>
+<td>Use <code>tmp_path</code>
+</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Choosing the Right Level of Test</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Ask:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>What am I trying to validate?</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you're validating:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Business logic → patch</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Serialization correctness → buffer</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>End-to-end behavior → tmp_path</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Don’t default to disk writes in unit tests.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Common Pitfalls</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">1. Patching the Wrong Namespace</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Patch where the method is looked up.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If your module imports pandas as:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IHBhbmRhcyBhcyBwZA=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import pandas as pd
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Patch <code>pd.DataFrame.to_excel</code> in that module's namespace if necessary.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">2. Mutating Shared DataFrames</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Tests that mutate global DataFrames cause CI-only failures.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Always create fresh DataFrames inside tests.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">3. Over-Testing pandas</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>You are not testing pandas.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You are testing:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>That your code calls it correctly</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>That your logic prepares correct data</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Keep responsibility boundaries clear.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Senior-Level Testing Pattern</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>In mature systems:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Wrap all I/O in thin methods</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Unit test by patching your wrapper</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Add one integration test using <code>tmp_path</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Avoid patching third-party internals broadly</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>This keeps tests:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Fast</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Deterministic</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Maintainable</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Final Takeaway</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Testing file output does not require touching the filesystem.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Patch</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Redirect to memory</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Or use temporary directories safely</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>The right choice depends on what you are validating.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Test behavior — not the operating system.</p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

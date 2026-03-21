@@ -1,0 +1,206 @@
+---
+layout: post
+title: Build a Currency Dashboard Using Python
+date: 2023-04-12 15:09:26.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- currency
+- dashboard
+- forex
+- project
+meta:
+  reader_suggested_tags: '["Investing","Finance","Forex","Trading","Forex Trading"]'
+  _last_editor_used_jetpack: block-editor
+  _edit_last: '257720953'
+  _yoast_wpseo_primary_category: '1376'
+  _yoast_wpseo_content_score: '60'
+  _yoast_wpseo_estimated-reading-time-minutes: '4'
+  _thumbnail_id: '454'
+  _wp_page_template: default
+  _wp_old_date: '2024-11-13'
+  _import_original_post_id: '446'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:50'
+  _publicize_shares: a:0:{}
+  _publicize_job_id: '112035843539'
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/04/12/build-a-currency-dashboard-using-python/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/blob/main/CurrencyDashboard.py","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>In the ever-evolving world of fintech, real-time currency conversion has become an essential tool for businesses and individuals alike. With the rise of global trade and international investments, the need to accurately and efficiently convert currencies has become more critical than ever. Additionally, keeping track of historical exchange rates and analyzing trends can provide valuable insights for financial decision-making.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Python, with its robust libraries and data analysis capabilities, has become a popular choice for fintech applications. In this blog post, we will explore how we can leverage Python to develop a dashboard that converts currencies in real-time, displays historical exchange rates, and analyzes trends.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The primary objective of our dashboard is to provide users with the ability to convert currencies in real-time, view historical exchange rates, and analyze trends. To achieve this, we will be using Python libraries such as Pandas, Requests, and Matplotlib. Let's break down each of these components and understand their role in our dashboard.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>1. Real-time Currency Conversion: Using the Requests library, we can make API calls to reliable sources such as Open Exchange Rates or Fixer to fetch real-time currency conversion rates. These rates can then be displayed on the dashboard using a user-friendly interface, allowing users to enter a currency pair and get an accurate conversion.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>2. Historical Exchange Rates: To display historical exchange rates, we will be using the Pandas library to retrieve data from a CSV file or an API. This data can then be visualized using Matplotlib to provide a graphical representation of exchange rates over a specific period.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>3. Trend Analysis: By combining the real-time and historical exchange rate data, we can perform trend analysis using Pandas and Matplotlib. This will enable us to identify patterns and fluctuations in currency exchange rates, providing valuable insights for financial decision-making.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Variations and Use Cases:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now that we have an understanding of the primary components of our dashboard, let's explore some variations and use cases for each of them.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>1. Real-time Currency Conversion:<br><br />
+- Variation 1: Instead of using a user interface, we can develop a command-line tool that takes user input and displays the converted amount.<br><br />
+- Use Case 1: Businesses can integrate this tool into their accounting systems to automate currency conversions for international transactions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>2. Historical Exchange Rates:<br><br />
+- Variation 2: Instead of displaying exchange rates for a specific period, we can provide an option for users to select their desired time frame.<br><br />
+- Use Case 2: Investors can use this feature to analyze the performance of a specific currency over a more extended period to make informed investment decisions.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>3. Trend Analysis:<br><br />
+- Variation 3: In addition to graphical representation, we can incorporate statistical analysis using the SciPy library to identify significant trends and patterns.<br><br />
+- Use Case 3: Financial analysts can leverage this feature to make predictions and forecasts based on historical exchange rates.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Code Examples:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>To give you a better understanding of how these variations can be implemented, let's take a look at some code snippets in Python.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>1. Real-time Currency Conversion:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nimport requests\n\n# Make API call to retrieve real-time exchange rates\n# most APIS need API key and registration for acces - i recomment yahoo finance for test projects\nresponse = requests.get('https://api.exchangeratesapi.io/latest')\n\n# Convert JSON response to a Python dictionary\nrates = response.json()['rates']\n\n# Get user input for currency pair\nbase_currency = input(\u0022Enter base currency: \u0022)\ntarget_currency = input(\u0022Enter target currency: \u0022)\n\n# Calculate converted amount\nconverted_amount = rates[target_currency] / rates[base_currency]\n\n# Display result\nprint(\u00221\u0022, base_currency, \u0022=\u0022, converted_amount, target_currency)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e requests\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Make API call to retrieve real-time exchange rates\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# most APIS need API key and registration for acces - i recomment yahoo finance for test projects\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eresponse = requests.get(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;https://api.exchangeratesapi.io/latest\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Convert JSON response to a Python dictionary\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003erates = response.json()[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;rates\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Get user input for currency pair\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ebase_currency = \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003einput\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Enter base currency: \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003etarget_currency = \u003c/span\u003e\u003cspan style=\u0022color: #795E26\u0022\u003einput\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Enter target currency: \u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate converted amount\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003econverted_amount = rates[target_currency] / rates[base_currency]\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Display result\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;1\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, base_currency, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;=\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, converted_amount, target_currency)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> requests</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Make API call to retrieve real-time exchange rates</span></span>
+<span class="line"><span style="color: #008000"># most APIS need API key and registration for acces - i recomment yahoo finance for test projects</span></span>
+<span class="line"><span style="color: #000000">response = requests.get(</span><span style="color: #A31515">'https://api.exchangeratesapi.io/latest'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Convert JSON response to a Python dictionary</span></span>
+<span class="line"><span style="color: #000000">rates = response.json()[</span><span style="color: #A31515">'rates'</span><span style="color: #000000">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Get user input for currency pair</span></span>
+<span class="line"><span style="color: #000000">base_currency = </span><span style="color: #795E26">input</span><span style="color: #000000">(</span><span style="color: #A31515">"Enter base currency: "</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">target_currency = </span><span style="color: #795E26">input</span><span style="color: #000000">(</span><span style="color: #A31515">"Enter target currency: "</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate converted amount</span></span>
+<span class="line"><span style="color: #000000">converted_amount = rates[target_currency] / rates[base_currency]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Display result</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"1"</span><span style="color: #000000">, base_currency, </span><span style="color: #A31515">"="</span><span style="color: #000000">, converted_amount, target_currency)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>2. Historical Exchange Rates:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nimport pandas as pd\nimport matplotlib.pyplot as plt\n\n# Read data from CSV file\ndata = pd.read_csv('exchange_rates.csv', index_col='Date')\n\n# Select desired time frame\nstart_date = '2021-01-01'\nend_date = '2021-04-30'\n\n# Plot exchange rates over selected time frame\ndata.loc[start_date:end_date].plot(figsize=(10,6))\nplt.xlabel('Date')\nplt.ylabel('Exchange Rate')\nplt.show()\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e matplotlib.pyplot \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Read data from CSV file\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edata = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;exchange_rates.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003eindex_col\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Date\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Select desired time frame\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003estart_date = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-01-01\u0026#039;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eend_date = \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;2021-04-30\u0026#039;\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Plot exchange rates over selected time frame\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edata.loc[start_date:end_date].plot(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003efigsize\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e6\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.xlabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Date\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.ylabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Exchange Rate\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.show()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> matplotlib.pyplot </span><span style="color: #AF00DB">as</span><span style="color: #000000"> plt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Read data from CSV file</span></span>
+<span class="line"><span style="color: #000000">data = pd.read_csv(</span><span style="color: #A31515">'exchange_rates.csv'</span><span style="color: #000000">, </span><span style="color: #001080">index_col</span><span style="color: #000000">=</span><span style="color: #A31515">'Date'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Select desired time frame</span></span>
+<span class="line"><span style="color: #000000">start_date = </span><span style="color: #A31515">'2021-01-01'</span></span>
+<span class="line"><span style="color: #000000">end_date = </span><span style="color: #A31515">'2021-04-30'</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Plot exchange rates over selected time frame</span></span>
+<span class="line"><span style="color: #000000">data.loc[start_date:end_date].plot(</span><span style="color: #001080">figsize</span><span style="color: #000000">=(</span><span style="color: #098658">10</span><span style="color: #000000">,</span><span style="color: #098658">6</span><span style="color: #000000">))</span></span>
+<span class="line"><span style="color: #000000">plt.xlabel(</span><span style="color: #A31515">'Date'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">plt.ylabel(</span><span style="color: #A31515">'Exchange Rate'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">plt.show()</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:paragraph --></p>
+<p>3. Trend Analysis:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom scipy import stats\n\n# Calculate percentage change in exchange rates\ndata['Rate Change'] = data['Exchange Rate'].pct_change()\n\n# Plot rate change over time\ndata['Rate Change'].plot(figsize=(10,6))\nplt.xlabel('Date')\nplt.ylabel('Rate Change')\nplt.show()\n\n# Perform linear regression on rate change data\nslope, intercept, r_value, p_value, std_err = stats.linregress(data.index, data['Rate Change'])\n\n# Display results\nprint(\u0022Slope:\u0022, slope)\nprint(\u0022Intercept:\u0022, intercept)\nprint(\u0022R-squared:\u0022, r_value**2)\n","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e matplotlib.pyplot \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e plt\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e scipy \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e stats\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate percentage change in exchange rates\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edata[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Rate Change\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Exchange Rate\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e].pct_change()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Plot rate change over time\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edata[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Rate Change\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e].plot(\u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003efigsize\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=(\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e10\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e,\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e6\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.xlabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Date\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.ylabel(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Rate Change\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eplt.show()\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Perform linear regression on rate change data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eslope, intercept, r_value, p_value, std_err = stats.linregress(data.index, data[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Rate Change\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Display results\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Slope:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, slope)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;Intercept:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, intercept)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #795E26\u0022\u003eprint\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026quot;R-squared:\u0026quot;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, r_value**\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e2\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> matplotlib.pyplot </span><span style="color: #AF00DB">as</span><span style="color: #000000"> plt</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> scipy </span><span style="color: #AF00DB">import</span><span style="color: #000000"> stats</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate percentage change in exchange rates</span></span>
+<span class="line"><span style="color: #000000">data[</span><span style="color: #A31515">'Rate Change'</span><span style="color: #000000">] = data[</span><span style="color: #A31515">'Exchange Rate'</span><span style="color: #000000">].pct_change()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Plot rate change over time</span></span>
+<span class="line"><span style="color: #000000">data[</span><span style="color: #A31515">'Rate Change'</span><span style="color: #000000">].plot(</span><span style="color: #001080">figsize</span><span style="color: #000000">=(</span><span style="color: #098658">10</span><span style="color: #000000">,</span><span style="color: #098658">6</span><span style="color: #000000">))</span></span>
+<span class="line"><span style="color: #000000">plt.xlabel(</span><span style="color: #A31515">'Date'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">plt.ylabel(</span><span style="color: #A31515">'Rate Change'</span><span style="color: #000000">)</span></span>
+<span class="line"><span style="color: #000000">plt.show()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Perform linear regression on rate change data</span></span>
+<span class="line"><span style="color: #000000">slope, intercept, r_value, p_value, std_err = stats.linregress(data.index, data[</span><span style="color: #A31515">'Rate Change'</span><span style="color: #000000">])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Display results</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Slope:"</span><span style="color: #000000">, slope)</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"Intercept:"</span><span style="color: #000000">, intercept)</span></span>
+<span class="line"><span style="color: #795E26">print</span><span style="color: #000000">(</span><span style="color: #A31515">"R-squared:"</span><span style="color: #000000">, r_value**</span><span style="color: #098658">2</span><span style="color: #000000">)</span></span>
+<span class="line"></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4 class="wp-block-heading">Technical Overview</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Layout</strong>: The app layout contains a header, a dropdown for selecting the currency pair, input fields for amount conversion, a section for displaying the converted amount, and a section to visualize the historical data as a candlestick chart.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Real-Time Conversion</strong>: The conversion function uses <code>yfinance</code> to fetch the latest exchange rate for the selected currency pair and converts the amount input by the user. The result is displayed below the input field.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Historical Graph</strong>: The historical data is fetched for the last year using <code>yfinance</code> and plotted using Plotly’s <code>Candlestick</code> chart to show the currency pair’s fluctuation over time. This gives the user a graphical representation of how the exchange rate has changed over the last year.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Interactive Features</strong>: The app is interactive in that the user can select different currency pairs from the dropdown, input the amount they want to convert, and see the updated conversion result and historical data in real time.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph {"fontSize":"x-small"} --></p>
+<p class="has-x-small-font-size">Note for newbies: Running the app shows an output block like the below, and hosts a dashboard on your local machine, open the link to view the dashboard.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["RGFzaCBpcyBydW5uaW5nIG9uIGh0dHA6Ly8xMjcuMC4wLjE6ODA1MC8="]],[[""]],[["ICogU2VydmluZyBGbGFzayBhcHAgJ0N1cnJlbmN5RGFzaGJvYXJkJw=="]],[["ICogRGVidWcgbW9kZTogb24="]]]} --></p>
+<pre class="wp-block-code"><code>Dash is running on http://127.0.0.1:8050/
+
+ * Serving Flask app 'CurrencyDashboard'
+ * Debug mode: on</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:image {"id":723,"sizeSlug":"large","linkDestination":"none","align":"wide"} --></p>
+<figure class="wp-block-image alignwide size-large"><img src="{{site.baseurl}}/assets/2023/04/da019-figure_1-6.png?w=1024&amp;h=489" alt="" class="wp-image-723"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:paragraph --></p>
+<p>In this blog post, we explored how we can develop a dashboard using Python that converts currencies in real-time, displays historical exchange rates, and can be used to analyze trends. We saw how we can use various libraries and incorporate different variations to cater to different use cases. With the increasing demand for accurate and efficient currency conversion, this dashboard can be a valuable tool for businesses and individuals in the fintech industry. Furthermore, with the continuous advancements in technology and data analysis, the potential for future applications of this concept is limitless.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

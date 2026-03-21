@@ -1,0 +1,732 @@
+---
+layout: post
+title: Redis, Gunicorn, and Cache Issues
+date: 2026-01-03 12:24:23.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- caching
+- debugging
+- gunicorn
+- redis
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Books","Blogs","Introduction","Physics","Reading"]'
+  _wp_old_date: '2026-01-01'
+  _publicize_job_id: '111088780249'
+  firehose_sent: '1770553701'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 12:25:30'
+  timeline_notification: '1770553703'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/01/03/redis-gunicorn-and-cache-issues/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/redis_sample","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Redis, Gunicorn, and multi-node setups can sound scary at first. But once you understand the architecture, common issues, and troubleshooting steps, it’s actually manageable — and often reassuring.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This guide will walk you through everything <strong>without overwhelming you</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1️⃣ Redis Explained Like You’re Five 🧒</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Imagine a building with many offices (servers). Everyone needs to remember things quickly.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Redis</strong> is like a <strong>shared whiteboard in the hallway</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Workers write info temporarily for everyone to see</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>The <strong>database is the pantry</strong>, Redis is just <strong>fast, shared memory</strong>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Things on the whiteboard aren’t permanent. If it’s erased, everyone can still go to the pantry (database) to get the true info.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ Key takeaway: Redis = temporary shared memory, not truth.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2️⃣ Multi-Node Enterprise Architecture with Redis 🏢</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Typical setup:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["VXNlcnM="]],[["ICAg4oaT"]],[["TG9hZCBCYWxhbmNlcg=="]],[["ICAg4oaT"]],[["U2VydmVyIDEgKEd1bmljb3JuIHdvcmtlcnMpIC0tPiBSZWRpcw=="]],[["U2VydmVyIDIgKEd1bmljb3JuIHdvcmtlcnMpIC0tPiBSZWRpcw=="]],[["Li4u"]],[["ICAg4oaT"]],[["RGF0YWJhc2UgKHNvdXJjZSBvZiB0cnV0aCk="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>Users
+   ↓
+Load Balancer
+   ↓
+Server 1 (Gunicorn workers) --&gt; Redis
+Server 2 (Gunicorn workers) --&gt; Redis
+...
+   ↓
+Database (source of truth)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>App servers / Gunicorn workers</strong>: handle requests</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Redis</strong>: shared memory for all servers and workers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Database</strong>: permanent truth</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Why Redis?</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Consistency</strong> across nodes</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Scalability</strong> for adding more workers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>Reduced database load</strong></li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3️⃣ What is Gunicorn and Why Use It? 🚀</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Gunicorn (“Green Unicorn”) is a <strong>Python WSGI HTTP server</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>It allows your Python web application (Flask, Django, FastAPI) to <strong>handle multiple requests simultaneously</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Runs <strong>multiple worker processes</strong> on a server to improve performance</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Works behind a <strong>load balancer</strong> for scalability across multiple servers</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Think of it like this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Your web app is a restaurant kitchen. Gunicorn is the team of chefs (workers) handling orders. Redis is the shared fridge where all chefs grab ingredients quickly, while the database is the pantry storing all recipes permanently.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">What Gunicorn Brings to the Table</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Concurrency</strong>: Handles many requests at the same time</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Isolation</strong>: Each worker is a separate process (prevents one crash from taking down others)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Scalability</strong>: Add more workers or servers as traffic grows</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Compatibility</strong>: Works with any WSGI Python app</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Gunicorn makes your Python app <strong>fast, reliable, and scalable</strong>, but each worker’s memory is isolated — so you need Redis for shared caching.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">4️⃣ Gunicorn Workers and Redis 🐍</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Gunicorn workers are <strong>separate processes</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Each worker has <strong>its own memory</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Local caches like <code>lru_cache</code> are <strong>worker-local</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Redis is <strong>shared across all workers</strong>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Example:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IHJlZGlz"]],[["ZnJvbSBmbGFzayBpbXBvcnQgRmxhc2s="]],[[""]],[["YXBwID0gRmxhc2soX19uYW1lX18p"]],[["ciA9IHJlZGlzLlJlZGlzKGhvc3Q9InJlZGlzLmNvbXBhbnkuY29tIiwgcG9ydD02Mzc5KQ=="]],[[""]],[["QGFwcC5yb3V0ZSgiL3Byb2ZpbGUvPGludDp1c2VyX2lkPiIp"]],[["ZGVmIHByb2ZpbGUodXNlcl9pZCk6"]],[["ICAgIGtleSA9IGYidXNlcjp7dXNlcl9pZH0i"]],[["ICAgIHByb2ZpbGUgPSByLmdldChrZXkp"]],[[""]],[["ICAgIGlmIHByb2ZpbGUgaXMgTm9uZTo="]],[["ICAgICAgICAjIENhY2hlIG1pc3MsIGZhbGxiYWNrIHRvIERC"]],[["ICAgICAgICBwcm9maWxlID0gZ2V0X3VzZXJfZnJvbV9kYih1c2VyX2lkKQ=="]],[["ICAgICAgICByLnNldChrZXksIHByb2ZpbGUsIGV4PTMwMCkgICMgY2FjaGUgZm9yIDUgbWludXRlcw=="]],[["ICAgIHJldHVybiBwcm9maWxl"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import redis
+from flask import Flask
+
+app = Flask(__name__)
+r = redis.Redis(host="redis.company.com", port=6379)
+
+@app.route("/profile/&lt;int:user_id&gt;")
+def profile(user_id):
+    key = f"user:{user_id}"
+    profile = r.get(key)
+
+    if profile is None:
+        # Cache miss, fallback to DB
+        profile = get_user_from_db(user_id)
+        r.set(key, profile, ex=300)  # cache for 5 minutes
+    return profile
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>All workers see the same Redis keys</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Local <code>lru_cache</code> only works for <strong>pure functions</strong> like formatting or calculations</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">5️⃣ Common Cache Problems in Gunicorn + Redis</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely Cause</th>
+<th>Troubleshooting Steps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Different workers return inconsistent data</td>
+<td>Workers rely on local cache instead of Redis</td>
+<td>Use shared Redis for mutable data</td>
+</tr>
+<tr>
+<td>Cache misses high / slow responses</td>
+<td>Redis flush, expired keys, new worker</td>
+<td>Check TTLs, rebuild cache, confirm connectivity</td>
+</tr>
+<tr>
+<td>RedisTimeoutError / connection errors</td>
+<td>Network issue, blocking command</td>
+<td>Add timeouts, check network, monitor commands</td>
+</tr>
+<tr>
+<td>Stale data</td>
+<td>TTL too long, invalidation failed</td>
+<td>Reduce TTL, ensure updates go to Redis</td>
+</tr>
+<tr>
+<td>Slow first requests</td>
+<td>Worker cold start, cache empty</td>
+<td>Normal; caches rebuild gradually</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">6️⃣ Handling Stale Cache 🧹</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Sometimes Redis keys stick around too long or invalidation fails.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Identify stale keys:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["Zm9yIGtleSBpbiByLnNjYW5faXRlcigidXNlcjoqIik6"]],[["ICAgIHR0bCA9IHIudHRsKGtleSk="]],[["ICAgIHByaW50KGYie2tleS5kZWNvZGUoKX06IFRUTD17dHRsfSIp"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>for key in r.scan_iter("user:*"):
+    ttl = r.ttl(key)
+    print(f"{key.decode()}: TTL={ttl}")
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>TTL &gt; expected → may be stale</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>TTL = -1 → no expiration</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>TTL = -2 → missing (safe)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Clear stale keys:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBTaW5nbGUga2V5"]],[["ci5kZWxldGUoInVzZXI6MTIzIik="]],[[""]],[["IyBNdWx0aXBsZSBrZXlzIGJ5IHBhdHRlcm4="]],[["Zm9yIGtleSBpbiByLnNjYW5faXRlcigidXNlcjoqIik6"]],[["ICAgIHIuZGVsZXRlKGtleSk="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code># Single key
+r.delete("user:123")
+
+# Multiple keys by pattern
+for key in r.scan_iter("user:*"):
+    r.delete(key)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Tip:</strong> Use TTLs and lazy refresh for automatic cache rebuilding:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZGVmIGdldF9wcm9maWxlKHVzZXJfaWQsIHJlZGlzLCBkYik6"]],[["ICAgIGtleSA9IGYidXNlcjp7dXNlcl9pZH0i"]],[["ICAgIHByb2ZpbGUgPSByZWRpcy5nZXQoa2V5KQ=="]],[[""]],[["ICAgIGlmIHByb2ZpbGUgaXMgTm9uZTo="]],[["ICAgICAgICBwcm9maWxlID0gZGIuZmV0Y2hfdXNlcih1c2VyX2lkKQ=="]],[["ICAgICAgICByZWRpcy5zZXQoa2V5LCBwcm9maWxlLCBleD0zMDAp"]],[["ICAgIHJldHVybiBwcm9maWxl"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>def get_profile(user_id, redis, db):
+    key = f"user:{user_id}"
+    profile = redis.get(key)
+
+    if profile is None:
+        profile = db.fetch_user(user_id)
+        redis.set(key, profile, ex=300)
+    return profile
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">7️⃣ Troubleshooting Redis: With and Without Sysadmin Rights 🛠️</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">With sysadmin rights:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check Redis process:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtY2xpIFBJTkcgICMgUE9ORyA9IGFsaXZl"]],[["dGFpbCAtZiAvdmFyL2xvZy9yZWRpcy9yZWRpcy1zZXJ2ZXIubG9n"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-cli PING  # PONG = alive
+tail -f /var/log/redis/redis-server.log
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check memory, eviction, cluster events:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtY2xpIElORk8gbWVtb3J5"]],[["cmVkaXMtY2xpIElORk8gc3RhdHM="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-cli INFO memory
+redis-cli INFO stats
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Monitor metrics: hits, misses, TTL expirations</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Without sysadmin rights (developer perspective):</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check connectivity:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHJpbnQoci5waW5nKCkpICAjIFRydWUgaWYgcmVhY2hhYmxl"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>print(r.ping())  # True if reachable
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check specific keys:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHJpbnQoci5nZXQoInVzZXI6MTIzIikp"]],[["cHJpbnQoci50dGwoInVzZXI6MTIzIikp"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>print(r.get("user:123"))
+print(r.ttl("user:123"))
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Check stats (client-only):</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW5mbyA9IHIuaW5mbygic3RhdHMiKQ=="]],[["cHJpbnQoaW5mb1sia2V5c3BhY2VfaGl0cyJdLCBpbmZvWyJrZXlzcGFjZV9taXNzZXMiXSk="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>info = r.info("stats")
+print(info["keyspace_hits"], info["keyspace_misses"])
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Simulate cache miss safely:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ci5kZWxldGUoInVzZXI6MTIzIik="]],[["cHJvZmlsZSA9IGdldF9wcm9maWxlKDEyMywgciwgZGIpICAjIGZhbGxiYWNrIHRvIERC"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>r.delete("user:123")
+profile = get_profile(123, r, db)  # fallback to DB
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ Most Redis issues are <strong>performance issues</strong>, not correctness problems.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">8️⃣ Using Logs for Troubleshooting</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>App logs</strong>: cache hits/misses, fallbacks, timeouts</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Redis logs</strong>: evictions, memory warnings, failovers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Metrics</strong>: keyspace_hits, keyspace_misses, memory usage</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Alerts</strong>: high memory, Redis down</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Example Python logging:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IGxvZ2dpbmc="]],[[""]],[["bG9nZ2luZy5iYXNpY0NvbmZpZyhsZXZlbD1sb2dnaW5nLklORk8p"]],[["aWYgcHJvZmlsZSBpcyBOb25lOg=="]],[["ICAgIGxvZ2dpbmcuaW5mbyhmIkNhY2hlIG1pc3MgZm9yIGtleT17a2V5fSwgcXVlcnlpbmcgREIiKQ=="]],[["ZWxzZTo="]],[["ICAgIGxvZ2dpbmcuaW5mbyhmIkNhY2hlIGhpdCBmb3Iga2V5PXtrZXl9Iik="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import logging
+
+logging.basicConfig(level=logging.INFO)
+if profile is None:
+    logging.info(f"Cache miss for key={key}, querying DB")
+else:
+    logging.info(f"Cache hit for key={key}")
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">9️⃣ Safe Redis Alternatives</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Short-lived TTL caches</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Lazy refresh / read-through caching</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Client-side TTL caches (<code>cachetools.TTLCache</code>) for single-worker data</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Local <code>lru_cache</code> for deterministic calculations</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Async background refreshes</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Principle: Redis = shared memory; DB = source of truth; local caches = optional speed trick.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">✅ Final Takeaways</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Redis is <strong>temporary, shared memory</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Gunicorn workers <strong>share Redis</strong>, but not local caches</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Flushing, eviction, or restart = temporary hiccup</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Database is always the <strong>source of truth</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Logs, metrics, and client commands help troubleshoot</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Most issues = performance, not correctness</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Think of it like:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>🟢 Local drawer = deterministic functions<br>🔴 Shared fridge = Redis cache<br>✅ Pantry = permanent database</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>Once you see it this way, Redis, Gunicorn workers, and multi-node caches stop being overwhelming — they’re just <strong>tools/ layers that make your system faster and more reliable</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Diagrams</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1️⃣ Multi-Node Architecture with Gunicorn and Redis</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Purpose:</strong> Show how users’ requests flow through multiple servers and workers to Redis and the database.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Diagram Idea:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["VXNlcnM="]],[["ICAg4oaT"]],[["TG9hZCBCYWxhbmNlcg=="]],[["ICAg4oaT"]],[["Ky0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSs="]],[["fCBTZXJ2ZXIgMSAgICAgICAgICAgICAgIHw="]],[["fCAgV29ya2VyIDEgIFdvcmtlciAyICAgIHw="]],[["fCAgV29ya2VyIDMgIFdvcmtlciA0ICAgIHw="]],[["Ky0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSs="]],[["ICAg4oaT"]],[["Ky0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSs="]],[["fCBTZXJ2ZXIgMiAgICAgICAgICAgICAgIHw="]],[["fCAgV29ya2VyIDEgIFdvcmtlciAyICAgIHw="]],[["fCAgV29ya2VyIDMgIFdvcmtlciA0ICAgIHw="]],[["Ky0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSs="]],[["ICAg4oaT"]],[["ICAgICAgUmVkaXMgKHNoYXJlZCBjYWNoZSk="]],[["ICAgICAgICAgIOKGkw=="]],[["ICAgICAgRGF0YWJhc2UgKHNvdXJjZSBvZiB0cnV0aCk="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>Users
+   ↓
+Load Balancer
+   ↓
++------------------------+
+| Server 1               |
+|  Worker 1  Worker 2    |
+|  Worker 3  Worker 4    |
++------------------------+
+   ↓
++------------------------+
+| Server 2               |
+|  Worker 1  Worker 2    |
+|  Worker 3  Worker 4    |
++------------------------+
+   ↓
+      Redis (shared cache)
+          ↓
+      Database (source of truth)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Visual cues:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Workers = small boxes inside each server</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Redis = shared cloud icon between servers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Database = pantry icon at the bottom</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Use arrows for request flow from user → load balancer → workers → Redis → DB</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2️⃣ Cache Flow with Gunicorn Workers</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Purpose:</strong> Explain <strong>how Redis cache interacts with workers and DB</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Diagram Idea:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["V29ya2VyIEEgICAgICAgIFdvcmtlciBC"]],[["ICAgfCAgICAgICAgICAgICAgICB8"]],[["ICAgdiAgICAgICAgICAgICAgICB2"]],[["ICAgKy0tLS0tPiBSZWRpcyA8LS0tLSs="]],[["ICAgfCAgICAgIChzaGFyZWQpICAgICB8"]],[["ICAgdiAgICAgICAgICAgICAgICAgICAgdg=="]],[["RGF0YWJhc2UgKHNvdXJjZSBvZiB0cnV0aCk="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>Worker A        Worker B
+   |                |
+   v                v
+   +-----&gt; Redis &lt;----+
+   |      (shared)     |
+   v                    v
+Database (source of truth)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Flow explanation:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Worker checks Redis</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Cache hit → serve directly</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Cache miss → fetch from DB → write back to Redis</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Other workers now see updated value</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3️⃣ TTL &amp; Stale Cache Visualization</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Purpose:</strong> Show <strong>how stale keys expire and rebuild automatically</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Diagram Idea:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UmVkaXMgQ2FjaGUgKHVzZXI6MTIzKQ=="]],[["WyBUVEw6IDMwMHMgXQ=="]],[["ICAgIHw="]],[["ICAgIHY="]],[["VFRMIGV4cGlyZXMg4oaSIEtleSBkZWxldGVk"]],[["ICAgIHw="]],[["ICAgIHY="]],[["TmV4dCByZXF1ZXN0IOKGkiBmZXRjaCBmcm9tIERCIOKGkiB1cGRhdGUgUmVkaXMg4oaSIG5ldyBUVEw="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>Redis Cache (user:123)
+[ TTL: 300s ]
+    |
+    v
+TTL expires → Key deleted
+    |
+    v
+Next request → fetch from DB → update Redis → new TTL
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Visual cues:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Countdown timer icon for TTL</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Highlight expired key with “stale” / “deleted” label</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Arrow showing DB fallback and cache rebuild</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

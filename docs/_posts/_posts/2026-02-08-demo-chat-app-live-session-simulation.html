@@ -1,0 +1,771 @@
+---
+layout: post
+title: 'Demo Chat App with Redis: Live session simulation'
+date: 2026-02-08 14:52:19.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- chat app
+- demo
+- redis
+- sessions
+meta:
+  firehose_sent: '1770562340'
+  _last_editor_used_jetpack: block-editor
+  _publicize_job_id: '111091196153'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 14:51:49'
+  timeline_notification: '1770562340'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/02/08/demo-chat-app-live-session-simulation/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/redis_sample","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>to understand whats happening within the app: </p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here’s a <strong>visual flow diagram</strong> for the Redis chat demo showing <strong>how a message flows and where issues can happen</strong>. This is great for live teaching, borrowed from blog.bytebytego.com</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:image --></p>
+<figure class="wp-block-image"><img src="{{site.baseurl}}/assets/2026/02/1740063086769?e=2147483647&amp;t=P49bJGkh-FvrMmbrgvsUlzAztWrK9FzoA0LoVxrqvk8&amp;v=beta" alt="https://media.licdn.com/dms/image/v2/D5612AQF1AA0KR9uoPA/article-cover_image-shrink_720_1280/B56ZUj15YVHEAI-/0/1740063086769?e=2147483647&amp;t=P49bJGkh-FvrMmbrgvsUlzAztWrK9FzoA0LoVxrqvk8&amp;v=beta"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:image --></p>
+<figure class="wp-block-image"><img src="{{site.baseurl}}/assets/2026/02/0314-redis-chat.jpg" alt="https://assets.bytebytego.com/diagrams/0314-redis-chat.jpg"></figure>
+<p><!-- /wp:image --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Diagram Explanation</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Flow:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Client sends message</strong> → <code>/chat</code> endpoint on Flask</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Flask processes request</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Publishes message to Redis <strong>Pub/Sub channel</strong> → for real-time listeners</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Adds message to Redis <strong>cache list</strong> with TTL (LPUSH + LTRIM + EXPIRE)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Listener threads / other app instances</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Subscribed to Pub/Sub → receive messages live</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>New listeners joining later may miss messages if relying only on Pub/Sub</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Client retrieves history</strong> → <code>/history</code><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Cache hit</strong> → messages returned from Redis list</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Cache miss</strong> → list empty (TTL expired or not populated)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Potential Issues / Troubleshooting Points</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Cache Miss</strong> → TTL expired / key not populated</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Pub/Sub missed messages</strong> → listener not started</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Redis Down</strong> → connection errors</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Multi-worker race</strong> → simultaneous writes without atomic pipeline (solved by LPUSH+LTRIM pipeline)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Cache Eviction</strong> → MAX_MESSAGES limit triggers removal of old messages</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>This diagram <strong>maps every stage of your chat message</strong>, highlights <strong>where issues can happen</strong>, and matches your <strong>cheat sheet/log demo</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Troubleshooting:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here’s a <strong>step-by-step demo script</strong> you can use to <strong>show all the Redis cache and Pub/Sub issues live</strong> with your multi-worker chat app. It’s structured like a <strong>10–15 minute live session</strong>, with each step showing the issue, expected console logs, and discussion points.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Goal:</strong> Demonstrate cache hits/misses, TTL expiration, Pub/Sub delivery, race conditions, and Redis connection issues.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Setup Before Demo</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Start Redis:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtc2VydmVyLmV4ZQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-server.exe
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Run Python app:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0aG9uIGNoYXRfbXVsdGlfd29ya2VyX2RlbW8ucHk="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>python chat_multi_worker_demo.py
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":3} --></p>
+<ol start="3" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Confirm Flask running at <code>http://127.0.0.1:5000/</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Console shows:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBMaXN0ZW5lcjEgc3RhcnRlZCBsaXN0ZW5pbmcuLi4="]],[["W0hIOk1NOlNTXSBMaXN0ZW5lcjIgc3RhcnRlZCBsaXN0ZW5pbmcuLi4="]],[["W0hIOk1NOlNTXSBTdGFydGluZyBtdWx0aS13b3JrZXIgY2hhdCBkZW1vLi4u"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] Listener1 started listening...
+[HH:MM:SS] Listener2 started listening...
+[HH:MM:SS] Starting multi-worker chat demo...
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 1: Show Cache Miss (0:00–1:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Action:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Open <code>/history</code> endpoint in browser/Postman:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["R0VUIGh0dHA6Ly8xMjcuMC4wLjE6NTAwMC9oaXN0b3J5"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>GET http://127.0.0.1:5000/history
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Expected Logs:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBbQ0FDSEUgTUlTU10gTm8gbWVzc2FnZXMgaW4gY2FjaGU="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] [CACHE MISS] No messages in cache
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Talking Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Cache miss happens because no messages yet</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>TTL is irrelevant at this point</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 2: Send a Message (1:00–2:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Action:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UE9TVCBodHRwOi8vMTI3LjAuMC4xOjUwMDAvY2hhdA=="]],[["Qm9keTogeyJtZXNzYWdlIjoiSGVsbG8gV29ybGQhIn0="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>POST http://127.0.0.1:5000/chat
+Body: {"message":"Hello World!"}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Expected Logs:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBbUFVCL1NVQiBTRU5UXSBIZWxsbyBXb3JsZCE="]],[["W0hIOk1NOlNTXSBbQ0FDSEVdIE1lc3NhZ2UgY2FjaGVkIChUVEw9MTBzKQ=="]],[["W0hIOk1NOlNTXSBMaXN0ZW5lcjEgcmVjZWl2ZWQ6IEhlbGxvIFdvcmxkIQ=="]],[["W0hIOk1NOlNTXSBMaXN0ZW5lcjIgcmVjZWl2ZWQ6IEhlbGxvIFdvcmxkIQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] [PUB/SUB SENT] Hello World!
+[HH:MM:SS] [CACHE] Message cached (TTL=10s)
+[HH:MM:SS] Listener1 received: Hello World!
+[HH:MM:SS] Listener2 received: Hello World!
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Talking Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Pub/Sub delivers to all subscribers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Message also stored in Redis list for history</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 3: Show Cache Hit (2:00–3:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Action:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Call <code>/history</code> again:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["R0VUIGh0dHA6Ly8xMjcuMC4wLjE6NTAwMC9oaXN0b3J5"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>GET http://127.0.0.1:5000/history
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Expected Logs:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBbQ0FDSEUgSElUXSBSZXRyaWV2ZWQgMSBtZXNzYWdlcw=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] [CACHE HIT] Retrieved 1 messages
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Talking Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Messages retrieved from Redis cache instead of re-computing</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Demonstrates benefit of caching</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 4: Demonstrate Cache Expiration (3:00–5:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Action:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Wait 10–15 seconds (CACHE_TTL = 10s)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Call <code>/history</code> again</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Expected Logs:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBbQ0FDSEUgTUlTU10gTm8gbWVzc2FnZXMgaW4gY2FjaGU="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] [CACHE MISS] No messages in cache
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Talking Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>TTL expiration automatically removes old messages</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Shows importance of setting appropriate TTL</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 5: Show Redis Down / Connection Error (5:00–6:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Action:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Stop Redis server</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Send a message:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UE9TVCAvY2hhdCB7Im1lc3NhZ2UiOiJUZXN0IGFmdGVyIFJlZGlzIGRvd24ifQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>POST /chat {"message":"Test after Redis down"}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Expected Logs:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBbRVJST1JdIFJlZGlzIG5vdCBhdmFpbGFibGUhIE1lc3NhZ2Ugbm90IHNlbnQu"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] [ERROR] Redis not available! Message not sent.
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Talking Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Connection error handling in app</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Discuss troubleshooting steps: restart Redis, check port</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 6: Demonstrate Multi-Worker Race Conditions (6:00–10:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Action:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Start multiple instances of the app (or use Waitress with multiple threads)</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB3YWl0cmVzcyBpbXBvcnQgc2VydmU="]],[["c2VydmUoYXBwLCBob3N0PSIwLjAuMC4wIiwgcG9ydD01MDAwKQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from waitress import serve
+serve(app, host="0.0.0.0", port=5000)
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Send multiple messages quickly:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UE9TVCAvY2hhdCB7Im1lc3NhZ2UiOiJNZXNzYWdlIDEifQ=="]],[["UE9TVCAvY2hhdCB7Im1lc3NhZ2UiOiJNZXNzYWdlIDIifQ=="]],[["Li4u"]],[["UE9TVCAvY2hhdCB7Im1lc3NhZ2UiOiJNZXNzYWdlIDUifQ=="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>POST /chat {"message":"Message 1"}
+POST /chat {"message":"Message 2"}
+...
+POST /chat {"message":"Message 5"}
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Expected Logs:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Multiple listener threads receive messages</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBMaXN0ZW5lcjEgcmVjZWl2ZWQ6IE1lc3NhZ2UgMQ=="]],[["W0hIOk1NOlNTXSBMaXN0ZW5lcjIgcmVjZWl2ZWQ6IE1lc3NhZ2UgMQ=="]],[["W0hIOk1NOlNTXSBMaXN0ZW5lcjEgcmVjZWl2ZWQ6IE1lc3NhZ2UgMg=="]],[["W0hIOk1NOlNTXSBMaXN0ZW5lcjIgcmVjZWl2ZWQ6IE1lc3NhZ2UgMg=="]],[["Li4u"]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] Listener1 received: Message 1
+[HH:MM:SS] Listener2 received: Message 1
+[HH:MM:SS] Listener1 received: Message 2
+[HH:MM:SS] Listener2 received: Message 2
+...
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Console shows all PUB/SUB and cache logs</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Talking Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Demonstrates <strong>atomic operations</strong> via pipeline prevent partial updates</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Discuss race conditions, what happens if LPUSH+LTRIM not atomic</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Discuss TTL: overlapping expirations in multiple workers</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 7: Show Eviction / TTL Overwrites (10:00–12:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Action:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Keep sending messages rapidly (&gt; MAX_MESSAGES = 10)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Check <code>/history</code> after 10s</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Expected Logs:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Only last 10 messages retrieved</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0hIOk1NOlNTXSBbQ0FDSEUgSElUXSBSZXRyaWV2ZWQgMTAgbWVzc2FnZXM="]],[[""]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[HH:MM:SS] [CACHE HIT] Retrieved 10 messages
+
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Older messages discarded automatically</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Talking Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Shows eviction strategy</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>TTL + LTRIM controls cache size</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Helps explain real-world cache issues with limits</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 8: Wrap-Up (12:00–15:00)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Discussion Points:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Cache misses, hits, TTL expiration</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Pub/Sub message delivery and missed subscribers</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Redis down scenarios &amp; error handling</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Multi-worker race conditions &amp; atomic operations</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Cache eviction strategies (max items + TTL)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Optional Extensions for Live Demo:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Adjust TTL to 5s → show faster expiration</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Stop/start Redis mid-demo → live errors</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Open multiple console tabs → simulate multiple users</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>This script gives you a <strong>complete, timed demo</strong> showing <strong>all common Redis caching issues</strong>, with <strong>logs, troubleshooting, and discussion points</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading"><strong>Redis Chat Demo – Live Cheat Sheet</strong></h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table {"fontSize":"x-small"} --></p>
+<figure class="wp-block-table has-x-small-font-size">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Step</th>
+<th>Endpoint / Action</th>
+<th>Expected Logs</th>
+<th>Possible Issue</th>
+<th>Troubleshooting / Talking Points</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>
+<code>GET /history</code> before any messages</td>
+<td><code>[CACHE MISS] No messages in cache</code></td>
+<td>Cache empty</td>
+<td>Explain cache miss; key not yet populated</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>POST /chat {"message":"Hello"}</code></td>
+<td>
+<code>[PUB/SUB SENT] Hello</code>, <code>[CACHE] Message cached (TTL=10s)</code>, <code>[Listener1/2 received: Hello]</code>
+</td>
+<td>None</td>
+<td>Show Pub/Sub delivery; cache storage</td>
+</tr>
+<tr>
+<td>3</td>
+<td>
+<code>GET /history</code> after sending message</td>
+<td><code>[CACHE HIT] Retrieved 1 messages</code></td>
+<td>None</td>
+<td>Demonstrates cache hit</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Wait &gt; TTL (10s) → <code>GET /history</code>
+</td>
+<td><code>[CACHE MISS] No messages in cache</code></td>
+<td>TTL expired</td>
+<td>Discuss cache expiration; TTL configuration</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Stop Redis → <code>POST /chat</code>
+</td>
+<td><code>[ERROR] Redis not available! Message not sent.</code></td>
+<td>Redis down</td>
+<td>Restart Redis; check port &amp; connectivity</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Multiple instances / Waitress / Gunicorn → rapid messages</td>
+<td>
+<code>[PUB/SUB SENT] Message N</code>, <code>[Listener1/2 received: Message N]</code>, <code>[CACHE] Message cached</code>
+</td>
+<td>Race conditions possible</td>
+<td>Show atomic LPUSH+LTRIM pipeline; discuss multi-worker issues</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Send &gt; MAX_MESSAGES</td>
+<td><code>[CACHE HIT] Retrieved 10 messages</code></td>
+<td>Older messages evicted</td>
+<td>Explain eviction strategy: LTRIM keeps last N items</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Stop/start Redis during demo</td>
+<td><code>[ERROR] Redis not available!</code></td>
+<td>Missed messages</td>
+<td>Demonstrates real-world Redis outage handling</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Open new listener after messages sent</td>
+<td><code>[CACHE MISS] No messages in cache</code></td>
+<td>Missed Pub/Sub events</td>
+<td>Discuss subscriber timing; persisted cache vs ephemeral Pub/Sub</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Rapid sends + TTL expiration</td>
+<td>
+<code>[CACHE HIT]</code> / <code>[CACHE MISS]</code> interleaved</td>
+<td>Mixed cache hits/misses</td>
+<td>Show effect of overlapping TTLs in multi-worker environment</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading"><strong>Quick Tips for Live Demo</strong></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Adjust TTL</strong> to 5–15s for fast observation of expiration.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>MAX_MESSAGES</strong> = 10 → easy to show eviction.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Use multiple console windows</strong> → simulate multiple workers / listeners.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Stop/start Redis</strong> → show connection errors and recovery.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Explain atomic pipeline</strong> → LPUSH + LTRIM prevents partial writes.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Highlight logs clearly</strong> → <code>[CACHE HIT]</code>, <code>[CACHE MISS]</code>, <code>[PUB/SUB SENT]</code>, <code>[ListenerX received]</code>.</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

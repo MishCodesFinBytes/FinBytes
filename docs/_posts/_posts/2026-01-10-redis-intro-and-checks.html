@@ -1,0 +1,515 @@
+---
+layout: post
+title: Redis - intro and checks
+date: 2026-01-10 12:05:36.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- devops
+- getting started
+- intro
+- redis
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Technology","Art","Photography","Creativity","Beauty"]'
+  _wp_old_date: '2026-01-26'
+  _publicize_job_id: '111088509520'
+  firehose_sent: '1770552704'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 12:10:07'
+  timeline_notification: '1770552705'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/01/10/redis-intro-and-checks/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/redis_sample","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here’s a <strong>complete, calm, reassuring blog post</strong> that brings together all the Redis sections we’ve experienced.<br>It’s aimed at engineers or developers who feel overwhelmed by Redis in an enterprise, multi-node setup. It includes child-friendly explanations, architecture, troubleshooting (with and without sysadmin rights), flushing, and safe alternatives.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading">Redis Is Not Scary: A Calm Guide for Engineers in Multi-Node Systems</h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Redis can sound intimidating:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>“We have Redis in production”<br>“It’s a distributed cache”<br>“Don’t mess with it”</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>If that made your heart skip a beat — relax. Redis is usually <strong>boring, safe, and manageable</strong>. This guide explains it clearly, calmly, and with practical examples.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1️⃣ Redis Explained Like You’re Five 🧒</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Imagine a building with <strong>many offices</strong>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Each office has people working (servers)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Everyone sometimes needs to remember things quickly</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>There’s <strong>one shared whiteboard in the hallway</strong>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>That whiteboard is <strong>Redis</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>People write things like:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>“This answer is the same for everyone”</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>“Remember this for 5 minutes”</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>“Don’t let more than 10 people do this at once”</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>It’s not permanent. It’s not precious. It’s just <strong>helpful memory</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">What Redis Is NOT</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>❌ Not your main database</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>❌ Not permanent storage</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>❌ Not where business logic belongs</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>If Redis disappears:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Your system should still work</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>The database is still the source of truth</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Redis just makes things faster</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2️⃣ Where Redis Sits in Multi-Node Enterprise Architecture 🏢</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Think of a typical multi-node setup:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["VXNlcnM="]],[["ICAg4oaT"]],[["TG9hZCBCYWxhbmNlcg=="]],[["ICAg4oaT"]],[["QXBwbGljYXRpb24gU2VydmVycyAobWFueSBub2Rlcyk="]],[["ICAg4oaT"]],[["UmVkaXMgKHNoYXJlZCBjYWNoZSk="]],[["ICAg4oaT"]],[["RGF0YWJhc2UgKHNvdXJjZSBvZiB0cnV0aCk="]],[],[]],"language":"YAML","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>Users
+   ↓
+Load Balancer
+   ↓
+Application Servers (many nodes)
+   ↓
+Redis (shared cache)
+   ↓
+Database (source of truth)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>App servers</strong>: Your code running on multiple nodes</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Redis</strong>: One shared cache visible to all nodes</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Database</strong>: The permanent truth</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Redis is <strong>in the middle</strong>, coordinating shared memory for all nodes. It’s <strong>not replacing the database</strong>, just speeding things up and ensuring consistent answers across servers.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Why Multi-Node Systems Use Redis</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Consistency</strong>: All nodes see the same value.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Scalability</strong>: Add more nodes without changing caching logic.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Load management</strong>: Redis absorbs repetitive reads, reducing database stress.</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Even in Redis clusters:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Sharded keys across nodes</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Automatic failover</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Still looks like one shared cache to your application</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>You don’t need to manage the cluster — just use it.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">3️⃣ Redis in Practice: Code Examples 💻</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Good example: Pure logic in <code>lru_cache</code>, shared data in Redis</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbQ==","tok-keyword"],["IA=="],["ZnVuY3Rvb2xz","tok-variableName"],["IA=="],["aW1wb3J0","tok-keyword"],["IA=="],["bHJ1X2NhY2hl","tok-variableName"]],[],[["QA==","tok-meta"],["bHJ1X2NhY2hl","tok-variableName"],["KA==","tok-punctuation"],["bWF4c2l6ZQ==","tok-variableName"],["PQ==","tok-operator"],["MTI4","tok-number"],["KQ==","tok-punctuation"]],[["ZGVm","tok-keyword"],["IA=="],["Zm9ybWF0X3ByaWNl","tok-variableName tok-definition"],["KA==","tok-punctuation"],["YW1vdW50","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["ZiLCow==","tok-string2"],["ew==","tok-punctuation"],["YW1vdW50","tok-variableName"],["Og=="],["LjJm","tok-keyword"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["ICA="],["IyBkZXRlcm1pbmlzdGljLCBzYWZlIHRvIGNhY2hlIGxvY2FsbHk=","tok-comment"]],[],[["ZGVm","tok-keyword"],["IA=="],["Z2V0X3VzZXJfYmFsYW5jZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVkaXM=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["YmFsYW5jZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["ZiJiYWxhbmNlOg==","tok-string2"],["ew==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["KQ==","tok-punctuation"],["ICA="],["IyBzaGFyZWQgUmVkaXM=","tok-comment"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["Zm9ybWF0X3ByaWNl","tok-variableName"],["KA==","tok-punctuation"],["YmFsYW5jZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def format_price(amount):
+    return f"£{amount:.2f}"  # deterministic, safe to cache locally
+
+def get_user_balance(user_id, redis):
+    balance = redis.get(f"balance:{user_id}")  # shared Redis
+    return format_price(balance)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ Safe because Redis holds <strong>changing data</strong>, while local cache holds <strong>pure functions</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Bad example: Caching mutable data locally</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbQ==","tok-keyword"],["IA=="],["ZnVuY3Rvb2xz","tok-variableName"],["IA=="],["aW1wb3J0","tok-keyword"],["IA=="],["bHJ1X2NhY2hl","tok-variableName"]],[],[["QA==","tok-meta"],["bHJ1X2NhY2hl","tok-variableName"],["KA==","tok-punctuation"],["bWF4c2l6ZQ==","tok-variableName"],["PQ==","tok-operator"],["MTAyNA==","tok-number"],["KQ==","tok-punctuation"]],[["ZGVm","tok-keyword"],["IA=="],["Z2V0X3VzZXJfYmFsYW5jZQ==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVkaXM=","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["ZiJiYWxhbmNlOg==","tok-string2"],["ew==","tok-punctuation"],["dXNlcl9pZA==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["KQ==","tok-punctuation"],["ICA="],["IyDinYwgY2FuIGJlY29tZSBzdGFsZSBhY3Jvc3Mgc2VydmVycw==","tok-comment"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def get_user_balance(user_id, redis):
+    return redis.get(f"balance:{user_id}")  # ❌ can become stale across servers
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>❌ Different servers may serve outdated balances — this is a common multi-node trap.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">4️⃣ What Happens When Redis Is Flushed 🔄</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Sometimes Redis is cleared:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["RkxVU0hBTEw="]],[],[]],"language":"Shell","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>FLUSHALL
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Or it restarts. What happens?</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Redis = empty fridge</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Database = pantry of truth</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Your app now queries the database, then repopulates Redis</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Example:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cg==","tok-variableName"],["Lg==","tok-operator"],["ZGVsZXRl","tok-propertyName"],["KA==","tok-punctuation"],["InVzZXI6MTIzIg==","tok-string"],["KQ==","tok-punctuation"],["ICA="],["IyBzaW11bGF0ZSBmbHVzaA==","tok-comment"]],[["cHJvZmlsZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Z2V0X3VzZXJfcHJvZmlsZQ==","tok-variableName"],["KA==","tok-punctuation"],["MTIz","tok-number"],["LA==","tok-punctuation"],["IA=="],["cg==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZGI=","tok-variableName"],["KQ==","tok-punctuation"],["ICA="],["IyBmYWxsYmFjayB0byBEQg==","tok-comment"]],[["cg==","tok-variableName"],["Lg==","tok-operator"],["c2V0","tok-propertyName"],["KA==","tok-punctuation"],["InVzZXI6MTIzIg==","tok-string"],["LA==","tok-punctuation"],["IA=="],["cHJvZmlsZQ==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["ZXg=","tok-variableName"],["PQ==","tok-operator"],["MzAw","tok-number"],["KQ==","tok-punctuation"],["ICAgICA="],["IyByZWJ1aWxkIGNhY2hl","tok-comment"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>r.delete("user:123")  # simulate flush
+profile = get_user_profile(123, r, db)  # fallback to DB
+r.set("user:123", profile, ex=300)     # rebuild cache
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ Nothing critical is lost. The system may be slower temporarily, but correctness is intact.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">5️⃣ Troubleshooting Redis Without Panic 🛠️</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Even if you’re new, you can check Redis safely.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Basic checks without sysadmin rights</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"]],[],[["cg==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["UmVkaXM=","tok-propertyName"],["KA==","tok-punctuation"],["aG9zdA==","tok-variableName"],["PQ==","tok-operator"],["J3JlZGlzLmNvbXBhbnkuY29tJw==","tok-string"],["LA==","tok-punctuation"],["IA=="],["cG9ydA==","tok-variableName"],["PQ==","tok-operator"],["NjM3OQ==","tok-number"],["KQ==","tok-punctuation"]],[],[["IyAxLiBJcyBSZWRpcyBhbGl2ZT8=","tok-comment"]],[["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["cg==","tok-variableName"],["Lg==","tok-operator"],["cGluZw==","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["KQ==","tok-punctuation"],["ICA="],["IyBUcnVlIG1lYW5zIFJlZGlzIGlzIHJlYWNoYWJsZQ==","tok-comment"]],[],[["IyAyLiBDaGVjayBhIGtleQ==","tok-comment"]],[["a2V5","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["InVzZXI6MTIzIg==","tok-string"]],[["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["cg==","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"],["KQ==","tok-punctuation"],["ICA="],["IyBOb25lIG1lYW5zIGtleSBtaXNzaW5nIG9yIGV4cGlyZWQ=","tok-comment"]],[],[["IyAzLiBDaGVjayBUVEw=","tok-comment"]],[["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["cg==","tok-variableName"],["Lg==","tok-operator"],["dHRs","tok-propertyName"],["KA==","tok-punctuation"],["a2V5","tok-variableName"],["KQ==","tok-punctuation"],["KQ==","tok-punctuation"],["ICA="],["IyBTZWNvbmRzIHJlbWFpbmluZyAoLTEgPSBubyBUVEwsIC0yID0gbWlzc2luZyk=","tok-comment"]],[],[["IyA0LiBDaGVjayBzdGF0cw==","tok-comment"]],[["aW5mbw==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cg==","tok-variableName"],["Lg==","tok-operator"],["aW5mbw==","tok-propertyName"],["KA==","tok-punctuation"],["InN0YXRzIg==","tok-string"],["KQ==","tok-punctuation"]],[["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["aW5mbw==","tok-variableName"],["Ww==","tok-punctuation"],["ImtleXNwYWNlX2hpdHMi","tok-string"],["XQ==","tok-punctuation"],["LA==","tok-punctuation"],["IA=="],["aW5mbw==","tok-variableName"],["Ww==","tok-punctuation"],["ImtleXNwYWNlX21pc3NlcyI=","tok-string"],["XQ==","tok-punctuation"],["KQ==","tok-punctuation"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>import redis
+
+r = redis.Redis(host='redis.company.com', port=6379)
+
+# 1. Is Redis alive?
+print(r.ping())  # True means Redis is reachable
+
+# 2. Check a key
+key = "user:123"
+print(r.get(key))  # None means key missing or expired
+
+# 3. Check TTL
+print(r.ttl(key))  # Seconds remaining (-1 = no TTL, -2 = missing)
+
+# 4. Check stats
+info = r.info("stats")
+print(info["keyspace_hits"], info["keyspace_misses"])
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Other things to check:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Memory usage: <code>r.info("memory")</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Cache hit rate: <code>keyspace_hits / (hits + misses)</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>App fallback behavior: simulate missing keys</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Common Redis Issues and What to Do</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely Cause</th>
+<th>Calm Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slow app / cache misses</td>
+<td>TTL expired, Redis flushed</td>
+<td>Wait or rebuild cache</td>
+</tr>
+<tr>
+<td>High memory usage / evictions</td>
+<td>Keys live too long or are large</td>
+<td>Set TTLs, optimize keys</td>
+</tr>
+<tr>
+<td>Stale data</td>
+<td>Long TTL, missed invalidation</td>
+<td>Adjust TTL, verify update logic</td>
+</tr>
+<tr>
+<td>Different nodes see different data</td>
+<td>Local in-process cache used incorrectly</td>
+<td>Ensure shared Redis is source of truth</td>
+</tr>
+<tr>
+<td>Redis timeout</td>
+<td>Network issues, blocking commands</td>
+<td>Check connectivity, add timeouts</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">6️⃣ Safe Redis Alternatives</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you need caching logic:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Redis with TTL</strong>: Cache shared, time-limited values</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Read-through / write-through caching</strong>: App repopulates Redis on miss</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Client-side caching with invalidation</strong>: Optional local cache with Redis sync</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>TTLCache (<code>cachetools</code>)</strong>: Only for single-node, short-lived data</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Async background refresh</strong>: Serve stale values while refreshing</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p>Key principle: Redis = shared memory; database = source of truth; local caches = optional speed trick.</p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">7️⃣ Mindset Shift: Redis Is Not Scary 🌱</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Redis issues mostly affect <strong>performance, not correctness</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Flushing, eviction, or restart = temporary hiccup</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Multi-node setup = Redis coordinates shared memory, not truth</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Developers don’t need sysadmin access to check or debug</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Keep your database as the source of truth — Redis just helps it breathe</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Final Takeaway</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>
+<!-- wp:paragraph --></p>
+<p><strong>Redis is temporary, shared memory that makes systems calmer.</strong></p>
+<p><!-- /wp:paragraph -->
+</p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>Think of it like this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>🟢 Rules, formulas, deterministic logic → local drawer (<code>lru_cache</code>)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>🔴 Shared, temporary facts → Redis fridge</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>✅ Permanent truth → Database pantry</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you remember that, <strong>Redis is no longer scary</strong>, no matter how many nodes you have.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

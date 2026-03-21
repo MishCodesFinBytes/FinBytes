@@ -1,0 +1,398 @@
+---
+layout: post
+title: 'Demo Chat App with Redis: Enhanced Logging Demo'
+date: 2026-02-08 14:46:42.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- debugging
+- demo
+- logging
+- redis
+meta:
+  _last_editor_used_jetpack: block-editor
+  reader_suggested_tags: '["Travel","Technology","Books","Movies","Programming"]'
+  _publicize_job_id: '111091098757'
+  firehose_sent: '1770562003'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 14:44:26'
+  timeline_notification: '1770562004'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/02/08/demo-chat-app-with-redis-enhanced-logging-demo/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/redis_sample","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>Let’s upgrade our <strong>single-file chat app</strong> to <strong>log cache hits/misses, message publishing, and Pub/Sub events</strong>, so you can <strong>see issues live in the console</strong> for demonstration and troubleshooting.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading"><strong>Updated Single-File Chat + Logging Demo – <code>chat_cache_demo_logs.py</code></strong></h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"]],[["aW1wb3J0","tok-keyword"],["IA=="],["dGhyZWFkaW5n","tok-variableName"]],[["aW1wb3J0","tok-keyword"],["IA=="],["dGltZQ==","tok-variableName"]],[["ZnJvbQ==","tok-keyword"],["IA=="],["Zmxhc2s=","tok-variableName"],["IA=="],["aW1wb3J0","tok-keyword"],["IA=="],["Rmxhc2s=","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["cmVxdWVzdA==","tok-variableName"],["LA==","tok-punctuation"],["IA=="],["anNvbmlmeQ==","tok-variableName"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["IyBSZWRpcyBDb25uZWN0aW9u","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["cg==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["UmVkaXM=","tok-propertyName"],["KA==","tok-punctuation"],["aG9zdA==","tok-variableName"],["PQ==","tok-operator"],["J2xvY2FsaG9zdCc=","tok-string"],["LA==","tok-punctuation"],["IA=="],["cG9ydA==","tok-variableName"],["PQ==","tok-operator"],["NjM3OQ==","tok-number"],["LA==","tok-punctuation"],["IA=="],["ZGI=","tok-variableName"],["PQ==","tok-operator"],["MA==","tok-number"],["LA==","tok-punctuation"],["IA=="],["ZGVjb2RlX3Jlc3BvbnNlcw==","tok-variableName"],["PQ==","tok-operator"],["VHJ1ZQ==","tok-bool"],["KQ==","tok-punctuation"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["IyBDaGF0IGFuZCBDYWNoZSB3aXRoIExvZ2dpbmc=","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["Y2xhc3M=","tok-keyword"],["IA=="],["Q2hhdENhY2hlRGVtbw==","tok-className"],["Og=="]],[["ICAgIA=="],["IiIiQ2hhdCBhcHAgd2l0aCBSZWRpcyBjYWNoaW5nICsgUHViL1N1YiArIGRldGFpbGVkIGxvZ2dpbmciIiI=","tok-string"]],[],[["ICAgIA=="],["TUVTU0FHRV9MSVNUX0tFWQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ImNoYXRfbWVzc2FnZXMi","tok-string"],["ICA="],["IyBMYXN0IE4gbWVzc2FnZXM=","tok-comment"]],[["ICAgIA=="],["Q0FDSEVfVFRM","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["MzAw","tok-number"],["ICA="],["IyA1IG1pbnV0ZXM=","tok-comment"]],[],[["ICAgIA=="],["QA==","tok-meta"],["c3RhdGljbWV0aG9k","tok-variableName"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["bG9n","tok-variableName tok-definition"],["KA==","tok-punctuation"],["bXNn","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["cHJpbnQ=","tok-variableName"],["KA==","tok-punctuation"],["ZiJbTE9HXSA=","tok-string2"],["ew==","tok-punctuation"],["dGltZQ==","tok-variableName"],["Lg==","tok-operator"],["c3RyZnRpbWU=","tok-propertyName"],["KA==","tok-punctuation"],["JyVIOiVNOiVTJw==","tok-string"],["KQ==","tok-punctuation"],["fQ==","tok-punctuation"],["IC0g","tok-string2"],["ew==","tok-punctuation"],["bXNn","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["QA==","tok-meta"],["c3RhdGljbWV0aG9k","tok-variableName"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["c3RhcnRfbGlzdGVuZXI=","tok-variableName tok-definition"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["cHVic3Vi","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cg==","tok-variableName"],["Lg==","tok-operator"],["cHVic3Vi","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["cHVic3Vi","tok-variableName"],["Lg==","tok-operator"],["c3Vic2NyaWJl","tok-propertyName"],["KA==","tok-punctuation"],["Imdsb2JhbF9jaGF0Ig==","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["IkNoYXQgbGlzdGVuZXIgc3RhcnRlZC4i","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["Zm9y","tok-keyword"],["IA=="],["bWVzc2FnZQ==","tok-variableName"],["IA=="],["aW4=","tok-keyword"],["IA=="],["cHVic3Vi","tok-variableName"],["Lg==","tok-operator"],["bGlzdGVu","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICAgICAg"],["aWY=","tok-keyword"],["IA=="],["bWVzc2FnZQ==","tok-variableName"],["Ww==","tok-punctuation"],["J3R5cGUn","tok-string"],["XQ==","tok-punctuation"],["IA=="],["PT0=","tok-operator"],["IA=="],["J21lc3NhZ2Un","tok-string"],["Og=="]],[["ICAgICAgICAgICAgICAgIA=="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["ZiJbUFVCL1NVQiBSRUNFSVZFRF0g","tok-string2"],["ew==","tok-punctuation"],["bWVzc2FnZQ==","tok-variableName"],["Ww==","tok-punctuation"],["J2RhdGEn","tok-string"],["XQ==","tok-punctuation"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["QA==","tok-meta"],["c3RhdGljbWV0aG9k","tok-variableName"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["c2VuZF9tZXNzYWdl","tok-variableName tok-definition"],["KA==","tok-punctuation"],["bWVzc2FnZQ==","tok-variableName"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["dHJ5","tok-keyword"],["Og=="]],[["ICAgICAgICAgICAg"],["IyBQdWJsaXNoIHRvIGxpdmUgc3Vic2NyaWJlcnM=","tok-comment"]],[["ICAgICAgICAgICAg"],["cg==","tok-variableName"],["Lg==","tok-operator"],["cHVibGlzaA==","tok-propertyName"],["KA==","tok-punctuation"],["Imdsb2JhbF9jaGF0Ig==","tok-string"],["LA==","tok-punctuation"],["IA=="],["bWVzc2FnZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["ZiJbUFVCL1NVQiBTRU5UXSA=","tok-string2"],["ew==","tok-punctuation"],["bWVzc2FnZQ==","tok-variableName"],["fQ==","tok-punctuation"],["Ig==","tok-string2"],["KQ==","tok-punctuation"]],[],[["ICAgICAgICAgICAg"],["IyBBZGQgdG8gY2FjaGU=","tok-comment"]],[["ICAgICAgICAgICAg"],["cg==","tok-variableName"],["Lg==","tok-operator"],["bHB1c2g=","tok-propertyName"],["KA==","tok-punctuation"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["TUVTU0FHRV9MSVNUX0tFWQ==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["bWVzc2FnZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["cg==","tok-variableName"],["Lg==","tok-operator"],["bHRyaW0=","tok-propertyName"],["KA==","tok-punctuation"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["TUVTU0FHRV9MSVNUX0tFWQ==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["MA==","tok-number"],["LA==","tok-punctuation"],["IA=="],["OQ==","tok-number"],["KQ==","tok-punctuation"],["ICA="],["IyBLZWVwIGxhc3QgMTA=","tok-comment"]],[["ICAgICAgICAgICAg"],["cg==","tok-variableName"],["Lg==","tok-operator"],["ZXhwaXJl","tok-propertyName"],["KA==","tok-punctuation"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["TUVTU0FHRV9MSVNUX0tFWQ==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["Q0FDSEVfVFRM","tok-propertyName"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["ZiJbQ0FDSEVdIE1lc3NhZ2UgYWRkZWQsIFRUTD0=","tok-string2"],["ew==","tok-punctuation"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["Q0FDSEVfVFRM","tok-propertyName"],["fQ==","tok-punctuation"],["cyI=","tok-string2"],["KQ==","tok-punctuation"]],[],[["ICAgICAgICA="],["ZXhjZXB0","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["ZXhjZXB0aW9ucw==","tok-propertyName"],["Lg==","tok-operator"],["Q29ubmVjdGlvbkVycm9y","tok-propertyName"],["Og=="]],[["ICAgICAgICAgICAg"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["IltFUlJPUl0gUmVkaXMgY29ubmVjdGlvbiBmYWlsZWQhIE1lc3NhZ2Ugbm90IHNlbnQuIg==","tok-string"],["KQ==","tok-punctuation"]],[],[["ICAgIA=="],["QA==","tok-meta"],["c3RhdGljbWV0aG9k","tok-variableName"]],[["ICAgIA=="],["ZGVm","tok-keyword"],["IA=="],["Z2V0X2NhY2hlZF9tZXNzYWdlcw==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgICAgICA="],["dHJ5","tok-keyword"],["Og=="]],[["ICAgICAgICAgICAg"],["bWVzc2FnZXM=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cg==","tok-variableName"],["Lg==","tok-operator"],["bHJhbmdl","tok-propertyName"],["KA==","tok-punctuation"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["TUVTU0FHRV9MSVNUX0tFWQ==","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["MA==","tok-number"],["LA==","tok-punctuation"],["IA=="],["LQ==","tok-operator"],["MQ==","tok-number"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["aWY=","tok-keyword"],["IA=="],["bWVzc2FnZXM=","tok-variableName"],["Og=="]],[["ICAgICAgICAgICAgICAgIA=="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["ZiJbQ0FDSEUgSElUXSBSZXRyaWV2ZWQg","tok-string2"],["ew==","tok-punctuation"],["bGVu","tok-variableName"],["KA==","tok-punctuation"],["bWVzc2FnZXM=","tok-variableName"],["KQ==","tok-punctuation"],["fQ==","tok-punctuation"],["IG1lc3NhZ2VzIg==","tok-string2"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["ZWxzZQ==","tok-keyword"],["Og=="]],[["ICAgICAgICAgICAgICAgIA=="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["IltDQUNIRSBNSVNTXSBObyBtZXNzYWdlcyBpbiBjYWNoZSI=","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["cmV0dXJu","tok-keyword"],["IA=="],["bWVzc2FnZXM=","tok-variableName"]],[["ICAgICAgICA="],["ZXhjZXB0","tok-keyword"],["IA=="],["cmVkaXM=","tok-variableName"],["Lg==","tok-operator"],["ZXhjZXB0aW9ucw==","tok-propertyName"],["Lg==","tok-operator"],["Q29ubmVjdGlvbkVycm9y","tok-propertyName"],["Og=="]],[["ICAgICAgICAgICAg"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["IltFUlJPUl0gUmVkaXMgY29ubmVjdGlvbiBmYWlsZWQhIENhbm5vdCByZXRyaWV2ZSBjYWNoZSI=","tok-string"],["KQ==","tok-punctuation"]],[["ICAgICAgICAgICAg"],["cmV0dXJu","tok-keyword"],["IA=="],["Ww==","tok-punctuation"],["XQ==","tok-punctuation"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["IyBTdGFydCBsaXN0ZW5lciB0aHJlYWQ=","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["dGhyZWFkaW5n","tok-variableName"],["Lg==","tok-operator"],["VGhyZWFk","tok-propertyName"],["KA==","tok-punctuation"],["dGFyZ2V0","tok-variableName"],["PQ==","tok-operator"],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["c3RhcnRfbGlzdGVuZXI=","tok-propertyName"],["LA==","tok-punctuation"],["IA=="],["ZGFlbW9u","tok-variableName"],["PQ==","tok-operator"],["VHJ1ZQ==","tok-bool"],["KQ==","tok-punctuation"],["Lg==","tok-operator"],["c3RhcnQ=","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["IyBGbGFzayBBcHA=","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["YXBw","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Rmxhc2s=","tok-variableName"],["KA==","tok-punctuation"],["X19uYW1lX18=","tok-variableName"],["KQ==","tok-punctuation"]],[],[["QA==","tok-meta"],["YXBw","tok-variableName"],["Lg==","tok-operator"],["cm91dGU=","tok-variableName"],["KA==","tok-punctuation"],["Ii9jaGF0Ig==","tok-string"],["LA==","tok-punctuation"],["IA=="],["bWV0aG9kcw==","tok-variableName"],["PQ==","tok-operator"],["Ww==","tok-punctuation"],["IlBPU1Qi","tok-string"],["XQ==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ZGVm","tok-keyword"],["IA=="],["c2VuZF9jaGF0","tok-variableName tok-definition"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["ZGF0YQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["cmVxdWVzdA==","tok-variableName"],["Lg==","tok-operator"],["anNvbg==","tok-propertyName"]],[["ICAgIA=="],["bWVzc2FnZQ==","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["ZGF0YQ==","tok-variableName"],["Lg==","tok-operator"],["Z2V0","tok-propertyName"],["KA==","tok-punctuation"],["Im1lc3NhZ2Ui","tok-string"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["aWY=","tok-keyword"],["IA=="],["bWVzc2FnZQ==","tok-variableName"],["Og=="]],[["ICAgICAgICA="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["c2VuZF9tZXNzYWdl","tok-propertyName"],["KA==","tok-punctuation"],["bWVzc2FnZQ==","tok-variableName"],["KQ==","tok-punctuation"]],[["ICAgICAgICA="],["cmV0dXJu","tok-keyword"],["IA=="],["anNvbmlmeQ==","tok-variableName"],["KA==","tok-punctuation"],["ew==","tok-punctuation"],["InN0YXR1cyI=","tok-string"],["OiA="],["InNlbnQi","tok-string"],["fQ==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["anNvbmlmeQ==","tok-variableName"],["KA==","tok-punctuation"],["ew==","tok-punctuation"],["InN0YXR1cyI=","tok-string"],["OiA="],["ImZhaWxlZCI=","tok-string"],["LA==","tok-punctuation"],["IA=="],["ImVycm9yIg==","tok-string"],["OiA="],["Ik5vIG1lc3NhZ2UgcHJvdmlkZWQi","tok-string"],["fQ==","tok-punctuation"],["KQ==","tok-punctuation"],["LA==","tok-punctuation"],["IA=="],["NDAw","tok-number"]],[],[["QA==","tok-meta"],["YXBw","tok-variableName"],["Lg==","tok-operator"],["cm91dGU=","tok-variableName"],["KA==","tok-punctuation"],["Ii9oaXN0b3J5Ig==","tok-string"],["KQ==","tok-punctuation"]],[["ZGVm","tok-keyword"],["IA=="],["Y2hhdF9oaXN0b3J5","tok-variableName tok-definition"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["bWVzc2FnZXM=","tok-variableName"],["IA=="],["PQ==","tok-operator"],["IA=="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["Z2V0X2NhY2hlZF9tZXNzYWdlcw==","tok-propertyName"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["anNvbmlmeQ==","tok-variableName"],["KA==","tok-punctuation"],["ew==","tok-punctuation"],["Im1lc3NhZ2VzIg==","tok-string"],["OiA="],["bWVzc2FnZXM=","tok-variableName"],["fQ==","tok-punctuation"],["KQ==","tok-punctuation"]],[],[["QA==","tok-meta"],["YXBw","tok-variableName"],["Lg==","tok-operator"],["cm91dGU=","tok-variableName"],["KA==","tok-punctuation"],["Ii9waW5nIg==","tok-string"],["KQ==","tok-punctuation"]],[["ZGVm","tok-keyword"],["IA=="],["cGluZw==","tok-variableName tok-definition"],["KA==","tok-punctuation"],["KQ==","tok-punctuation"],["Og=="]],[["ICAgIA=="],["cmV0dXJu","tok-keyword"],["IA=="],["IlNlcnZlciBydW5uaW5nISI=","tok-string"]],[],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["IyBSdW4gQXBw","tok-comment"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=","tok-comment"]],[["aWY=","tok-keyword"],["IA=="],["X19uYW1lX18=","tok-variableName"],["IA=="],["PT0=","tok-operator"],["IA=="],["Il9fbWFpbl9fIg==","tok-string"],["Og=="]],[["ICAgIA=="],["Q2hhdENhY2hlRGVtbw==","tok-variableName"],["Lg==","tok-operator"],["bG9n","tok-propertyName"],["KA==","tok-punctuation"],["IlN0YXJ0aW5nIENoYXQgQ2FjaGUgRGVtbyBBcHAgd2l0aCBsb2dnaW5nLi4uIg==","tok-string"],["KQ==","tok-punctuation"]],[["ICAgIA=="],["YXBw","tok-variableName"],["Lg==","tok-operator"],["cnVu","tok-propertyName"],["KA==","tok-punctuation"],["ZGVidWc=","tok-variableName"],["PQ==","tok-operator"],["VHJ1ZQ==","tok-bool"],["KQ==","tok-punctuation"]],[],[]],"language":"Python","languageConfidence":"certain"} --></p>
+<pre class="wp-block-code"><code>import redis
+import threading
+import time
+from flask import Flask, request, jsonify
+
+# ------------------------------
+# Redis Connection
+# ------------------------------
+r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+
+# ------------------------------
+# Chat and Cache with Logging
+# ------------------------------
+class ChatCacheDemo:
+    """Chat app with Redis caching + Pub/Sub + detailed logging"""
+
+    MESSAGE_LIST_KEY = "chat_messages"  # Last N messages
+    CACHE_TTL = 300  # 5 minutes
+
+    @staticmethod
+    def log(msg):
+        print(f"[LOG] {time.strftime('%H:%M:%S')} - {msg}")
+
+    @staticmethod
+    def start_listener():
+        pubsub = r.pubsub()
+        pubsub.subscribe("global_chat")
+        ChatCacheDemo.log("Chat listener started.")
+        for message in pubsub.listen():
+            if message['type'] == 'message':
+                ChatCacheDemo.log(f"[PUB/SUB RECEIVED] {message['data']}")
+
+    @staticmethod
+    def send_message(message):
+        try:
+            # Publish to live subscribers
+            r.publish("global_chat", message)
+            ChatCacheDemo.log(f"[PUB/SUB SENT] {message}")
+
+            # Add to cache
+            r.lpush(ChatCacheDemo.MESSAGE_LIST_KEY, message)
+            r.ltrim(ChatCacheDemo.MESSAGE_LIST_KEY, 0, 9)  # Keep last 10
+            r.expire(ChatCacheDemo.MESSAGE_LIST_KEY, ChatCacheDemo.CACHE_TTL)
+            ChatCacheDemo.log(f"[CACHE] Message added, TTL={ChatCacheDemo.CACHE_TTL}s")
+
+        except redis.exceptions.ConnectionError:
+            ChatCacheDemo.log("[ERROR] Redis connection failed! Message not sent.")
+
+    @staticmethod
+    def get_cached_messages():
+        try:
+            messages = r.lrange(ChatCacheDemo.MESSAGE_LIST_KEY, 0, -1)
+            if messages:
+                ChatCacheDemo.log(f"[CACHE HIT] Retrieved {len(messages)} messages")
+            else:
+                ChatCacheDemo.log("[CACHE MISS] No messages in cache")
+            return messages
+        except redis.exceptions.ConnectionError:
+            ChatCacheDemo.log("[ERROR] Redis connection failed! Cannot retrieve cache")
+            return []
+
+# ------------------------------
+# Start listener thread
+# ------------------------------
+threading.Thread(target=ChatCacheDemo.start_listener, daemon=True).start()
+
+# ------------------------------
+# Flask App
+# ------------------------------
+app = Flask(__name__)
+
+@app.route("/chat", methods=["POST"])
+def send_chat():
+    data = request.json
+    message = data.get("message")
+    if message:
+        ChatCacheDemo.send_message(message)
+        return jsonify({"status": "sent"})
+    return jsonify({"status": "failed", "error": "No message provided"}), 400
+
+@app.route("/history")
+def chat_history():
+    messages = ChatCacheDemo.get_cached_messages()
+    return jsonify({"messages": messages})
+
+@app.route("/ping")
+def ping():
+    return "Server running!"
+
+# ------------------------------
+# Run App
+# ------------------------------
+if __name__ == "__main__":
+    ChatCacheDemo.log("Starting Chat Cache Demo App with logging...")
+    app.run(debug=True)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading"><strong>Step 1: Run Instructions (Windows)</strong></h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Start Redis:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cmVkaXMtc2VydmVyLmV4ZQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>redis-server.exe
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":2} --></p>
+<ol start="2" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Run Python app:</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0aG9uIGNoYXRfY2FjaGVfZGVtb19sb2dzLnB5"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>python chat_cache_demo_logs.py
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Flask server starts at <code>http://127.0.0.1:5000/</code>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Console shows logging for all events (cache hits/misses, Pub/Sub messages)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading"><strong>Step 2: Test &amp; Demonstrate Issues</strong></h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Cache Miss</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Open <code>/history</code> before sending any messages</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Console logs: <code>[CACHE MISS] No messages in cache</code>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>Send Messages</strong></li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UE9TVCAvY2hhdCB7Im1lc3NhZ2UiOiJIZWxsbyBXb3JsZCJ9"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>POST /chat {"message":"Hello World"}
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Console logs:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["W0xPR10gSEg6TU06U1MgLSBbUFVCL1NVQiBTRU5UXSBIZWxsbyBXb3JsZA=="]],[["W0xPR10gSEg6TU06U1MgLSBbQ0FDSEVdIE1lc3NhZ2UgYWRkZWQsIFRUTD0zMDBz"]],[["W0xPR10gSEg6TU06U1MgLSBbUFVCL1NVQiBSRUNFSVZFRF0gSGVsbG8gV29ybGQ="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>[LOG] HH:MM:SS - [PUB/SUB SENT] Hello World
+[LOG] HH:MM:SS - [CACHE] Message added, TTL=300s
+[LOG] HH:MM:SS - [PUB/SUB RECEIVED] Hello World
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list {"ordered":true,"start":3} --></p>
+<ol start="3" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Cache Hit</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Open <code>/history</code> again</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Logs: <code>[CACHE HIT] Retrieved 1 messages</code>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Cache Expiration</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Wait &gt;5 minutes → <code>/history</code> shows <code>[CACHE MISS]</code>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Redis Down</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Stop Redis → send message → logs: <code>[ERROR] Redis connection failed! Message not sent.</code>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Multi-Listener / Race Conditions</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Run another Python instance of the same app → messages are received on all listeners</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Console shows <code>[PUB/SUB RECEIVED]</code> on each listener</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading"><strong>Step 3: Optional Production Server (Windows)</strong></h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Install <strong>Waitress</strong>:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cGlwIGluc3RhbGwgd2FpdHJlc3M="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>pip install waitress
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Replace Flask run block with:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB3YWl0cmVzcyBpbXBvcnQgc2VydmU="]],[["c2VydmUoYXBwLCBob3N0PSIwLjAuMC4wIiwgcG9ydD01MDAwKQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from waitress import serve
+serve(app, host="0.0.0.0", port=5000)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Demonstrates multi-threaded environment, good for showing cache race conditions and TTL issues.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":1} --></p>
+<h1 class="wp-block-heading"><strong>Step 4: Demonstration Table</strong></h1>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Issue</th>
+<th>How to Cause</th>
+<th>Console Logs</th>
+<th>Troubleshooting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cache miss</td>
+<td>
+<code>/history</code> before any messages</td>
+<td><code>[CACHE MISS]</code></td>
+<td>Check TTL, verify key exists</td>
+</tr>
+<tr>
+<td>TTL expired</td>
+<td>Wait &gt;5 min after messages</td>
+<td><code>[CACHE MISS]</code></td>
+<td>Adjust TTL or check expiration logic</td>
+</tr>
+<tr>
+<td>Redis down</td>
+<td>Stop Redis</td>
+<td><code>[ERROR] Redis connection failed!</code></td>
+<td>Restart Redis, verify port</td>
+</tr>
+<tr>
+<td>Pub/Sub not received</td>
+<td>Listener thread not running</td>
+<td>No <code>[PUB/SUB RECEIVED]</code>
+</td>
+<td>Ensure listener thread is started</td>
+</tr>
+<tr>
+<td>Multi-worker message race</td>
+<td>Multiple instances / threads</td>
+<td>Messages may appear out-of-order</td>
+<td>Use LPUSH+LTRIM atomic operations; consider transactions if needed</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>This setup gives you a <strong>live demo for caching issues and troubleshooting</strong> with <strong>detailed logging</strong> for every stage of the system.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

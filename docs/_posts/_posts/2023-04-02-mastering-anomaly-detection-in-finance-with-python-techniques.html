@@ -1,0 +1,181 @@
+---
+layout: post
+title: Mastering Anomaly Detection in Finance with Python Techniques
+date: 2023-04-02 12:33:16.000000000 +01:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Fintech &amp; Python
+tags:
+- anomaly detection
+- finance
+- Machine Learning
+- ML
+meta:
+  reader_suggested_tags: '["Artificial Intelligence","AI","Machine Learning","Data
+    Science","Technology"]'
+  _last_editor_used_jetpack: block-editor
+  _thumbnail_id: '335'
+  _wp_old_date: '2024-11-04'
+  _edit_last: '257720953'
+  _wp_page_template: default
+  _yoast_wpseo_primary_category: '1377'
+  _yoast_wpseo_content_score: '90'
+  _yoast_wpseo_estimated-reading-time-minutes: '3'
+  _import_original_post_id: '138'
+  _elasticsearch_data_sharing_indexed_on: '2026-02-07 12:06:48'
+  _publicize_job_id: '112088254242'
+  _publicize_shares: a:0:{}
+author:
+  login: finbytes
+  email: finbytesng@gmail.com
+  display_name: finbytes
+  first_name: ''
+  last_name: ''
+permalink: "/2023/04/02/mastering-anomaly-detection-in-finance-with-python-techniques/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size"><strong>All code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/AnomalyDetection","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>In the world of finance, data is king. Financial institutions and fintech companies rely heavily on data to make informed decisions and gain a competitive edge. However, with the ever-increasing volume and complexity of financial data, it's becoming more challenging to identify and analyze anomalies or outliers that could potentially impact financial outcomes. This is where anomaly detection techniques come into play, leveraging the power of Python to automate the process and provide valuable insights for financial tasks.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Concept of Anomaly Detection:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Anomaly detection is the process of identifying data points that deviate significantly from the expected or normal behavior of a dataset. These anomalies can be caused by various factors such as human error, fraud, or unusual market conditions. In the financial world, detecting anomalies is crucial as they can indicate potential risks, fraudulent activities, or opportunities for growth. Traditional methods of detecting anomalies, such as visual inspection or manual review, are time-consuming and prone to human error. Hence, the use of anomaly detection techniques with Python has gained popularity in the fintech industry.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Variations of Anomaly Detection Techniques in Python:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">1. Statistical Methods:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>One of the most common anomaly detection techniques is using statistical methods such as Z-score, Grubbs test, or Tukey's method. These methods compare the data point to the mean or median of the dataset and flag it as an anomaly if it falls outside a certain threshold. Let's take a simple example of detecting anomalies in stock prices using the Z-score method in Python:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Import libraries\nimport pandas as pd\nimport numpy as np\nfrom scipy import stats\n\n# Load stock prices data\ndf = pd.read_csv('stock_prices.csv')\n\n# Calculate Z-score for each data point\ndf['Z_score'] = np.abs(stats.zscore(df['Price']))\n\n# Set a threshold for Z-score\nthreshold = 3\n\n# Flag data points with Z-score above the threshold\ndf['Anomaly'] = np.where(df['Z_score'] \u0026gt; threshold, 'Yes', 'No')\n\n# View flagged anomalies\ndf[df['Anomaly'] == 'Yes']","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Import libraries\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e numpy \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e np\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e scipy \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e stats\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Load stock prices data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;stock_prices.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate Z-score for each data point\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Z_score\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = np.abs(stats.zscore(df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Price\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]))\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Set a threshold for Z-score\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ethreshold = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e3\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Flag data points with Z-score above the threshold\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Anomaly\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = np.where(df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Z_score\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] \u0026gt; threshold, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Yes\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;No\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# View flagged anomalies\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Anomaly\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Yes\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Import libraries</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> numpy </span><span style="color: #AF00DB">as</span><span style="color: #000000"> np</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> scipy </span><span style="color: #AF00DB">import</span><span style="color: #000000"> stats</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Load stock prices data</span></span>
+<span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">'stock_prices.csv'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate Z-score for each data point</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">'Z_score'</span><span style="color: #000000">] = np.abs(stats.zscore(df[</span><span style="color: #A31515">'Price'</span><span style="color: #000000">]))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Set a threshold for Z-score</span></span>
+<span class="line"><span style="color: #000000">threshold = </span><span style="color: #098658">3</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Flag data points with Z-score above the threshold</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">'Anomaly'</span><span style="color: #000000">] = np.where(df[</span><span style="color: #A31515">'Z_score'</span><span style="color: #000000">] &gt; threshold, </span><span style="color: #A31515">'Yes'</span><span style="color: #000000">, </span><span style="color: #A31515">'No'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># View flagged anomalies</span></span>
+<span class="line"><span style="color: #000000">df[df[</span><span style="color: #A31515">'Anomaly'</span><span style="color: #000000">] == </span><span style="color: #A31515">'Yes'</span><span style="color: #000000">]</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">2. Machine Learning Algorithms:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>With advancements in machine learning, anomaly detection techniques in Python have become more sophisticated. Using algorithms such as Isolation Forest, One-Class SVM, or Local Outlier Factor, anomalies can be detected in a more automated and accurate manner. These algorithms work by creating a model of the normal behavior of the dataset and then flagging data points that deviate from it. Let's see how we can use the Isolation Forest algorithm to detect anomalies in credit card transactions:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Import libraries\nimport pandas as pd\nfrom sklearn.ensemble import IsolationForest\n\n# Load credit card transactions data\ndf = pd.read_csv('credit_card_transactions.csv')\n\n# Fit Isolation Forest model\nmodel = IsolationForest().fit(df[['Amount']])\n\n# Predict outliers using the model\ndf['Anomaly'] = model.predict(df[['Amount']])\n\n# View flagged anomalies\ndf[df['Anomaly'] == -1]","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Import libraries\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e sklearn.ensemble \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e IsolationForest\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Load credit card transactions data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;credit_card_transactions.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Fit Isolation Forest model\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003emodel = IsolationForest().fit(df[[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Predict outliers using the model\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Anomaly\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = model.predict(df[[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Amount\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# View flagged anomalies\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Anomaly\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] == -\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e1\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span><span role="button" style="color:#000000;display:none" aria-label="Copy" class="code-block-pro-copy-button"></span>
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Import libraries</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> sklearn.ensemble </span><span style="color: #AF00DB">import</span><span style="color: #000000"> IsolationForest</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Load credit card transactions data</span></span>
+<span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">'credit_card_transactions.csv'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Fit Isolation Forest model</span></span>
+<span class="line"><span style="color: #000000">model = IsolationForest().fit(df[[</span><span style="color: #A31515">'Amount'</span><span style="color: #000000">]])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Predict outliers using the model</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">'Anomaly'</span><span style="color: #000000">] = model.predict(df[[</span><span style="color: #A31515">'Amount'</span><span style="color: #000000">]])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># View flagged anomalies</span></span>
+<span class="line"><span style="color: #000000">df[df[</span><span style="color: #A31515">'Anomaly'</span><span style="color: #000000">] == -</span><span style="color: #098658">1</span><span style="color: #000000">]</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">3. Time Series Analysis:</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>In finance, time series data is prevalent, and detecting anomalies in such data requires a different approach. Python offers various techniques such as Seasonal Hybrid ESD, Twitter's AnomalyDetection library, or Facebook's Prophet library to detect anomalies in time series data. These methods take into account the seasonality and trends in the data to identify anomalies. Let's take an example of using the Seasonal Hybrid ESD method to detect anomalies in stock prices over time:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:kevinbatdorf/code-block-pro {"code":"# Import libraries\nimport pandas as pd\nfrom statsmodels.tsa.seasonal import seasonal_decompose\nfrom statsmodels.stats.stattools import adfuller\nfrom outlier_utils import smirnov_grubbs as grubbs\n\n# Load stock prices data\ndf = pd.read_csv('stock_prices.csv')\n\n# Decompose time series data \nresult = seasonal_decompose(df['Price'], model='additive', freq=30)\n\n# Calculate residuals\ndf['Residuals'] = result.resid\n\n# Perform Augmented Dickey-Fuller test\n_, p_value, _, _, _, _ = adfuller(df['Residuals'])\n\n# Set a threshold for p-value\nthreshold = 0.05\n\n# Flag data points with p-value below the threshold\ndf['Anomaly'] = np.where(p_value \u0026lt; threshold, \u0026#039;Yes\u0026#039;, \u0026#039;No\u0026#039;)\n\n# View flagged anomalies\ndf[df[\u0026#039;Anomaly\u0026#039;] == \u0026#039;Yes\u0026#039;]","codeHTML":"\u003cpre class=\u0022shiki light-plus\u0022 style=\u0022background-color: #FFFFFF\u0022\u003e\u003ccode\u003e\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Import libraries\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pandas \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e pd\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e statsmodels.tsa.seasonal \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e seasonal_decompose\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e statsmodels.stats.stattools \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e adfuller\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003efrom\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e outlier_utils \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eimport\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e smirnov_grubbs \u003c/span\u003e\u003cspan style=\u0022color: #AF00DB\u0022\u003eas\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e grubbs\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Load stock prices data\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf = pd.read_csv(\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;stock_prices.csv\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Decompose time series data \u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003eresult = seasonal_decompose(df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Price\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e], \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003emodel\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;additive\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #001080\u0022\u003efreq\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e=\u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e30\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Calculate residuals\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Residuals\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = result.resid\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Perform Augmented Dickey-Fuller test\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003e_, p_value, _, _, _, _ = adfuller(df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Residuals\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e])\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Set a threshold for p-value\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003ethreshold = \u003c/span\u003e\u003cspan style=\u0022color: #098658\u0022\u003e0.05\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# Flag data points with p-value below the threshold\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Anomaly\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] = np.where(p_value \u0026lt; threshold, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Yes\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e, \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;No\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e)\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #008000\u0022\u003e# View flagged anomalies\u003c/span\u003e\u003c/span\u003e\n\u003cspan class=\u0022line\u0022\u003e\u003cspan style=\u0022color: #000000\u0022\u003edf[df[\u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Anomaly\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e] == \u003c/span\u003e\u003cspan style=\u0022color: #A31515\u0022\u003e\u0026#039;Yes\u0026#039;\u003c/span\u003e\u003cspan style=\u0022color: #000000\u0022\u003e]\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e","language":"python","theme":"light-plus","bgColor":"#FFFFFF","textColor":"#000000","fontSize":".875rem","fontFamily":"Code-Pro-JetBrains-Mono","lineHeight":"1.25rem","clampFonts":false,"lineNumbers":false,"headerType":"headlights","disablePadding":false,"footerType":"none","enableMaxHeight":false,"seeMoreType":"","seeMoreString":"","seeMoreAfterLine":"","seeMoreTransition":false,"highlightingHover":false,"lineHighlightColor":"rgba(0, 0, 0, 0.2)","copyButton":true,"copyButtonType":"heroicons","useTabs":false} --></p>
+<div class="wp-block-kevinbatdorf-code-block-pro" style="font-size:.875rem;font-family:Code-Pro-JetBrains-Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.25rem;--cbp-tab-width:2">
+<span style="display:block;padding:16px 0 0 16px;margin-bottom:-1px;width:100%;text-align:left;background-color:#FFFFFF"></span>&lt;span role="button" tabindex="0" data-code="# Import libraries<br />
+import pandas as pd<br />
+from statsmodels.tsa.seasonal import seasonal_decompose<br />
+from statsmodels.stats.stattools import adfuller<br />
+from outlier_utils import smirnov_grubbs as grubbs</p>
+<p># Load stock prices data<br />
+df = pd.read_csv('stock_prices.csv')</p>
+<p># Decompose time series data<br />
+result = seasonal_decompose(df['Price'], model='additive', freq=30)</p>
+<p># Calculate residuals<br />
+df['Residuals'] = result.resid</p>
+<p># Perform Augmented Dickey-Fuller test<br />
+_, p_value, _, _, _, _ = adfuller(df['Residuals'])</p>
+<p># Set a threshold for p-value<br />
+threshold = 0.05</p>
+<p># Flag data points with p-value below the threshold<br />
+df['Anomaly'] = np.where(p_value
+<pre class="shiki light-plus" style="background-color: #FFFFFF"><code><span class="line"><span style="color: #008000"># Import libraries</span></span>
+<span class="line"><span style="color: #AF00DB">import</span><span style="color: #000000"> pandas </span><span style="color: #AF00DB">as</span><span style="color: #000000"> pd</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> statsmodels.tsa.seasonal </span><span style="color: #AF00DB">import</span><span style="color: #000000"> seasonal_decompose</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> statsmodels.stats.stattools </span><span style="color: #AF00DB">import</span><span style="color: #000000"> adfuller</span></span>
+<span class="line"><span style="color: #AF00DB">from</span><span style="color: #000000"> outlier_utils </span><span style="color: #AF00DB">import</span><span style="color: #000000"> smirnov_grubbs </span><span style="color: #AF00DB">as</span><span style="color: #000000"> grubbs</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Load stock prices data</span></span>
+<span class="line"><span style="color: #000000">df = pd.read_csv(</span><span style="color: #A31515">'stock_prices.csv'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Decompose time series data </span></span>
+<span class="line"><span style="color: #000000">result = seasonal_decompose(df[</span><span style="color: #A31515">'Price'</span><span style="color: #000000">], </span><span style="color: #001080">model</span><span style="color: #000000">=</span><span style="color: #A31515">'additive'</span><span style="color: #000000">, </span><span style="color: #001080">freq</span><span style="color: #000000">=</span><span style="color: #098658">30</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Calculate residuals</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">'Residuals'</span><span style="color: #000000">] = result.resid</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Perform Augmented Dickey-Fuller test</span></span>
+<span class="line"><span style="color: #000000">_, p_value, _, _, _, _ = adfuller(df[</span><span style="color: #A31515">'Residuals'</span><span style="color: #000000">])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Set a threshold for p-value</span></span>
+<span class="line"><span style="color: #000000">threshold = </span><span style="color: #098658">0.05</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># Flag data points with p-value below the threshold</span></span>
+<span class="line"><span style="color: #000000">df[</span><span style="color: #A31515">'Anomaly'</span><span style="color: #000000">] = np.where(p_value &lt; threshold, </span><span style="color: #A31515">'Yes'</span><span style="color: #000000">, </span><span style="color: #A31515">'No'</span><span style="color: #000000">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #008000"># View flagged anomalies</span></span>
+<span class="line"><span style="color: #000000">df[df[</span><span style="color: #A31515">'Anomaly'</span><span style="color: #000000">] == </span><span style="color: #A31515">'Yes'</span><span style="color: #000000">]</span></span></code></pre>
+</div>
+<p><!-- /wp:kevinbatdorf/code-block-pro --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Applications of Anomaly Detection in Fintech:</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The application of anomaly detection techniques in Python is vast and has numerous benefits for the fintech industry. Some of the potential use cases include fraud detection, risk assessment, predictive modeling, and automated anomaly identification. With the ability to process large volumes of data and provide real-time insights, these techniques can help financial institutions and fintech companies make more informed decisions and mitigate potential risks.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>In conclusion, the use of anomaly detection techniques in Python has revolutionized the way financial data is analyzed and processed. With the ability to automate the process and provide accurate insights, these techniques have become an essential tool for the fintech industry. As technology continues to advance, we can expect to see more innovative applications of anomaly detection in finance, making it easier for businesses to stay ahead in an ever-changing market.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

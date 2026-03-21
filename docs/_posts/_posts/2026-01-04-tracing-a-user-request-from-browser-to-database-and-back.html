@@ -1,0 +1,525 @@
+---
+layout: post
+title: 'Tracing a User Request: From Browser to Database and Back'
+date: 2026-01-04 12:37:21.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- System design &amp; debugging
+tags:
+- architecture
+- backend
+- HTTP
+- system design
+meta:
+  _last_editor_used_jetpack: block-editor
+  timeline_notification: '1770554582'
+  reader_suggested_tags: '["Art","Photography","Travel","Books","Food"]'
+  _wp_old_date: '2026-02-08'
+  _publicize_job_id: '111089007897'
+  firehose_sent: '1770554582'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 12:41:27'
+  _edit_last: '257720953'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/01/04/tracing-a-user-request-from-browser-to-database-and-back/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph --><html><body></p>
+<p>When a user clicks a button or opens a page, their request travels through multiple layers of your architecture. Understanding this <strong>helps debug issues and optimize performance</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">1️⃣ Request Flow Overview</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Imagine a user wants to see their profile page. Here’s how the request moves:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code {"tokenizedLines":[[["VXNlciBCcm93c2Vy"]],[["ICAgICDihpM="]],[["TG9hZCBCYWxhbmNlcg=="]],[["ICAgICDihpM="]],[["V2ViIFNlcnZlciAoTmdpbnggLyBBcGFjaGUp"]],[["ICAgICDihpM="]],[["R3VuaWNvcm4gV29ya2VyIChQeXRob24gQXBwKQ=="]],[["ICAgICDihpM="]],[["UmVkaXMgQ2FjaGUgKHNoYXJlZCk="]],[["ICAgICDihpM="]],[["RGF0YWJhc2UgKHNvdXJjZSBvZiB0cnV0aCk="]],[["ICAgICDihpE="]],[["UmVkaXMgQ2FjaGUgKHdyaXRlcyB1cGRhdGVkIGRhdGEgYmFjayk="]],[["ICAgICDihpE="]],[["R3VuaWNvcm4gV29ya2VyIOKGkiBXZWIgU2VydmVyIOKGkiBCcm93c2Vy"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>User Browser
+     ↓
+Load Balancer
+     ↓
+Web Server (Nginx / Apache)
+     ↓
+Gunicorn Worker (Python App)
+     ↓
+Redis Cache (shared)
+     ↓
+Database (source of truth)
+     ↑
+Redis Cache (writes updated data back)
+     ↑
+Gunicorn Worker → Web Server → Browser
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">Step-by-Step Explanation</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>User Browser</strong>: Sends HTTP request</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Load Balancer</strong>: Chooses which web server to send the request to</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Web Server</strong>: Forwards request to Gunicorn worker</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Gunicorn Worker</strong>: Processes request, checks cache</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Redis Cache</strong>: Returns value if exists, else triggers DB fetch</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Database</strong>: Returns permanent data if cache missed</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Gunicorn Worker</strong>: Updates Redis if needed, formats response</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>
+<strong>Web Server → Load Balancer → Browser</strong>: Sends response back to user</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Think of it as a <strong>relay race</strong>, with Redis acting as a “shortcut” to speed things up.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">2️⃣ Common Issues at Each Stage and Troubleshooting</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Stage</th>
+<th>Possible Issues</th>
+<th>How to Troubleshoot (With Sysadmin Rights)</th>
+<th>How to Troubleshoot (Without Sysadmin Rights / Developer)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Browser</td>
+<td>Slow load, 404, or timeout</td>
+<td>Check browser dev tools, network requests, server logs</td>
+<td>Check app logs for request handling, inspect response times</td>
+</tr>
+<tr>
+<td>Load Balancer</td>
+<td>Overloaded node, wrong routing</td>
+<td>Check LB metrics, health checks, failover config</td>
+<td>Observe which server handled the request from app logs</td>
+</tr>
+<tr>
+<td>Web Server</td>
+<td>502/504 errors, misconfig</td>
+<td>Check web server logs (Nginx/Apache), restart if needed</td>
+<td>Inspect request forwarding logs, confirm worker responses</td>
+</tr>
+<tr>
+<td>Gunicorn Worker</td>
+<td>High CPU/memory, worker crash</td>
+<td>Check worker logs, restart workers, scale workers</td>
+<td>Observe request times, simulate cache misses, confirm worker is alive</td>
+</tr>
+<tr>
+<td>Redis Cache</td>
+<td>Cache misses, stale data, timeout</td>
+<td>Check Redis logs, memory, TTLs, cluster health</td>
+<td>Ping Redis, check key existence, inspect TTL, simulate cache rebuild</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>Slow queries, deadlocks, unavailable</td>
+<td>Analyze DB logs, slow query logs, replication status</td>
+<td>Confirm data consistency, check query performance using ORM/logging</td>
+</tr>
+<tr>
+<td>Application Layer (Gunicorn)</td>
+<td>Exceptions, serialization errors</td>
+<td>Inspect app logs, stack traces, check dependencies</td>
+<td>Add logging around key code paths, simulate input cases</td>
+</tr>
+<tr>
+<td>Response Delivery</td>
+<td>Delayed response, partial content</td>
+<td>Monitor network, LB, web server metrics</td>
+<td>Log response time, size, and status codes in the app</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">3️⃣ Extra Tips for Developers Without Full Server Access</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Always log cache hits/misses</strong> at the app layer:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aWYgcHJvZmlsZSBpcyBOb25lOg=="]],[["ICAgIGxvZ2dpbmcuaW5mbygiQ2FjaGUgbWlzcywgZmV0Y2hpbmcgZnJvbSBEQiIp"]],[["ZWxzZTo="]],[["ICAgIGxvZ2dpbmcuaW5mbygiQ2FjaGUgaGl0Iik="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>if profile is None:
+    logging.info("Cache miss, fetching from DB")
+else:
+    logging.info("Cache hit")
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Ping Redis</strong> to confirm availability:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ci5waW5nKCkgICMgVHJ1ZSA9IGFsaXZl"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>r.ping()  # True = alive
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Check TTLs and stale keys</strong> if stale data is suspected:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ci50dGwoInVzZXI6MTIzIik="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>r.ttl("user:123")
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Simulate failures safely</strong> to test fallbacks:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ci5kZWxldGUoInVzZXI6MTIzIikgICMgdHJpZ2dlcnMgREIgZmV0Y2ggKyBjYWNoZSByZWJ1aWxk"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>r.delete("user:123")  # triggers DB fetch + cache rebuild
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Track request timing</strong> end-to-end for performance bottlenecks</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">4️⃣ Why This Matters</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>By tracing requests and understanding <strong>where issues can occur</strong>, you can:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Identify <strong>performance bottlenecks</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Understand <strong>cache behavior vs DB queries</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Calmly troubleshoot without panicking</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Write <strong>robust apps</strong> that handle Redis downtime gracefully</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here’s a <strong>clear, structured separation</strong> of logs &amp; troubleshooting into <strong><em>programming time vs production/debugging time</em></strong>, keeping it practical and approachable. </p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading">Logs &amp; Troubleshooting: Programming vs Production</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Logging and troubleshooting are <strong>different depending on the stage</strong>. Knowing what to log and how to debug at <strong>development time</strong> vs <strong>production</strong> saves hours of stress.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">1️⃣ At the Time of Programming (Development / Local Testing) 💻</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Focus: <strong>Make sure your code behaves correctly and handles caching gracefully.</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Key Activities:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Goal</th>
+<th>What to Log</th>
+<th>Why</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Check cache logic</td>
+<td>Hits / misses</td>
+<td>Ensure cache is used correctly</td>
+<td><code>logging.info(f"Cache hit for key={key}")</code></td>
+</tr>
+<tr>
+<td>Verify DB fallback</td>
+<td>When Redis misses trigger DB query</td>
+<td>Confirm fallback works</td>
+<td><code>logging.info(f"Cache miss, fetching from DB for {key}")</code></td>
+</tr>
+<tr>
+<td>Track TTL and stale keys</td>
+<td>When keys are set, expire</td>
+<td>Avoid stale data</td>
+<td><code>logging.info(f"Set key={key} with TTL={ttl}")</code></td>
+</tr>
+<tr>
+<td>Test worker-local cache</td>
+<td>lru_cache usage</td>
+<td>Ensure pure function caching works per worker</td>
+<td><code>logging.info(f"Computed local cache value: {value}")</code></td>
+</tr>
+<tr>
+<td>Debug request flow</td>
+<td>Entry/exit points of function</td>
+<td>Trace full function call</td>
+<td><code>logging.info(f"Request start/end for user={user_id}")</code></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Tips:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Use Python <code>logging</code> module with <code>DEBUG</code> level</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Simulate <strong>cache misses</strong> deliberately (<code>r.delete(key)</code>)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Test <strong>Redis unavailability</strong> by disconnecting client temporarily</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Run multiple Gunicorn workers locally to see <strong>per-worker cache behavior</strong>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">2️⃣ At the Time of Production Debugging (Prod / Live System) 🛠️</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Focus: <strong>Identify real-world issues without impacting users.</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Key Activities:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Goal</th>
+<th>What to Check</th>
+<th>Tools / Techniques</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Performance bottlenecks</td>
+<td>Slow request, cache misses</td>
+<td>App logs, APM (Datadog, NewRelic)</td>
+<td>Compare Redis vs DB timings</td>
+</tr>
+<tr>
+<td>Redis health</td>
+<td>Connection failures, evictions, TTLs</td>
+<td>Redis CLI, Redis info stats, Redis client ping</td>
+<td>Use TTL and key inspection for stale data</td>
+</tr>
+<tr>
+<td>Worker issues</td>
+<td>Crashes, high CPU/mem</td>
+<td>Gunicorn logs, server metrics</td>
+<td>Restart workers if needed, scale if persistent</td>
+</tr>
+<tr>
+<td>Network / Load Balancer</td>
+<td>502/504, request drops</td>
+<td>LB metrics, Nginx/Apache logs</td>
+<td>Ensure correct routing to healthy nodes</td>
+</tr>
+<tr>
+<td>Unexpected behavior</td>
+<td>Stale data, incorrect responses</td>
+<td>App logs + key checks</td>
+<td>Rebuild cache, verify DB consistency</td>
+</tr>
+<tr>
+<td>Logging context</td>
+<td>Include request ID, user ID, key names</td>
+<td>Structured logging</td>
+<td>Helps trace requests across multiple layers</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Tips:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Keep <strong>production logging lightweight</strong> to avoid overhead</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Use <strong>request IDs / correlation IDs</strong> for tracing across servers, workers, Redis, DB</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>For Redis, you can <strong>inspect keys and TTLs without sysadmin rights</strong> from the app layer:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHJpbnQoci5nZXQoInVzZXI6MTIzIikp"]],[["cHJpbnQoci50dGwoInVzZXI6MTIzIikp"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>print(r.get("user:123"))
+print(r.ttl("user:123"))
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Always have <strong>fallback logic to DB</strong> in case Redis is down — this ensures <strong>correctness over speed</strong>
+</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3 class="wp-block-heading">✅ Key Difference: Dev vs Prod</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Development</th>
+<th>Production</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Goal</td>
+<td>Verify correctness</td>
+<td>Identify &amp; fix real issues</td>
+</tr>
+<tr>
+<td>Logging Level</td>
+<td>DEBUG</td>
+<td>INFO / WARN / ERROR</td>
+</tr>
+<tr>
+<td>Redis Testing</td>
+<td>Simulate misses &amp; flushes</td>
+<td>Inspect TTLs, ping Redis, monitor eviction</td>
+</tr>
+<tr>
+<td>Gunicorn Workers</td>
+<td>Local testing, per-worker behavior</td>
+<td>Monitor crashes, CPU/memory usage, request performance</td>
+</tr>
+<tr>
+<td>Risk</td>
+<td>Safe to manipulate keys</td>
+<td>Avoid impacting live users — test with care</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>Developer need to know<strong> exactly what to log and check at each stage</strong> so that prevents confusion between <strong>development testing</strong> and <strong>production troubleshooting</strong>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>

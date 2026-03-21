@@ -1,0 +1,433 @@
+---
+layout: post
+title: 'Demo Chat App with Redis: Learning &amp; Troubleshooting'
+date: 2026-02-08 14:37:13.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- Redis &amp; caching
+tags:
+- demo
+- learning
+- redis
+- troubleshooting
+meta:
+  _last_editor_used_jetpack: block-editor
+  _publicize_job_id: '111090933490'
+  firehose_sent: '1770561434'
+  _publicize_shares: a:0:{}
+  _elasticsearch_data_sharing_indexed_on: '2026-02-08 14:34:56'
+  timeline_notification: '1770561435'
+  _edit_last: '257720953'
+  reader_suggested_tags: '["Education","Books","Writing","Photography","Reading"]'
+author:
+  login: manishasadashiva
+  email: manishasadashiva@gmail.com
+  display_name: StoryBug
+  first_name: ''
+  last_name: Shetty
+permalink: "/2026/02/08/demo-chat-app-with-redis-learning-troubleshooting/"
+---
+<p><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"><br />
+<!-- wp:paragraph {"fontSize":"x-small"} --><html><body></p>
+<p class="has-x-small-font-size">All <strong>code used in the article below is downloadable as a single file via the github link below:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:social-links --></p>
+<ul class="wp-block-social-links"><!-- wp:social-link {"url":"https://github.com/MishCodesFinBytes/FinBytes/tree/main/redis_sample","service":"github"} /--></ul>
+<p><!-- /wp:social-links --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is a <strong>learning/demo chat app</strong> that demonstrates <strong>Redis caching, issues, and troubleshooting</strong>, and can be run with <strong>Gunicorn</strong> (or Windows-friendly alternatives). I’ll make it <strong>step-by-step with prerequisites</strong>, including notes on cost.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>Goals:</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Build a simple chat app using <strong>Redis + Flask + Pub/Sub</strong>.</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Demonstrate <strong>caching issues</strong> (misses, stale data, TTL problems).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Show how to <strong>troubleshoot issues</strong> at different stages (app, server, Redis).</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Run with <strong>Gunicorn</strong> (Linux preferred) or <strong>Waitress</strong> (Windows-friendly).</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 0: Prerequisites</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Notes</th>
+<th>Paid?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 3.10+</td>
+<td><a href="https://www.python.org/downloads/">https://www.python.org/downloads/</a></td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Redis server</td>
+<td>Use Windows build: <a href="https://github.com/tporadowski/redis/releases">https://github.com/tporadowski/redis/releases</a>
+</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Flask</td>
+<td>Python web framework</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Redis Python client</td>
+<td><code>pip install redis</code></td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Gunicorn (optional)</td>
+<td>Preferred for Linux/macOS; Windows may not work natively</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Waitress (Windows alternative)</td>
+<td><code>pip install waitress</code></td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Postman or curl</td>
+<td>For API testing</td>
+<td>Free</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:paragraph --></p>
+<p>💡 <strong>Tip:</strong> If you want Gunicorn on Windows, the easiest way is to run a <strong>Linux VM, WSL, or Docker container</strong>. Otherwise, use <strong>Waitress</strong> for Windows demo.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 1: Single-File Demo App – <code>chat_cache_demo.py</code></strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["aW1wb3J0IHJlZGlz"]],[["aW1wb3J0IHRocmVhZGluZw=="]],[["aW1wb3J0IHRpbWU="]],[["ZnJvbSBmbGFzayBpbXBvcnQgRmxhc2ssIHJlcXVlc3QsIGpzb25pZnk="]],[[""]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["IyBSZWRpcyBDb25uZWN0aW9u"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["ciA9IHJlZGlzLlJlZGlzKGhvc3Q9J2xvY2FsaG9zdCcsIHBvcnQ9NjM3OSwgZGI9MCwgZGVjb2RlX3Jlc3BvbnNlcz1UcnVlKQ=="]],[[""]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["IyBDaGF0IGFuZCBDYWNoaW5n"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["Y2xhc3MgQ2hhdENhY2hlRGVtbzo="]],[["ICAgICIiIkNoYXQgYXBwIHdpdGggY2FjaGUgZGVtbyBmZWF0dXJlcyIiIg=="]],[[""]],[["ICAgIE1FU1NBR0VfTElTVF9LRVkgPSAiY2hhdF9tZXNzYWdlcyIgICMgU3RvcmUgbGFzdCBOIG1lc3NhZ2Vz"]],[[""]],[["ICAgIEBzdGF0aWNtZXRob2Q="]],[["ICAgIGRlZiBzdGFydF9saXN0ZW5lcigpOg=="]],[["ICAgICAgICBwdWJzdWIgPSByLnB1YnN1Yigp"]],[["ICAgICAgICBwdWJzdWIuc3Vic2NyaWJlKCJnbG9iYWxfY2hhdCIp"]],[["ICAgICAgICBwcmludCgiQ2hhdCBsaXN0ZW5lciBzdGFydGVkLiBXYWl0aW5nIGZvciBtZXNzYWdlcy4uLiIp"]],[["ICAgICAgICBmb3IgbWVzc2FnZSBpbiBwdWJzdWIubGlzdGVuKCk6"]],[["ICAgICAgICAgICAgaWYgbWVzc2FnZVsndHlwZSddID09ICdtZXNzYWdlJzo="]],[["ICAgICAgICAgICAgICAgIHByaW50KGYiW0NIQVQgTElWRV0ge21lc3NhZ2VbJ2RhdGEnXX0iKQ=="]],[[""]],[["ICAgIEBzdGF0aWNtZXRob2Q="]],[["ICAgIGRlZiBzZW5kX21lc3NhZ2UobWVzc2FnZSk6"]],[["ICAgICAgICAjIFB1Ymxpc2ggdG8gbGl2ZSBzdWJzY3JpYmVycw=="]],[["ICAgICAgICByLnB1Ymxpc2goImdsb2JhbF9jaGF0IiwgbWVzc2FnZSk="]],[["ICAgICAgICAjIEFkZCB0byBjYWNoZSBmb3IgaGlzdG9yeSAoVFRMID0gMzAwcyk="]],[["ICAgICAgICByLmxwdXNoKENoYXRDYWNoZURlbW8uTUVTU0FHRV9MSVNUX0tFWSwgbWVzc2FnZSk="]],[["ICAgICAgICByLmx0cmltKENoYXRDYWNoZURlbW8uTUVTU0FHRV9MSVNUX0tFWSwgMCwgOSkgICMgS2VlcCBsYXN0IDEwIG1lc3NhZ2Vz"]],[["ICAgICAgICByLmV4cGlyZShDaGF0Q2FjaGVEZW1vLk1FU1NBR0VfTElTVF9LRVksIDMwMCkgICMgTWVzc2FnZXMgZXhwaXJlIGFmdGVyIDUgbWludXRlcw=="]],[[""]],[["ICAgIEBzdGF0aWNtZXRob2Q="]],[["ICAgIGRlZiBnZXRfY2FjaGVkX21lc3NhZ2VzKCk6"]],[["ICAgICAgICAjIERlbW9uc3RyYXRlIGNhY2hlIHJldHJpZXZhbA=="]],[["ICAgICAgICBtZXNzYWdlcyA9IHIubHJhbmdlKENoYXRDYWNoZURlbW8uTUVTU0FHRV9MSVNUX0tFWSwgMCwgLTEp"]],[["ICAgICAgICBpZiBub3QgbWVzc2FnZXM6"]],[["ICAgICAgICAgICAgcHJpbnQoIkNhY2hlIG1pc3MhIE1lc3NhZ2VzIG5vdCBmb3VuZCAoZXhwaXJlZCBvciBub3QgcG9wdWxhdGVkKS4iKQ=="]],[["ICAgICAgICByZXR1cm4gbWVzc2FnZXM="]],[[""]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["IyBTdGFydCBsaXN0ZW5lciB0aHJlYWQ="]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["dGhyZWFkaW5nLlRocmVhZCh0YXJnZXQ9Q2hhdENhY2hlRGVtby5zdGFydF9saXN0ZW5lciwgZGFlbW9uPVRydWUpLnN0YXJ0KCk="]],[[""]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["IyBGbGFzayBBcHA="]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["YXBwID0gRmxhc2soX19uYW1lX18p"]],[[""]],[["QGFwcC5yb3V0ZSgiL2NoYXQiLCBtZXRob2RzPVsiUE9TVCJdKQ=="]],[["ZGVmIHNlbmRfY2hhdCgpOg=="]],[["ICAgICIiIlNlbmQgYSBjaGF0IG1lc3NhZ2UiIiI="]],[["ICAgIGRhdGEgPSByZXF1ZXN0Lmpzb24="]],[["ICAgIG1lc3NhZ2UgPSBkYXRhLmdldCgibWVzc2FnZSIp"]],[["ICAgIGlmIG1lc3NhZ2U6"]],[["ICAgICAgICBDaGF0Q2FjaGVEZW1vLnNlbmRfbWVzc2FnZShtZXNzYWdlKQ=="]],[["ICAgICAgICByZXR1cm4ganNvbmlmeSh7InN0YXR1cyI6ICJzZW50In0p"]],[["ICAgIHJldHVybiBqc29uaWZ5KHsic3RhdHVzIjogImZhaWxlZCIsICJlcnJvciI6ICJObyBtZXNzYWdlIHByb3ZpZGVkIn0pLCA0MDA="]],[[""]],[["QGFwcC5yb3V0ZSgiL2hpc3RvcnkiKQ=="]],[["ZGVmIGNoYXRfaGlzdG9yeSgpOg=="]],[["ICAgICIiIlJldHJpZXZlIGNhY2hlZCBtZXNzYWdlcyIiIg=="]],[["ICAgIG1lc3NhZ2VzID0gQ2hhdENhY2hlRGVtby5nZXRfY2FjaGVkX21lc3NhZ2VzKCk="]],[["ICAgIHJldHVybiBqc29uaWZ5KHsibWVzc2FnZXMiOiBtZXNzYWdlc30p"]],[[""]],[["QGFwcC5yb3V0ZSgiL3BpbmciKQ=="]],[["ZGVmIHBpbmcoKTo="]],[["ICAgIHJldHVybiAiU2VydmVyIHJ1bm5pbmchIg=="]],[[""]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["IyBSdW4gQXBw"]],[["IyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0="]],[["aWYgX19uYW1lX18gPT0gIl9fbWFpbl9fIjo="]],[["ICAgIHByaW50KCJTdGFydGluZyBDaGF0IENhY2hlIERlbW8gQXBwLi4uIik="]],[["ICAgIGFwcC5ydW4oZGVidWc9VHJ1ZSk="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>import redis
+import threading
+import time
+from flask import Flask, request, jsonify
+
+# ------------------------------
+# Redis Connection
+# ------------------------------
+r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+
+# ------------------------------
+# Chat and Caching
+# ------------------------------
+class ChatCacheDemo:
+    """Chat app with cache demo features"""
+
+    MESSAGE_LIST_KEY = "chat_messages"  # Store last N messages
+
+    @staticmethod
+    def start_listener():
+        pubsub = r.pubsub()
+        pubsub.subscribe("global_chat")
+        print("Chat listener started. Waiting for messages...")
+        for message in pubsub.listen():
+            if message['type'] == 'message':
+                print(f"[CHAT LIVE] {message['data']}")
+
+    @staticmethod
+    def send_message(message):
+        # Publish to live subscribers
+        r.publish("global_chat", message)
+        # Add to cache for history (TTL = 300s)
+        r.lpush(ChatCacheDemo.MESSAGE_LIST_KEY, message)
+        r.ltrim(ChatCacheDemo.MESSAGE_LIST_KEY, 0, 9)  # Keep last 10 messages
+        r.expire(ChatCacheDemo.MESSAGE_LIST_KEY, 300)  # Messages expire after 5 minutes
+
+    @staticmethod
+    def get_cached_messages():
+        # Demonstrate cache retrieval
+        messages = r.lrange(ChatCacheDemo.MESSAGE_LIST_KEY, 0, -1)
+        if not messages:
+            print("Cache miss! Messages not found (expired or not populated).")
+        return messages
+
+# ------------------------------
+# Start listener thread
+# ------------------------------
+threading.Thread(target=ChatCacheDemo.start_listener, daemon=True).start()
+
+# ------------------------------
+# Flask App
+# ------------------------------
+app = Flask(__name__)
+
+@app.route("/chat", methods=["POST"])
+def send_chat():
+    """Send a chat message"""
+    data = request.json
+    message = data.get("message")
+    if message:
+        ChatCacheDemo.send_message(message)
+        return jsonify({"status": "sent"})
+    return jsonify({"status": "failed", "error": "No message provided"}), 400
+
+@app.route("/history")
+def chat_history():
+    """Retrieve cached messages"""
+    messages = ChatCacheDemo.get_cached_messages()
+    return jsonify({"messages": messages})
+
+@app.route("/ping")
+def ping():
+    return "Server running!"
+
+# ------------------------------
+# Run App
+# ------------------------------
+if __name__ == "__main__":
+    print("Starting Chat Cache Demo App...")
+    app.run(debug=True)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 2: How to Run Locally (Windows)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Start Redis</strong><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Run <code>redis-server.exe</code> in your Redis folder (e.g., <code>C:\Redis</code>)</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list -->
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li><strong>Run Flask app</strong></li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["cHl0aG9uIGNoYXRfY2FjaGVfZGVtby5weQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>python chat_cache_demo.py
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Console shows incoming live messages and cache debug info.</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:list {"ordered":true,"start":3} --></p>
+<ol start="3" class="wp-block-list">
+<!-- wp:list-item --></p>
+<li><strong>Test API endpoints</strong></li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Send message</strong>:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["UE9TVCBodHRwOi8vMTI3LjAuMC4xOjUwMDAvY2hhdA=="]],[["Q29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29u"]],[["Qm9keTogeyJtZXNzYWdlIjogIkhlbGxvIGRlbW8gY2hhdCEifQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>POST http://127.0.0.1:5000/chat
+Content-Type: application/json
+Body: {"message": "Hello demo chat!"}
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Get cached messages</strong>:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["R0VUIGh0dHA6Ly8xMjcuMC4wLjE6NTAwMC9oaXN0b3J5"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>GET http://127.0.0.1:5000/history
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<strong>Ping server</strong>:</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:code {"tokenizedLines":[[["R0VUIGh0dHA6Ly8xMjcuMC4wLjE6NTAwMC9waW5n"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>GET http://127.0.0.1:5000/ping
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 3: Demonstrating Cache Issues</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:table --></p>
+<figure class="wp-block-table">
+<table class="has-fixed-layout">
+<thead>
+<tr>
+<th>Stage</th>
+<th>Issue</th>
+<th>How to Demonstrate</th>
+<th>Troubleshooting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>App Layer</td>
+<td>Cache miss</td>
+<td>Call <code>/history</code> before any messages sent</td>
+<td>Observe <code>"Cache miss!"</code> printed</td>
+</tr>
+<tr>
+<td>App Layer</td>
+<td>Stale cache</td>
+<td>Send message, wait &gt; TTL (5 min), check <code>/history</code>
+</td>
+<td>Observe cache expired; shows missed retrieval</td>
+</tr>
+<tr>
+<td>Redis Layer</td>
+<td>Redis down</td>
+<td>Stop <code>redis-server.exe</code> and call <code>/chat</code> or <code>/history</code>
+</td>
+<td>Connection error raised; check Redis server</td>
+</tr>
+<tr>
+<td>Multi-Instance</td>
+<td>Pub/Sub missed messages</td>
+<td>Run 2 instances of listener thread; send messages before second instance subscribes</td>
+<td>Demonstrates missed messages if listener not subscribed in time</td>
+</tr>
+<tr>
+<td>Cache Layer</td>
+<td>Overloaded cache</td>
+<td>Reduce TTL, add &gt;10 messages</td>
+<td>LTRIM removes old messages; test eviction</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p><!-- /wp:table --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 4: Optional – Run with Waitress (Windows-friendly production server)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["ZnJvbSB3YWl0cmVzcyBpbXBvcnQgc2VydmU="]],[["c2VydmUoYXBwLCBob3N0PSIwLjAuMC4wIiwgcG9ydD01MDAwKQ=="]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code>from waitress import serve
+serve(app, host="0.0.0.0", port=5000)
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Now app can handle multiple concurrent requests safely (like Gunicorn).</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:heading --></p>
+<h2 class="wp-block-heading"><strong>Step 5: Optional – Gunicorn (Linux / WSL / Docker)</strong></h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code {"tokenizedLines":[[["IyBPbiBMaW51eCAvIFdTTCAvIERvY2tlcg=="]],[["cGlwIGluc3RhbGwgZ3VuaWNvcm4="]],[["Z3VuaWNvcm4gLXcgNCBjaGF0X2NhY2hlX2RlbW86YXBw"]],[[""]],[[""]]]} --></p>
+<pre class="wp-block-code"><code># On Linux / WSL / Docker
+pip install gunicorn
+gunicorn -w 4 chat_cache_demo:app
+
+
+</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:list --></p>
+<ul class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>
+<code>-w 4</code> → 4 worker processes</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>You can demonstrate race conditions / caching issues with multiple Gunicorn workers</li>
+<p><!-- /wp:list-item -->
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:separator --></p>
+<hr class="wp-block-separator has-alpha-channel-opacity">
+<!-- /wp:separator --></p>
+<p><!-- wp:paragraph --></p>
+<p>✅ <strong>What You Learn from This Setup</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol class="wp-block-list">
+<!-- wp:list-item --></p>
+<li>Cache <strong>misses</strong> and <strong>stale data</strong> (TTL expiration)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Pub/Sub <strong>real-time messaging</strong>
+</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Multi-instance race conditions (simulate with Gunicorn or multiple threads)</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Troubleshooting Redis connectivity and cache logic</li>
+<p><!-- /wp:list-item --></p>
+<p><!-- wp:list-item --></p>
+<li>Running Flask apps in <strong>production-style servers</strong>
+</li>
+<p><!-- /wp:list-item -->
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Next post goes through troubleshooting in more detail.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --><br />
+</body></html></p>
