@@ -1,0 +1,17 @@
+Month,Category,Description,Amount
+January,Food,Lunch at cafe,50
+January,Transportation,Boat Fare,20
+January,Food,Lunch at Pizzeria,50
+January,Transportation,Bus pass,20
+February,Groceries,Farmers Market shopping,100
+February,Entertainment,Circus tickets,30
+February,Groceries,Supermarket shopping,100
+February,Entertainment,Movie tickets,30
+March,Food,Dinner at restaurant1,70
+March,Transportation,Fuel,40
+March,Food,Dinner at restaurant2,70
+March,Transportation,Busfare,40
+April,Groceries,Weekly groceries,90
+April,Entertainment,Concert tickets,120
+April,Groceries,Weekly groceries,90
+April,Entertainment,Movie tickets,120
