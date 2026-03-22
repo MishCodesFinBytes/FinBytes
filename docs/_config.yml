@@ -45,6 +45,7 @@ header_pages:
   - _pages/privacy-policy.html
   - sitemap-page.html
   - private.html
+  - quant-lab.html
 
 # Exclude from processing.
 # The following items will not be processed, by default.
@@ -71,3 +72,6 @@ collections:
   private:
     output: true
     permalink: /private/:name/
+  quant_lab:
+    output: true
+    permalink: /quant-lab/:name/
