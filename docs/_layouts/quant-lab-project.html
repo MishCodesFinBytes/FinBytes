@@ -25,13 +25,17 @@ layout: default
     </header>
 
     <div class="ql-tabs">
-      <button class="ql-tab-btn active" onclick="showTab('python', this)">Python</button>
+      <button class="ql-tab-btn active" onclick="showTab('concept', this)">Concept</button>
+      <button class="ql-tab-btn" onclick="showTab('python', this)">Python</button>
       <button class="ql-tab-btn" onclick="showTab('cpp', this)">C++</button>
       <button class="ql-tab-btn" onclick="showTab('csharp', this)">C#</button>
       <button class="ql-tab-btn" onclick="showTab('comparative', this)">Comparative</button>
     </div>
 
-    <div id="tab-python" class="ql-tab-content active">
+    <div id="tab-concept" class="ql-tab-content active">
+      {{ page.concept_content }}
+    </div>
+    <div id="tab-python" class="ql-tab-content" style="display:none">
       {{ page.python_content }}
     </div>
     <div id="tab-cpp" class="ql-tab-content" style="display:none">
