@@ -40,9 +40,11 @@ plugins:
 include:
   - _pages
   
- header_pages:
-  - about.md
-  - contact.md
+header_pages:
+  - _pages/2024-10-30-about.html
+  - _pages/privacy-policy.html
+  - sitemap-page.html
+  - private.html
 
 # Exclude from processing.
 # The following items will not be processed, by default.
