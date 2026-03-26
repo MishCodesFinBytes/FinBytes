@@ -44,6 +44,7 @@ header_pages:
   - _pages/2024-10-30-about.html
   - _pages/privacy-policy.html
   - sitemap-page.html
+  - cpp.html
   - private.html
   - quant-lab.html
 
@@ -69,6 +70,9 @@ header_pages:
 
 
 collections:
+  cpp:
+    output: true
+    permalink: /cpp/:name/
   private:
     output: true
     permalink: /private/:name/
