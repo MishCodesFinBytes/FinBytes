@@ -38,8 +38,7 @@ permalink: /sitemap/
 <div class="filter-bar">
   <input type="text" id="search" placeholder="Search posts..." onkeyup="filterPosts()">
 </div>
-
-{% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
+{% assign all_posts = site.posts | concat: site.cpp | concat: site.quant_lab | sort: "date" | reverse %}
 
 {% for year in posts_by_year %}
 <div class="sitemap-category" data-year="{{ year.name }}">
