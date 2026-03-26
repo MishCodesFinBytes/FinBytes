@@ -1,0 +1,463 @@
+---
+layout: page
+title: "Why C++? Starting From Scratch (Sort Of)"
+date: 2025-01-01
+categories: cpp
+---
+
+<style>
+  .cpp-post {
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.75;
+    color: #1a1a1a;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .cpp-post p {
+    margin-bottom: 1.4em;
+  }
+
+  .cpp-post h2 {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #555;
+    margin: 2.5em 0 0.8em;
+    border-left: 3px solid #c0392b;
+    padding-left: 0.75em;
+  }
+
+  .lang-badge {
+    display: inline-flex;
+    gap: 0.5em;
+    margin-bottom: 1.5em;
+    flex-wrap: wrap;
+  }
+
+  .lang-badge span {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    font-weight: bold;
+    padding: 0.2em 0.65em;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-py  { background: #3572A5; color: #fff; }
+  .badge-cs  { background: #178600; color: #fff; }
+  .badge-cpp { background: #c0392b; color: #fff; }
+
+  /* ── Tab component ── */
+  .tab-block {
+    margin: 2em 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .tab-label {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #888;
+    padding: 0.4em 1em 0;
+    background: #f7f7f7;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tab-buttons {
+    display: flex;
+    background: #f7f7f7;
+    border-bottom: 1px solid #ddd;
+    padding: 0 0.5em;
+  }
+
+  .tab-btn {
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    font-weight: bold;
+    padding: 0.55em 1.1em;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #888;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .tab-btn:hover { color: #333; }
+
+  .tab-btn.active-py  { color: #3572A5; border-bottom-color: #3572A5; }
+  .tab-btn.active-cs  { color: #178600; border-bottom-color: #178600; }
+  .tab-btn.active-cpp { color: #c0392b; border-bottom-color: #c0392b; }
+
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block;
+  }
+
+  .tab-pane pre {
+    margin: 0;
+    padding: 1.2em 1.5em;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  /* Syntax colours (minimal) */
+  .kw  { color: #569cd6; }   /* keyword */
+  .ty  { color: #4ec9b0; }   /* type */
+  .fn  { color: #dcdcaa; }   /* function */
+  .st  { color: #ce9178; }   /* string */
+  .cm  { color: #6a9955; }   /* comment */
+  .nu  { color: #b5cea8; }   /* number */
+  .op  { color: #d4d4d4; }   /* operator */
+  .pp  { color: #c586c0; }   /* preprocessor / decorator */
+
+  .cpp-note {
+    background: #fdf6e3;
+    border-left: 3px solid #e67e22;
+    padding: 0.8em 1.1em;
+    font-size: 0.9rem;
+    font-family: 'Courier New', monospace;
+    color: #555;
+    margin: 0.5em 0 1em;
+  }
+</style>
+
+<div class="cpp-post">
+
+  <div class="lang-badge">
+    <span class="badge-py">Python · 7 yrs</span>
+    <span class="badge-cs">C# · 11 yrs</span>
+    <span class="badge-cpp">C++ · day 1</span>
+  </div>
+
+  <p>
+    I've been writing code professionally for nearly two decades. Eleven years in C# — enterprise software, financial systems, the whole stack. Then Python pulled me in, and for the last seven years that's been my daily language: data pipelines, quant models, automation, analysis.
+  </p>
+
+  <p>
+    Both are managed languages. Both handle memory for you. Both let you think mostly about the <em>problem</em> rather than the machine. That's been fine — great, even — but lately I've felt a pull toward understanding what's actually happening underneath. Not just "the garbage collector handles it" but <em>how</em>. Not just "this is slow" but <em>why</em>.
+  </p>
+
+  <p>
+    C++ is the answer I keep coming back to. It's everywhere that performance actually matters: trading systems, game engines, embedded hardware, compilers. It forces you to think in terms of memory layout, ownership, and cost. It's not comfortable. That's the point.
+  </p>
+
+  <p>
+    This is my learning journal. No polish — just notes, experiments, comparisons, and mini-projects as I go. If you're coming from Python or C# yourself, hopefully some of this is useful.
+  </p>
+
+  <h2>The Plan</h2>
+
+  <p>
+    I'm going to work through fundamentals first, always comparing against Python and C# since that's the mental model I already have. Then mini-projects — things small enough to finish, complex enough to be interesting. Everything documented here as I go.
+  </p>
+
+  <p>Below are the first comparisons: the same concepts across all three languages.</p>
+
+  <!-- ── 1. Hello World ── -->
+  <h2>Hello World</h2>
+
+  <div class="tab-block">
+    <div class="tab-label">Hello World</div>
+    <div class="tab-buttons">
+      <button class="tab-btn active-py" onclick="switchTab(this, 'hw', 'py')">Python</button>
+      <button class="tab-btn" onclick="switchTab(this, 'hw', 'cs')">C#</button>
+      <button class="tab-btn" onclick="switchTab(this, 'hw', 'cpp')">C++</button>
+    </div>
+    <div id="hw-py" class="tab-pane active"><pre
+><span class="pp"># Python — as minimal as it gets</span>
+<span class="fn">print</span>(<span class="st">"Hello, world!"</span>)</pre></div>
+    <div id="hw-cs" class="tab-pane"><pre
+><span class="cm">// C# — needs a class and a namespace</span>
+<span class="kw">using</span> System;
+
+<span class="kw">class</span> <span class="ty">Program</span>
+{
+    <span class="kw">static void</span> <span class="fn">Main</span>()
+    {
+        Console.<span class="fn">WriteLine</span>(<span class="st">"Hello, world!"</span>);
+    }
+}</pre></div>
+    <div id="hw-cpp" class="tab-pane"><pre
+><span class="cm">// C++ — explicit includes, explicit return</span>
+<span class="pp">#include &lt;iostream&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    std::cout <span class="op">&lt;&lt;</span> <span class="st">"Hello, world!"</span> <span class="op">&lt;&lt;</span> std::endl;
+    <span class="kw">return</span> <span class="nu">0</span>;
+}</pre></div>
+  </div>
+  <div class="cpp-note">💡 C++ makes you <em>include</em> standard library headers explicitly. Nothing is magic. <code>std::cout</code> is the standard output stream — you're literally pushing characters onto it with <code>&lt;&lt;</code>.</div>
+
+  <!-- ── 2. Variables & Types ── -->
+  <h2>Variables &amp; Types</h2>
+
+  <div class="tab-block">
+    <div class="tab-label">Variables &amp; Types</div>
+    <div class="tab-buttons">
+      <button class="tab-btn active-py" onclick="switchTab(this, 'vars', 'py')">Python</button>
+      <button class="tab-btn" onclick="switchTab(this, 'vars', 'cs')">C#</button>
+      <button class="tab-btn" onclick="switchTab(this, 'vars', 'cpp')">C++</button>
+    </div>
+    <div id="vars-py" class="tab-pane active"><pre
+><span class="cm"># Python — dynamically typed, no declarations</span>
+name    = <span class="st">"Mish"</span>
+age     = <span class="nu">38</span>
+balance = <span class="nu">1042.75</span>
+active  = <span class="kw">True</span>
+
+<span class="fn">print</span>(<span class="fn">type</span>(balance))  <span class="cm"># &lt;class 'float'&gt;</span></pre></div>
+    <div id="vars-cs" class="tab-pane"><pre
+><span class="cm">// C# — statically typed, or use var for inference</span>
+<span class="kw">string</span>  name    = <span class="st">"Mish"</span>;
+<span class="kw">int</span>     age     = <span class="nu">38</span>;
+<span class="kw">double</span>  balance = <span class="nu">1042.75</span>;
+<span class="kw">bool</span>    active  = <span class="kw">true</span>;
+
+<span class="cm">// or inferred:</span>
+<span class="kw">var</span> rate = <span class="nu">0.04</span>;</pre></div>
+    <div id="vars-cpp" class="tab-pane"><pre
+><span class="cm">// C++ — statically typed, size matters</span>
+<span class="pp">#include &lt;string&gt;</span>
+
+std::<span class="ty">string</span> name    = <span class="st">"Mish"</span>;
+<span class="kw">int</span>         age     = <span class="nu">38</span>;
+<span class="kw">double</span>      balance = <span class="nu">1042.75</span>;
+<span class="kw">bool</span>        active  = <span class="kw">true</span>;
+
+<span class="cm">// auto keyword infers type at compile time</span>
+<span class="kw">auto</span> rate = <span class="nu">0.04</span>;  <span class="cm">// deduced as double</span></pre></div>
+  </div>
+  <div class="cpp-note">💡 C++ <code>auto</code> looks like Python's dynamic typing but isn't — the type is resolved at <em>compile time</em>, not runtime. The compiler knows; you just don't have to spell it out.</div>
+
+  <!-- ── 3. Functions ── -->
+  <h2>Functions</h2>
+
+  <div class="tab-block">
+    <div class="tab-label">Functions</div>
+    <div class="tab-buttons">
+      <button class="tab-btn active-py" onclick="switchTab(this, 'fn', 'py')">Python</button>
+      <button class="tab-btn" onclick="switchTab(this, 'fn', 'cs')">C#</button>
+      <button class="tab-btn" onclick="switchTab(this, 'fn', 'cpp')">C++</button>
+    </div>
+    <div id="fn-py" class="tab-pane active"><pre
+><span class="kw">def</span> <span class="fn">compound_interest</span>(principal: <span class="ty">float</span>, rate: <span class="ty">float</span>, years: <span class="ty">int</span>) -> <span class="ty">float</span>:
+    <span class="st">"""Return total value after compound interest."""</span>
+    <span class="kw">return</span> principal * (<span class="nu">1</span> + rate) ** years
+
+result = <span class="fn">compound_interest</span>(<span class="nu">1000.0</span>, <span class="nu">0.05</span>, <span class="nu">10</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="st">"£{result:.2f}"</span>)  <span class="cm"># £1628.89</span></pre></div>
+    <div id="fn-cs" class="tab-pane"><pre
+><span class="cm">// Return type declared before name</span>
+<span class="kw">static double</span> <span class="fn">CompoundInterest</span>(<span class="kw">double</span> principal, <span class="kw">double</span> rate, <span class="kw">int</span> years)
+{
+    <span class="kw">return</span> principal * Math.<span class="fn">Pow</span>(<span class="nu">1</span> + rate, years);
+}
+
+<span class="kw">double</span> result = <span class="fn">CompoundInterest</span>(<span class="nu">1000.0</span>, <span class="nu">0.05</span>, <span class="nu">10</span>);
+Console.<span class="fn">WriteLine</span>(<span class="st">$"£{result:F2}"</span>);  <span class="cm">// £1628.89</span></pre></div>
+    <div id="fn-cpp" class="tab-pane"><pre
+><span class="pp">#include &lt;cmath&gt;</span>
+<span class="pp">#include &lt;iostream&gt;</span>
+<span class="pp">#include &lt;iomanip&gt;</span>
+
+<span class="cm">// Return type, then name, then typed parameters</span>
+<span class="kw">double</span> <span class="fn">compound_interest</span>(<span class="kw">double</span> principal, <span class="kw">double</span> rate, <span class="kw">int</span> years) {
+    <span class="kw">return</span> principal * std::<span class="fn">pow</span>(<span class="nu">1.0</span> + rate, years);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">double</span> result = <span class="fn">compound_interest</span>(<span class="nu">1000.0</span>, <span class="nu">0.05</span>, <span class="nu">10</span>);
+    std::cout <span class="op">&lt;&lt;</span> std::<span class="fn">fixed</span> <span class="op">&lt;&lt;</span> std::<span class="fn">setprecision</span>(<span class="nu">2</span>)
+              <span class="op">&lt;&lt;</span> <span class="st">"£"</span> <span class="op">&lt;&lt;</span> result <span class="op">&lt;&lt;</span> std::endl;
+    <span class="kw">return</span> <span class="nu">0</span>;
+}</pre></div>
+  </div>
+  <div class="cpp-note">💡 C++ feels like C# here — explicit types everywhere — but formatting output requires <code>&lt;iomanip&gt;</code>. Python's f-strings are spoiling.</div>
+
+  <!-- ── 4. Classes / OOP ── -->
+  <h2>Classes / OOP</h2>
+
+  <div class="tab-block">
+    <div class="tab-label">Classes</div>
+    <div class="tab-buttons">
+      <button class="tab-btn active-py" onclick="switchTab(this, 'cls', 'py')">Python</button>
+      <button class="tab-btn" onclick="switchTab(this, 'cls', 'cs')">C#</button>
+      <button class="tab-btn" onclick="switchTab(this, 'cls', 'cpp')">C++</button>
+    </div>
+    <div id="cls-py" class="tab-pane active"><pre
+><span class="kw">class</span> <span class="ty">Portfolio</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name: <span class="ty">str</span>, cash: <span class="ty">float</span>):
+        <span class="kw">self</span>.name = name
+        <span class="kw">self</span>.cash = cash
+
+    <span class="kw">def</span> <span class="fn">deposit</span>(<span class="kw">self</span>, amount: <span class="ty">float</span>) -> <span class="kw">None</span>:
+        <span class="kw">self</span>.cash += amount
+
+    <span class="kw">def</span> <span class="fn">__repr__</span>(<span class="kw">self</span>) -> <span class="ty">str</span>:
+        <span class="kw">return</span> <span class="fn">f</span><span class="st">"{self.name}: £{self.cash:.2f}"</span>
+
+p = <span class="ty">Portfolio</span>(<span class="st">"ISA"</span>, <span class="nu">5000.0</span>)
+p.<span class="fn">deposit</span>(<span class="nu">1000.0</span>)
+<span class="fn">print</span>(p)  <span class="cm"># ISA: £6000.00</span></pre></div>
+    <div id="cls-cs" class="tab-pane"><pre
+><span class="kw">public class</span> <span class="ty">Portfolio</span>
+{
+    <span class="kw">public string</span> Name    { <span class="kw">get</span>; }
+    <span class="kw">public double</span> Cash    { <span class="kw">get</span>; <span class="kw">private set</span>; }
+
+    <span class="kw">public</span> <span class="fn">Portfolio</span>(<span class="kw">string</span> name, <span class="kw">double</span> cash)
+    {
+        Name = name;
+        Cash = cash;
+    }
+
+    <span class="kw">public void</span> <span class="fn">Deposit</span>(<span class="kw">double</span> amount) => Cash += amount;
+
+    <span class="kw">public override string</span> <span class="fn">ToString</span>() =>
+        <span class="st">$"{Name}: £{Cash:F2}"</span>;
+}
+
+<span class="kw">var</span> p = <span class="kw">new</span> <span class="ty">Portfolio</span>(<span class="st">"ISA"</span>, <span class="nu">5000.0</span>);
+p.<span class="fn">Deposit</span>(<span class="nu">1000.0</span>);
+Console.<span class="fn">WriteLine</span>(p);  <span class="cm">// ISA: £6000.00</span></pre></div>
+    <div id="cls-cpp" class="tab-pane"><pre
+><span class="pp">#include &lt;string&gt;</span>
+<span class="pp">#include &lt;iostream&gt;</span>
+<span class="pp">#include &lt;iomanip&gt;</span>
+
+<span class="kw">class</span> <span class="ty">Portfolio</span> {
+<span class="kw">public</span>:
+    <span class="cm">// Constructor</span>
+    <span class="fn">Portfolio</span>(std::<span class="ty">string</span> name, <span class="kw">double</span> cash)
+        : name_(name), cash_(cash) {}
+
+    <span class="kw">void</span> <span class="fn">deposit</span>(<span class="kw">double</span> amount) { cash_ += amount; }
+
+    <span class="kw">void</span> <span class="fn">print</span>() <span class="kw">const</span> {
+        std::cout <span class="op">&lt;&lt;</span> name_ <span class="op">&lt;&lt;</span> <span class="st">": £"</span>
+                  <span class="op">&lt;&lt;</span> std::<span class="fn">fixed</span> <span class="op">&lt;&lt;</span> std::<span class="fn">setprecision</span>(<span class="nu">2</span>)
+                  <span class="op">&lt;&lt;</span> cash_ <span class="op">&lt;&lt;</span> std::endl;
+    }
+
+<span class="kw">private</span>:
+    std::<span class="ty">string</span> name_;
+    <span class="kw">double</span>      cash_;
+};
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="ty">Portfolio</span> p(<span class="st">"ISA"</span>, <span class="nu">5000.0</span>);
+    p.<span class="fn">deposit</span>(<span class="nu">1000.0</span>);
+    p.<span class="fn">print</span>();  <span class="cm">// ISA: £6000.00</span>
+    <span class="kw">return</span> <span class="nu">0</span>;
+}</pre></div>
+  </div>
+  <div class="cpp-note">💡 The initialiser list <code>: name_(name), cash_(cash)</code> is idiomatic C++ — it constructs members directly rather than assigning after construction. Also note the trailing underscore on private members — a common convention.</div>
+
+  <!-- ── 5. Memory / Pointers ── -->
+  <h2>Memory &amp; Pointers</h2>
+
+  <p>This is the big one — the thing neither Python nor C# exposes. In both of those languages, memory management is handled for you. In C++, you can manage it yourself. You <em>often should</em>.</p>
+
+  <div class="tab-block">
+    <div class="tab-label">Memory</div>
+    <div class="tab-buttons">
+      <button class="tab-btn active-py" onclick="switchTab(this, 'mem', 'py')">Python</button>
+      <button class="tab-btn" onclick="switchTab(this, 'mem', 'cs')">C#</button>
+      <button class="tab-btn" onclick="switchTab(this, 'mem', 'cpp')">C++</button>
+    </div>
+    <div id="mem-py" class="tab-pane active"><pre
+><span class="cm"># Python — you never think about memory</span>
+<span class="cm"># The garbage collector handles everything</span>
+
+values = [<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>]  <span class="cm"># heap-allocated, GC-managed</span>
+ref    = values             <span class="cm"># both point to the same list</span>
+ref.<span class="fn">append</span>(<span class="nu">4.0</span>)
+
+<span class="fn">print</span>(values)  <span class="cm"># [1.0, 2.0, 3.0, 4.0] — same object</span></pre></div>
+    <div id="mem-cs" class="tab-pane"><pre
+><span class="cm">// C# — reference vs value types, but still GC-managed</span>
+<span class="cm">// Reference type: lives on the heap</span>
+<span class="kw">var</span> values = <span class="kw">new</span> List&lt;<span class="kw">double</span>&gt; { <span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span> };
+<span class="kw">var</span> reference = values;  <span class="cm">// same object</span>
+reference.<span class="fn">Add</span>(<span class="nu">4.0</span>);
+Console.<span class="fn">WriteLine</span>(values.<span class="fn">Count</span>);  <span class="cm">// 4</span>
+
+<span class="cm">// Value type: copied</span>
+<span class="kw">int</span> a = <span class="nu">10</span>;
+<span class="kw">int</span> b = a;  <span class="cm">// copy</span>
+b = <span class="nu">99</span>;
+Console.<span class="fn">WriteLine</span>(a);  <span class="cm">// still 10</span></pre></div>
+    <div id="mem-cpp" class="tab-pane"><pre
+><span class="pp">#include &lt;iostream&gt;</span>
+<span class="pp">#include &lt;vector&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cm">// Stack allocation — fast, auto-cleaned up</span>
+    <span class="kw">int</span> x = <span class="nu">42</span>;
+
+    <span class="cm">// Pointer — holds the memory address of x</span>
+    <span class="kw">int</span>* ptr = &amp;x;
+    std::cout <span class="op">&lt;&lt;</span> <span class="st">"address: "</span> <span class="op">&lt;&lt;</span> ptr  <span class="op">&lt;&lt;</span> std::endl;
+    std::cout <span class="op">&lt;&lt;</span> <span class="st">"value:   "</span> <span class="op">&lt;&lt;</span> *ptr <span class="op">&lt;&lt;</span> std::endl;  <span class="cm">// dereference</span>
+
+    <span class="cm">// Reference — alias, not a copy</span>
+    <span class="kw">int</span>&amp; ref = x;
+    ref = <span class="nu">99</span>;
+    std::cout <span class="op">&lt;&lt;</span> x <span class="op">&lt;&lt;</span> std::endl;  <span class="cm">// 99 — same variable</span>
+
+    <span class="cm">// Heap allocation — manual, use smart pointers in modern C++</span>
+    <span class="kw">auto</span> values = std::<span class="fn">make_unique</span>&lt;std::<span class="ty">vector</span>&lt;<span class="kw">double</span>&gt;&gt;();
+    values-&gt;<span class="fn">push_back</span>(<span class="nu">1.0</span>);
+    values-&gt;<span class="fn">push_back</span>(<span class="nu">2.0</span>);
+    <span class="cm">// unique_ptr cleans itself up — no delete needed</span>
+
+    <span class="kw">return</span> <span class="nu">0</span>;
+}</pre></div>
+  </div>
+  <div class="cpp-note">💡 <code>&amp;x</code> gives the <em>address</em> of x. <code>*ptr</code> <em>dereferences</em> the pointer — follows the address to get the value. References (<code>int&amp;</code>) are safer aliases. Modern C++ uses <code>unique_ptr</code> / <code>shared_ptr</code> instead of raw <code>new</code>/<code>delete</code> — so you get control without the footguns.</div>
+
+  <h2>What's Next</h2>
+
+  <p>
+    That's the baseline. Five concepts, three languages, same logic — just different levels of abstraction. C++ is already asking me to think more carefully about <em>what lives where</em> and <em>who owns what</em>.
+  </p>
+
+  <p>
+    Next up: I want to write a small C++ program that actually does something — probably a basic order book or a position tracker. Something financial, something that makes sense to benchmark. Notes to follow.
+  </p>
+
+</div>
+
+<script>
+function switchTab(btn, group, lang) {
+  // Deactivate all buttons in this group
+  var buttons = btn.parentElement.querySelectorAll('.tab-btn');
+  buttons.forEach(function(b) {
+    b.classList.remove('active-py', 'active-cs', 'active-cpp');
+  });
+
+  // Deactivate all panes in this group
+  var panes = document.querySelectorAll('[id^="' + group + '-"]');
+  panes.forEach(function(p) { p.classList.remove('active'); });
+
+  // Activate selected
+  btn.classList.add('active-' + lang);
+  document.getElementById(group + '-' + lang).classList.add('active');
+}
+</script>
