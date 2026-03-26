@@ -5,13 +5,9 @@ description: "A Python and C# developer takes on a low-level language"
 date: 2025-01-01
 tags: [intro, cpp, python, csharp]
 permalink: /cpp/intro/
+---
 
-intro_content: |
-  <div class="lang-badges">
-    <span class="badge-py">Python · 7 yrs</span>
-    <span class="badge-cs">C# · 11 yrs</span>
-    <span class="badge-cpp">C++ · day 1</span>
-  </div>
+<div id="tab-intro" class="ql-tab-content active">
 
   <p>I've been writing code professionally for nearly two decades. Eleven years in C# — enterprise software, financial systems, the whole stack. Then Python pulled me in, and for the last seven years that's been my daily language: data pipelines, quant models, automation, analysis.</p>
 
@@ -22,7 +18,7 @@ intro_content: |
   <p>This is my learning journal. No polish — just notes, experiments, comparisons, and mini-projects as I go. If you're coming from Python or C# yourself, hopefully some of this is useful.</p>
 
   <h3>The Plan</h3>
-  <p>Work through fundamentals comparing against Python and C# — the mental model I already have. Then mini-projects: small enough to finish, complex enough to be interesting. The tabs above show the same concepts implemented across all three languages. That's the format I'll follow for each topic.</p>
+  <p>Work through fundamentals comparing against Python and C# — the mental model I already have. Then mini-projects: small enough to finish, complex enough to be interesting. The tabs above show the same concepts across all three languages.</p>
 
   <h3>Topics in this post</h3>
   <ul>
@@ -32,10 +28,11 @@ intro_content: |
     <li>Classes &amp; OOP</li>
     <li>Memory &amp; Pointers</li>
   </ul>
+</div>
 
-python_content: |
+<div id="tab-python" class="ql-tab-content" style="display:none">
   <h3>Python — the baseline</h3>
-  <p>Seven years in. This is the language I think in. Dynamically typed, garbage collected, expressive. Using it here as the reference point.</p>
+  <p>Seven years in. This is the language I think in. Dynamically typed, garbage collected, expressive.</p>
 
   <h4>Hello World</h4>
   <pre><code class="language-python"># As minimal as it gets
@@ -75,23 +72,20 @@ p.deposit(1000.0)
 print(p)  # ISA: £6000.00</code></pre>
 
   <h4>Memory</h4>
-  <pre><code class="language-python"># Python — you never think about memory.
-# The garbage collector handles everything.
-
+  <pre><code class="language-python"># The garbage collector handles everything
 values = [1.0, 2.0, 3.0]  # heap-allocated, GC-managed
 ref    = values             # both point to the same list
 ref.append(4.0)
-
-print(values)  # [1.0, 2.0, 3.0, 4.0] — same object</code></pre>
+print(values)  # [1.0, 2.0, 3.0, 4.0]</code></pre>
   <div class="cpp-note">Python's simplicity here is a feature — but it hides a lot. That's exactly what I want to pull back.</div>
+</div>
 
-csharp_content: |
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
   <h3>C# — eleven years of muscle memory</h3>
-  <p>Statically typed, garbage collected, strong OOP. Closer to C++ in structure but still fully managed. A useful middle ground.</p>
+  <p>Statically typed, garbage collected, strong OOP. Closer to C++ in structure but still fully managed.</p>
 
   <h4>Hello World</h4>
-  <pre><code class="language-csharp">// Needs a class and a namespace
-using System;
+  <pre><code class="language-csharp">using System;
 
 class Program
 {
@@ -102,18 +96,15 @@ class Program
 }</code></pre>
 
   <h4>Variables &amp; Types</h4>
-  <pre><code class="language-csharp">// Statically typed, or use var for inference
-string  name    = "Mish";
+  <pre><code class="language-csharp">string  name    = "Mish";
 int     age     = 38;
 double  balance = 1042.75;
 bool    active  = true;
 
-// Type inferred at compile time
-var rate = 0.04;</code></pre>
+var rate = 0.04;  // inferred as double</code></pre>
 
   <h4>Functions</h4>
-  <pre><code class="language-csharp">// Return type declared before name
-static double CompoundInterest(double principal, double rate, int years)
+  <pre><code class="language-csharp">static double CompoundInterest(double principal, double rate, int years)
 {
     return principal * Math.Pow(1 + rate, years);
 }
@@ -134,7 +125,6 @@ Console.WriteLine($"£{result:F2}");  // £1628.89</code></pre>
     }
 
     public void Deposit(double amount) => Cash += amount;
-
     public override string ToString() => $"{Name}: £{Cash:F2}";
 }
 
@@ -143,7 +133,7 @@ p.Deposit(1000.0);
 Console.WriteLine(p);  // ISA: £6000.00</code></pre>
 
   <h4>Memory</h4>
-  <pre><code class="language-csharp">// Reference type: lives on the heap, GC-managed
+  <pre><code class="language-csharp">// Reference type: heap-allocated, GC-managed
 var values = new List&lt;double&gt; { 1.0, 2.0, 3.0 };
 var reference = values;  // same object
 reference.Add(4.0);
@@ -155,14 +145,14 @@ int b = a;
 b = 99;
 Console.WriteLine(a);  // still 10</code></pre>
   <div class="cpp-note">C# distinguishes reference vs value types — closer to C++ thinking, but the GC still handles cleanup.</div>
+</div>
 
-cpp_content: |
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
   <h3>C++ — day one</h3>
   <p>No runtime. No garbage collector. You decide what lives where, and you're responsible for it. That's the deal.</p>
 
   <h4>Hello World</h4>
-  <pre><code class="language-cpp">// Explicit includes, explicit return
-#include &lt;iostream&gt;
+  <pre><code class="language-cpp">#include &lt;iostream&gt;
 
 int main() {
     std::cout &lt;&lt; "Hello, world!" &lt;&lt; std::endl;
@@ -178,9 +168,8 @@ int         age     = 38;
 double      balance = 1042.75;
 bool        active  = true;
 
-// auto infers at compile time — not dynamic like Python
-auto rate = 0.04;  // deduced as double</code></pre>
-  <div class="cpp-note"><code>auto</code> looks like Python duck typing but isn't — the type is locked in at compile time. The compiler knows; you just don't have to write it out.</div>
+auto rate = 0.04;  // deduced as double at compile time</code></pre>
+  <div class="cpp-note"><code>auto</code> looks like Python duck typing but isn't — the type is locked in at compile time.</div>
 
   <h4>Functions</h4>
   <pre><code class="language-cpp">#include &lt;cmath&gt;
@@ -194,7 +183,7 @@ double compound_interest(double principal, double rate, int years) {
 int main() {
     double result = compound_interest(1000.0, 0.05, 10);
     std::cout &lt;&lt; std::fixed &lt;&lt; std::setprecision(2)
-              &lt;&lt; "£" &lt;&lt; result &lt;&lt; std::endl;  // £1628.89
+              &lt;&lt; "£" &lt;&lt; result &lt;&lt; std::endl;
     return 0;
 }</code></pre>
   <div class="cpp-note">Formatting output requires <code>&lt;iomanip&gt;</code>. Python's f-strings are already something I miss.</div>
@@ -206,7 +195,6 @@ int main() {
 
 class Portfolio {
 public:
-    // Initialiser list — constructs members in place
     Portfolio(std::string name, double cash)
         : name_(name), cash_(cash) {}
 
@@ -219,7 +207,7 @@ public:
     }
 
 private:
-    std::string name_;  // trailing underscore = private member convention
+    std::string name_;
     double      cash_;
 };
 
@@ -229,7 +217,7 @@ int main() {
     p.print();  // ISA: £6000.00
     return 0;
 }</code></pre>
-  <div class="cpp-note">The initialiser list <code>: name_(name), cash_(cash)</code> constructs members in place rather than assigning after construction — matters for performance with complex types.</div>
+  <div class="cpp-note">The initialiser list <code>: name_(name), cash_(cash)</code> constructs members in place — matters for performance with complex types.</div>
 
   <h4>Memory &amp; Pointers</h4>
   <pre><code class="language-cpp">#include &lt;iostream&gt;
@@ -237,26 +225,26 @@ int main() {
 #include &lt;vector&gt;
 
 int main() {
-    // Stack allocation — fast, cleaned up automatically
+    // Stack — fast, auto cleaned up
     int x = 42;
 
     // Pointer — holds the memory address of x
     int* ptr = &amp;x;
     std::cout &lt;&lt; "address: " &lt;&lt; ptr  &lt;&lt; std::endl;
-    std::cout &lt;&lt; "value:   " &lt;&lt; *ptr &lt;&lt; std::endl;  // dereference
+    std::cout &lt;&lt; "value:   " &lt;&lt; *ptr &lt;&lt; std::endl;
 
     // Reference — an alias, not a copy
     int&amp; ref = x;
     ref = 99;
-    std::cout &lt;&lt; x &lt;&lt; std::endl;  // 99 — same variable
+    std::cout &lt;&lt; x &lt;&lt; std::endl;  // 99
 
-    // Heap allocation — smart pointers, not raw new/delete
+    // Heap — smart pointers, not raw new/delete
     auto values = std::make_unique&lt;std::vector&lt;double&gt;&gt;();
     values-&gt;push_back(1.0);
     values-&gt;push_back(2.0);
-    // unique_ptr cleans itself up when it goes out of scope
+    // unique_ptr cleans up when it goes out of scope
 
     return 0;
 }</code></pre>
-  <div class="cpp-note"><code>&amp;x</code> gives the <em>address</em> of x. <code>*ptr</code> dereferences it — follows the address to the value. Modern C++ prefers <code>unique_ptr</code> / <code>shared_ptr</code> over raw <code>new</code>/<code>delete</code> — control without the footguns.</div>
----
+  <div class="cpp-note"><code>&amp;x</code> gives the address of x. <code>*ptr</code> dereferences it. Modern C++ prefers <code>unique_ptr</code> / <code>shared_ptr</code> over raw <code>new</code>/<code>delete</code>.</div>
+</div>

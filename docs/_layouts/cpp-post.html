@@ -20,18 +20,7 @@ layout: default
     <button class="ql-tab-btn" onclick="showTab('cpp', this)">C++</button>
   </div>
 
-  <div id="tab-intro" class="ql-tab-content active">
-    {{ page.intro_content }}
-  </div>
-  <div id="tab-python" class="ql-tab-content" style="display:none">
-    {{ page.python_content }}
-  </div>
-  <div id="tab-csharp" class="ql-tab-content" style="display:none">
-    {{ page.csharp_content }}
-  </div>
-  <div id="tab-cpp" class="ql-tab-content" style="display:none">
-    {{ page.cpp_content }}
-  </div>
+  {{ content }}
 
 </article>
 
