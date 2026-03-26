@@ -1,0 +1,103 @@
+---
+layout: default
+---
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">{{ page.title }}</h1>
+    {% if page.description %}
+      <p class="post-description">{{ page.description }}</p>
+    {% endif %}
+    <p class="post-meta">
+      {% if page.date %}<time>{{ page.date | date: "%B %d, %Y" }}</time>{% endif %}
+      {% if page.tags.size > 0 %} &middot; {{ page.tags | join: ", " }}{% endif %}
+    </p>
+  </header>
+
+  <div class="ql-tabs">
+    <button class="ql-tab-btn active" onclick="showTab('intro', this)">Intro</button>
+    <button class="ql-tab-btn" onclick="showTab('python', this)">Python</button>
+    <button class="ql-tab-btn" onclick="showTab('csharp', this)">C#</button>
+    <button class="ql-tab-btn" onclick="showTab('cpp', this)">C++</button>
+  </div>
+
+  <div id="tab-intro" class="ql-tab-content active">
+    {{ page.intro_content }}
+  </div>
+  <div id="tab-python" class="ql-tab-content" style="display:none">
+    {{ page.python_content }}
+  </div>
+  <div id="tab-csharp" class="ql-tab-content" style="display:none">
+    {{ page.csharp_content }}
+  </div>
+  <div id="tab-cpp" class="ql-tab-content" style="display:none">
+    {{ page.cpp_content }}
+  </div>
+
+</article>
+
+<style>
+.ql-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 24px 0 0 0;
+  border-bottom: 2px solid #e8e8e8;
+}
+.ql-tab-btn {
+  padding: 8px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #555;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: inherit;
+}
+.ql-tab-btn.active {
+  color: #2a7ae2;
+  border-bottom: 2px solid #2a7ae2;
+  font-weight: 600;
+}
+.ql-tab-content {
+  padding: 24px 0;
+}
+.lang-badges {
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  margin-bottom: 1.2em;
+}
+.lang-badges span {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 0.2em 0.7em;
+  border-radius: 3px;
+}
+.badge-py  { background: #3572A5; color: #fff; }
+.badge-cs  { background: #178600; color: #fff; }
+.badge-cpp { background: #c0392b; color: #fff; }
+.cpp-note {
+  border-left: 4px solid #e8e8e8;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: #828282;
+  margin: 4px 0 20px;
+}
+.cpp-note code {
+  background: #eef;
+  border: 1px solid #e8e8e8;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 13px;
+  color: #111;
+}
+</style>
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.ql-tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.ql-tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).style.display = 'block';
+  btn.classList.add('active');
+}
+</script>
