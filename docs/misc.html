@@ -81,3 +81,16 @@ permalink: /misc/
     {% endfor %}
   </ul>
 </div>
+
+<div class="misc-section" id="devops">
+  <div class="misc-hdr">Docker, Kubernetes &amp; CI/CD <span class="sub">just enough for a developer</span></div>
+  <ul class="misc-list">
+    {% for p in site.posts %}
+      {% assign show = false %}
+      {% if p.tags contains "docker" or p.tags contains "kubernetes" or p.tags contains "ci-cd" or p.section == "devops" %}{% assign show = true %}{% endif %}
+      {% if show %}
+        <li><span class="misc-date">{{ p.date | date: "%-d %b %Y" }}</span><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
