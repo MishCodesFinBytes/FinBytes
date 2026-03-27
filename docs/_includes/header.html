@@ -2,9 +2,9 @@
 .nav-dropdown{display:inline-block;position:relative;margin-right:20px;line-height:54px}
 .nav-dropdown-toggle{margin-right:0!important;cursor:default;user-select:none}
 .nav-caret{font-size:9px;opacity:.45;margin-left:2px;vertical-align:middle;display:inline-block;transition:transform .15s ease}
-.nav-dropdown-menu{display:none;position:absolute;top:calc(100% - 2px);left:0;z-index:1000;background:#fff;border:1px solid #e8e8e8;border-radius:6px;min-width:220px;padding:6px 0;box-shadow:0 4px 16px rgba(0,0,0,.08);line-height:1.5;overflow:visible}
+.nav-dropdown-menu{display:none!important;position:absolute;top:calc(100% - 2px);left:0;z-index:1000;background:#fff;border:1px solid #e8e8e8;border-radius:6px;min-width:220px;padding:6px 0;box-shadow:0 4px 16px rgba(0,0,0,.08);line-height:1.5;overflow:visible}
 .nav-dropdown-menu--wide{min-width:260px}
-.nav-dropdown:hover .nav-dropdown-menu,.nav-dropdown:focus-within .nav-dropdown-menu{display:block}
+.nav-dropdown:hover>.nav-dropdown-menu,.nav-dropdown:focus-within>.nav-dropdown-menu{display:block!important}
 .nav-dropdown:hover .nav-caret{transform:rotate(180deg)}
 .nav-dropdown-header{padding:8px 16px 3px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#aaa;pointer-events:none;line-height:1.4}
 .nav-dropdown-header:first-child{padding-top:6px}
@@ -22,7 +22,7 @@ a.nav-dropdown-item{display:block}
   .nav-dropdown{display:block;position:static;margin-right:0;line-height:1}
   .nav-dropdown-toggle{display:block;margin-left:20px;padding:5px 10px}
   .nav-caret,.nav-sub-caret{display:none}
-  .nav-dropdown-menu{display:block;position:static;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0}
+  .nav-dropdown-menu{display:block!important;position:static!important;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0}
   .nav-dropdown-header{margin-left:20px;padding:8px 10px 2px;font-size:10px;color:#bbb}
   .nav-dropdown-item,a.nav-dropdown-item{display:block;margin-left:30px;padding:4px 10px;font-size:13px;color:#666}
   .nav-has-sub{display:block;margin-left:30px;padding:4px 10px;font-size:13px;color:#666}
@@ -179,6 +179,74 @@ a.nav-dropdown-item{display:block}
                 <a class="nav-dropdown-item" href="{{ "/cpp/idempotency/" | relative_url }}">Idempotency</a>
                 <a class="nav-dropdown-item" href="{{ "/cpp/resilient-market-data-pipeline/" | relative_url }}">Market data pipeline <span class="nav-badge">example</span></a>
                 <a class="nav-dropdown-item" href="{{ "/cpp/self-healing-oms/" | relative_url }}">Self-healing OMS <span class="nav-badge">example</span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Notes -->
+        <div class="nav-dropdown">
+          <a class="page-link nav-dropdown-toggle" href="{{ "/notes/" | relative_url }}">Notes <span class="nav-caret">&#9662;</span></a>
+          <div class="nav-dropdown-menu">
+            <a class="nav-dropdown-item" href="{{ "/notes/#sessions" | relative_url }}">Live sessions &amp; debugging</a>
+            <a class="nav-dropdown-item" href="{{ "/notes/#til" | relative_url }}">Today I learned</a>
+          </div>
+        </div>
+
+        <!-- Misc -->
+        <div class="nav-dropdown">
+          <a class="page-link nav-dropdown-toggle" href="{{ "/misc/" | relative_url }}">Misc <span class="nav-caret">&#9662;</span></a>
+          <div class="nav-dropdown-menu">
+            <div class="nav-has-sub">Infrastructure <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/misc/#redis" | relative_url }}">Redis &amp; caching</a>
+                <a class="nav-dropdown-item" href="{{ "/misc/#queues" | relative_url }}">Message queues</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Tools <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/misc/#cli" | relative_url }}">CLI &amp; argparse</a>
+                <a class="nav-dropdown-item" href="{{ "/misc/#git" | relative_url }}">Git</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cheatsheets -->
+        <div class="nav-dropdown">
+          <a class="page-link nav-dropdown-toggle" href="{{ "/cheatsheets/" | relative_url }}">Cheatsheets <span class="nav-caret">&#9662;</span></a>
+          <div class="nav-dropdown-menu">
+            <div class="nav-has-sub">Languages <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/python-cheatsheet.pdf" | relative_url }}" target="_blank">Python <span class="nav-badge">PDF</span></a>
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/pandas-cheatsheet.pdf" | relative_url }}" target="_blank">pandas <span class="nav-badge">PDF</span></a>
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/csharp-cheatsheet.pdf" | relative_url }}" target="_blank">C# <span class="nav-badge">PDF</span></a>
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/cpp-cheatsheet.pdf" | relative_url }}" target="_blank">C++ <span class="nav-badge">PDF</span></a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Testing <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/pytest-cheatsheet.pdf" | relative_url }}" target="_blank">pytest <span class="nav-badge">PDF</span></a>
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/monkeypatch-cheatsheet.pdf" | relative_url }}" target="_blank">monkeypatch <span class="nav-badge">PDF</span></a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Tools &amp; infrastructure <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/git-cheatsheet.pdf" | relative_url }}" target="_blank">Git <span class="nav-badge">PDF</span></a>
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/redis-cheatsheet.pdf" | relative_url }}" target="_blank">Redis <span class="nav-badge">PDF</span></a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Design patterns <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/design-patterns-python-cheatsheet.pdf" | relative_url }}" target="_blank">Python <span class="nav-badge">PDF</span></a>
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/design-patterns-csharp-cheatsheet.pdf" | relative_url }}" target="_blank">C# <span class="nav-badge">PDF</span></a>
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/design-patterns-cpp-cheatsheet.pdf" | relative_url }}" target="_blank">C++ <span class="nav-badge">PDF</span></a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Reliability <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/assets/cheatsheets/queues-reliability-cheatsheet.pdf" | relative_url }}" target="_blank">Queues &amp; reliability <span class="nav-badge">PDF</span></a>
               </div>
             </div>
           </div>

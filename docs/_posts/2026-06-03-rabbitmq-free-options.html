@@ -1,0 +1,47 @@
+---
+layout: post
+title: "RabbitMQ free options — CloudAMQP, local Docker, and alternatives"
+date: 2026-06-03
+tags: [rabbitmq, queues, message-queue, misc, setup]
+section: queues
+permalink: /misc/rabbitmq-free-options/
+---
+
+<p>You want to experiment with RabbitMQ. What are your options without paying anything?</p>
+
+<h2>Option 1 — CloudAMQP free tier (Little Lemur)</h2>
+<p>The easiest starting point. Sign up at <a href="https://www.cloudamqp.com">cloudamqp.com</a>, create an instance on the free "Little Lemur" plan.</p>
+<p><strong>Free tier limits:</strong> 1 concurrent connection, 1 million messages/month, max 20 queues. Enough for learning and small projects.</p>
+<p>You get a connection URL in the format: <code>amqps://user:pass@hostname/vhost</code></p>
+<p>No credit card required for the free plan.</p>
+
+<h2>Option 2 — Local Docker (recommended for development)</h2>
+<p>No limits, no internet required, management UI included.</p>
+<pre><code class="language-bash"># Start RabbitMQ with the management plugin enabled
+docker run -d --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  rabbitmq:3-management
+
+# Management UI: http://localhost:15672
+# Default credentials: guest / guest</code></pre>
+
+<p>The management UI at port 15672 lets you see queues, exchanges, bindings, message rates, and publish/consume test messages manually — invaluable for learning.</p>
+
+<h2>Option 3 — Alternatives with free tiers</h2>
+<table>
+  <thead><tr><th>Service</th><th>Protocol</th><th>Free tier</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>CloudAMQP</td><td>AMQP (RabbitMQ)</td><td>1M msg/month</td><td>Easiest setup</td></tr>
+    <tr><td>Amazon SQS</td><td>HTTP/HTTPS</td><td>1M requests/month</td><td>AWS ecosystem</td></tr>
+    <tr><td>Google Pub/Sub</td><td>gRPC/HTTP</td><td>10GB/month</td><td>GCP ecosystem</td></tr>
+    <tr><td>Upstash (Redis)</td><td>Redis protocol</td><td>10K commands/day</td><td>Serverless Redis</td></tr>
+    <tr><td>Celery + Redis</td><td>Redis protocol</td><td>Self-hosted</td><td>Task queue on top of Redis</td></tr>
+    <tr><td>Local RabbitMQ</td><td>AMQP</td><td>Unlimited</td><td>Docker, no cloud needed</td></tr>
+  </tbody>
+</table>
+
+<h2>Which should you use?</h2>
+<p>For learning RabbitMQ specifically: <strong>local Docker</strong>. Full control, management UI, no rate limits, reset whenever you want.</p>
+<p>For a shared dev/staging environment: <strong>CloudAMQP free tier</strong>. Accessible from anywhere, zero ops.</p>
+<p>For a Python project that just needs a task queue: consider <strong>Celery + Redis</strong> — you may already have Redis, and Celery handles the worker management, retry, and scheduling on top of it.</p>
