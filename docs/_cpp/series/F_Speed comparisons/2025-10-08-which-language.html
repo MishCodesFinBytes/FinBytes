@@ -1,0 +1,129 @@
+---
+layout: cpp-post
+title: "Which Language for Which Job?"
+description: "Decision guide: prototyping, data wrangling, pricing library, risk engine, scripts."
+date: 2025-10-08
+tags: [performance, decision, comparison]
+permalink: /cpp/which-language/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The honest answer: it depends</h3>
+  <p>There's no universally correct language. The question is: what are your constraints? Latency? Development speed? Team familiarity? Library ecosystem? Long-term maintainability? Here's how I think about it after years in all three.</p>
+
+  <h3>Decision matrix</h3>
+  <ul>
+    <li><strong>Research / prototyping</strong> → Python. Fast iteration, Jupyter, pandas, scipy.</li>
+    <li><strong>Data wrangling (CSV, Excel, APIs)</strong> → Python or C#. C++ is painful here.</li>
+    <li><strong>Pricing library (batch)</strong> → C++ or C#. Python with pybind11 if you need Python interface.</li>
+    <li><strong>Real-time / low-latency</strong> → C++ only. No GC pauses, predictable latency.</li>
+    <li><strong>Risk engine (EOD batch)</strong> → C# or C++. C# wins on developer productivity.</li>
+    <li><strong>CLI tools and scripts</strong> → Python for small/ad-hoc, C++ for performance-critical.</li>
+    <li><strong>GUI/web front-end</strong> → C# (WPF/Blazor) or Python (Dash/Streamlit). Not C++.</li>
+  </ul>
+
+  <h3>The right architecture</h3>
+  <p>Most serious quant systems use all three: Python for research and notebooks, C# for middle-office tooling and reporting, C++ for the execution-critical path. pybind11 and COM interop bridge them.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — where it shines</h3>
+  <pre><code class="language-python"># 1. Research and exploration
+import pandas as pd
+import plotly.express as px
+
+df = pd.read_csv("prices.csv", parse_dates=["date"])
+df["return"] = df["close"].pct_change()
+fig = px.line(df, x="date", y="close", title="Price history")
+fig.show()
+
+# 2. Rapid prototyping of models
+from scipy.optimize import minimize
+from scipy.stats import norm
+
+def calibrate_vol(market_price, S, K, T, r):
+    def objective(sigma):
+        d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+        d2 = d1 - sigma*np.sqrt(T)
+        model = S*norm.cdf(d1) - K*np.exp(-r*T)*norm.cdf(d2)
+        return (model - market_price)**2
+    return minimize(objective, x0=0.2, method="L-BFGS-B",
+                    bounds=[(0.01, 2.0)]).x[0]
+
+# 3. Data pipelines
+trades = pd.read_csv("trades.csv")
+risk   = trades.groupby("symbol").agg(
+    net_delta=("delta", "sum"),
+    gross_notional=("notional", lambda x: x.abs().sum())
+)
+risk.to_excel("risk_report.xlsx")</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — where it shines</h3>
+  <pre><code class="language-csharp">// 1. Middle-office tooling — strong typing, good IDE support
+public record TradeConfirmation(
+    string TradeId,
+    string Symbol,
+    decimal Notional,
+    DateTime TradeDate,
+    DateTime SettleDate);
+
+// 2. REST API for risk system
+app.MapGet("/api/risk/{portfolio}", async (string portfolio, IRiskService svc) => {
+    var greeks = await svc.GetGreeksAsync(portfolio);
+    return Results.Ok(greeks);
+});
+
+// 3. EOD batch pricing
+await Parallel.ForEachAsync(positions, async (pos, ct) => {
+    var price = await pricer.PriceAsync(pos, valuationDate: today);
+    results.TryAdd(pos.Id, price);
+});
+
+// 4. Excel/Word report generation (very strong ecosystem)
+using var wb = new XLWorkbook();
+// ... (see Excel post)</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — where it shines</h3>
+  <pre><code class="language-cpp">// 1. Real-time market data handler — microsecond latency
+class MarketDataHandler {
+    SPSCQueue&lt;Tick, 65536&gt; queue_;
+
+public:
+    void on_tick(const Tick& t) {  // called at 1M+ ticks/sec
+        queue_.push(t);           // lock-free, ~50ns
+    }
+};
+
+// 2. Intraday risk engine — no GC pauses
+class RiskEngine {
+    // Pre-allocated pools — no allocation in hot path
+    std::array&lt;GreekResult, MAX_POSITIONS&gt; results_{};
+
+public:
+    void reprice_all(std::span&lt;const Position&gt; positions) {
+        // Tight loop — auto-vectorised, cache-friendly SoA layout
+        for (std::size_t i = 0; i &lt; positions.size(); ++i)
+            results_[i] = pricer_.price(positions[i]);
+    }
+};
+
+// 3. Order book — microsecond latency requirement
+class OrderBook {
+    std::map&lt;Price, Level, std::greater&lt;Price&gt;&gt; bids_;
+    std::map&lt;Price, Level&gt;                       asks_;
+
+public:
+    // Add order: O(log n) — typically &lt;500ns
+    void add(const Order& o);
+
+    // Best bid/ask: O(1)
+    Price best_bid() const { return bids_.begin()-&gt;first; }
+    Price best_ask() const { return asks_.begin()-&gt;first; }
+};</code></pre>
+
+  <div class="cpp-note">💡 The right mental model: Python is for thinking, C# is for building, C++ is for optimising. Start in Python, move performance-critical components to C++ via pybind11 when you have measured evidence that it matters.</div>
+</div>

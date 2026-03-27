@@ -1,0 +1,105 @@
+---
+layout: cpp-post
+title: "Speed Regressions - Detecting and Preventing Slowdowns"
+description: "Continuous benchmarking, regression tests, CI integration."
+date: 2026-02-18
+tags: [defensive, performance, benchmarking]
+permalink: /cpp/speed-regressions/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The silent performance killer</h3>
+  <p>A refactor that moves a <code>std::vector</code> to a <code>std::map</code> for clarity. A copy constructor called where a move was expected. A unit test that runs fine but adds 50ms of latency in production. Performance regressions sneak in through normal development and accumulate until something complains.</p>
+  <p><strong>The solution:</strong> treat performance like correctness. Benchmark critical paths in CI. If a PR makes the pricer 20% slower, fail the build. This requires stable benchmark infrastructure, baseline tracking, and agreed thresholds.</p>
+  <p><strong>What to benchmark:</strong> focus on hot paths only - the single-trade pricing function, the inner loop of the batch pricer, queue throughput. Benchmarking everything is noise; benchmark what matters for latency and throughput.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python performance regression testing</h3>
+  <pre><code class="language-python">import timeit, json, os
+import pytest
+
+BASELINE_FILE = ".perf_baseline.json"
+THRESHOLD     = 1.20  # 20% slowdown fails the test
+
+def bench(fn, n=1000) -> float:
+    t = timeit.timeit(fn, number=n)
+    return t / n * 1e6  # microseconds per call
+
+def load_baseline() -> dict:
+    if os.path.exists(BASELINE_FILE):
+        with open(BASELINE_FILE) as f: return json.load(f)
+    return {}
+
+def save_baseline(data: dict) -> None:
+    with open(BASELINE_FILE, "w") as f: json.dump(data, f, indent=2)
+
+def test_pricer_performance():
+    from my_pricer import price_option
+    elapsed_us = bench(lambda: price_option(100, 100, 1, 0.05, 0.2))
+
+    baseline = load_baseline()
+    key = "price_option"
+    if key not in baseline:
+        baseline[key] = elapsed_us
+        save_baseline(baseline)
+        pytest.skip("Baseline not set - stored new baseline")
+
+    ratio = elapsed_us / baseline[key]
+    assert ratio &lt; THRESHOLD, (
+        f"Regression: {elapsed_us:.1f}us vs baseline {baseline[key]:.1f}us "
+        f"({ratio:.1%} exceeds {THRESHOLD:.0%})"
+    )</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# BenchmarkDotNet in CI</h3>
+  <pre><code class="language-csharp">[MemoryDiagnoser]
+[SimpleJob(RuntimeMoniker.Net80)]
+public class PricerBenchmark {
+    private Trade _trade = new("AAPL", 100_000, 1.0);
+
+    [Benchmark(Baseline = true)]
+    public double PriceV1() => PricerV1.Price(_trade);
+
+    [Benchmark]
+    public double PriceV2() => PricerV2.Price(_trade);
+    // BenchmarkDotNet reports Ratio: 1.00 vs 0.95
+    // A ratio &gt; 1.2 in CI can trigger a build failure
+}
+// CI: dotnet run -c Release -- --exporters json
+// Then compare JSON output against stored baseline</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ Google Benchmark in CI</h3>
+  <pre><code class="language-cpp">// bench_pricer.cpp
+#include &lt;benchmark/benchmark.h&gt;
+
+static void BM_SinglePrice(benchmark::State& state) {
+    BlackScholesPricer pricer;
+    OptionTrade trade{100, 100, 1, 0.05, 0.2};
+    for (auto _ : state)
+        benchmark::DoNotOptimize(pricer.price(trade));
+    state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(BM_SinglePrice);
+BENCHMARK_MAIN();</code></pre>
+
+  <pre><code class="language-bash"># Run and export JSON
+./bench_pricer --benchmark_format=json &gt; bench_results.json
+
+# Compare against stored baseline (Python helper)
+import json, sys
+curr = json.load(open(sys.argv[1]))["benchmarks"]
+base = json.load(open(sys.argv[2]))["benchmarks"]
+threshold = 1.15
+failures = []
+for c, b in zip(curr, base):
+    ratio = c["real_time"] / b["real_time"]
+    if ratio &gt; threshold:
+        failures.append(f"{c['name']}: {ratio:.2%} slower than baseline")
+if failures:
+    print("REGRESSION FAILURES:"); [print(f) for f in failures]; sys.exit(1)</code></pre>
+  <div class="cpp-note">Store benchmark baselines in version control. Run benchmarks on a dedicated CI runner (not a shared agent) for reproducible results. Use statistical tests (Mann-Whitney U) rather than a simple ratio for robust detection of genuine regressions vs noise.</div>
+</div>

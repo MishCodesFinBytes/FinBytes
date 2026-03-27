@@ -1,0 +1,193 @@
+---
+layout: cpp-post
+title: "Hash Maps — std::unordered_map Internals"
+description: "Buckets, collision resolution, load factor, when to use what"
+date: 2025-02-12
+tags: [data-structures, performance]
+permalink: /cpp/hash-maps/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Two maps, very different performance</h3>
+  <p>C++ gives you two associative containers: <code>std::map</code> (sorted, tree-based, O(log n)) and <code>std::unordered_map</code> (hash-based, O(1) average). Python's <code>dict</code> and C#'s <code>Dictionary&lt;K,V&gt;</code> are both hash maps — but C++ makes you choose explicitly.</p>
+
+  <h3>How a hash map works</h3>
+  <p>A hash function maps a key to a bucket index. The value is stored in that bucket. On lookup, hash the key, go to that bucket, check for a match. O(1) on average — assuming a good hash and low load factor.</p>
+
+  <h3>Collisions</h3>
+  <p>Two keys can hash to the same bucket. C++ <code>std::unordered_map</code> uses <em>chaining</em> — each bucket holds a linked list of entries. Open addressing (used by many other hash maps, including Python's dict) stores colliding entries elsewhere in the table.</p>
+
+  <h3>Load factor</h3>
+  <p>Ratio of elements to buckets. As it grows, collisions increase and performance degrades. <code>std::unordered_map</code> rehashes (doubles bucket count) when load factor exceeds a threshold (default 1.0). Like vector reallocation — invalidates iterators.</p>
+
+  <h3>When to use which</h3>
+  <ul>
+    <li><code>std::unordered_map</code> — fast lookup by key, order doesn't matter</li>
+    <li><code>std::map</code> — need sorted iteration, or range queries by key</li>
+    <li>For finance: instrument lookup, position tracking → <code>unordered_map</code>. Order book price levels → <code>map</code> (need sorted iteration from best bid/ask).</li>
+  </ul>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python dict — open addressing hash map</h3>
+  <p>Python's <code>dict</code> uses open addressing with pseudo-random probing. Since Python 3.7 it also preserves insertion order. It's highly optimised — generally faster than <code>std::unordered_map</code> for string keys due to interned strings.</p>
+
+  <pre><code class="language-python">from typing import Any
+import sys
+
+# Basic usage
+positions: dict[str, float] = {}
+positions["AAPL"] = 100.0
+positions["MSFT"] = 200.0
+positions["GOOGL"] = 50.0
+
+# O(1) average lookup
+if "AAPL" in positions:
+    print(positions["AAPL"])  # 100.0
+
+# Memory size
+print(sys.getsizeof(positions))  # ~200 bytes for 3 items</code></pre>
+
+  <h3>defaultdict and Counter</h3>
+  <pre><code class="language-python">from collections import defaultdict, Counter
+
+# defaultdict — auto-initialise missing keys
+trades: defaultdict[str, list] = defaultdict(list)
+trades["AAPL"].append({"price": 150.0, "qty": 100})
+trades["AAPL"].append({"price": 151.0, "qty": 200})
+
+# Counter — frequency map
+symbols = ["AAPL", "MSFT", "AAPL", "GOOGL", "AAPL"]
+counts = Counter(symbols)
+print(counts.most_common(2))  # [('AAPL', 3), ('MSFT', 1)]</code></pre>
+
+  <div class="cpp-note">Python dict's load factor is ~0.66 — it rehashes when 2/3 full. C++ <code>std::unordered_map</code> default is 1.0. Python's tighter threshold gives better performance at the cost of more memory.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# Dictionary&lt;K,V&gt; — open addressing</h3>
+  <p>C#'s <code>Dictionary&lt;K,V&gt;</code> uses open addressing with a power-of-two bucket count. Strong generic support — no boxing for value type keys unlike Java's HashMap.</p>
+
+  <pre><code class="language-csharp">var positions = new Dictionary&lt;string, double&gt;();
+positions["AAPL"]  = 100.0;
+positions["MSFT"]  = 200.0;
+
+// TryGetValue — safe lookup without exception
+if (positions.TryGetValue("AAPL", out double qty))
+    Console.WriteLine(qty);  // 100.0
+
+// Pre-sizing
+var large = new Dictionary&lt;string, double&gt;(capacity: 10_000);
+
+// Concurrent access
+using System.Collections.Concurrent;
+var concurrent = new ConcurrentDictionary&lt;string, double&gt;();</code></pre>
+
+  <h3>SortedDictionary — like std::map</h3>
+  <pre><code class="language-csharp">// Sorted by key — O(log n) operations
+var orderBook = new SortedDictionary&lt;double, int&gt;();
+orderBook[100.0] = 1000;  // price -> qty
+orderBook[99.5]  = 500;
+orderBook[100.5] = 750;
+
+// Iterate in price order
+foreach (var (price, qty) in orderBook)
+    Console.WriteLine($"{price}: {qty}");</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — unordered_map and map</h3>
+
+  <h4>Basic unordered_map usage</h4>
+  <pre><code class="language-cpp">#include &lt;unordered_map&gt;
+#include &lt;string&gt;
+#include &lt;iostream&gt;
+
+int main() {
+    std::unordered_map&lt;std::string, double&gt; positions;
+
+    // Insert
+    positions["AAPL"]  = 100.0;
+    positions["MSFT"]  = 200.0;
+    positions.emplace("GOOGL", 50.0);  // constructed in-place
+
+    // Lookup — operator[] inserts default if missing!
+    std::cout &lt;&lt; positions["AAPL"] &lt;&lt; "\n";  // 100.0
+
+    // Safe lookup
+    auto it = positions.find("TSLA");
+    if (it != positions.end())
+        std::cout &lt;&lt; it-&gt;second &lt;&lt; "\n";
+    else
+        std::cout &lt;&lt; "not found\n";
+
+    // at() throws if missing
+    try {
+        std::cout &lt;&lt; positions.at("TSLA") &lt;&lt; "\n";
+    } catch (const std::out_of_range&amp;) {
+        std::cout &lt;&lt; "not found\n";
+    }
+    return 0;
+}</code></pre>
+
+  <div class="cpp-note">💡 Avoid <code>operator[]</code> for lookups — it inserts a default value if the key doesn't exist, which is usually a bug. Prefer <code>find()</code> or <code>at()</code>.</div>
+
+  <h4>Pre-reserving buckets</h4>
+  <pre><code class="language-cpp">#include &lt;unordered_map&gt;
+
+// Reserve buckets upfront to avoid rehashing
+std::unordered_map&lt;std::string, double&gt; positions;
+positions.reserve(10'000);     // allocate for 10k entries
+positions.max_load_factor(0.5); // rehash at 50% — faster lookups, more memory
+
+// Check current state
+std::cout &lt;&lt; positions.bucket_count() &lt;&lt; "\n";
+std::cout &lt;&lt; positions.load_factor()  &lt;&lt; "\n";</code></pre>
+
+  <h4>std::map — sorted, O(log n)</h4>
+  <pre><code class="language-cpp">#include &lt;map&gt;
+#include &lt;iostream&gt;
+
+int main() {
+    // Order book: price -> quantity (sorted by price)
+    std::map&lt;double, int&gt; bids;
+    bids[99.5]  = 500;
+    bids[100.0] = 1000;
+    bids[98.0]  = 250;
+
+    // Iterates in ascending price order
+    for (auto&amp; [price, qty] : bids)
+        std::cout &lt;&lt; price &lt;&lt; " -> " &lt;&lt; qty &lt;&lt; "\n";
+
+    // Best bid = last element (highest price)
+    auto best_bid = bids.rbegin();
+    std::cout &lt;&lt; "Best bid: " &lt;&lt; best_bid-&gt;first &lt;&lt; "\n";
+    return 0;
+}</code></pre>
+
+  <h4>Custom hash for numeric keys</h4>
+  <pre><code class="language-cpp">#include &lt;unordered_map&gt;
+
+// Integer keys are fast — default hash is identity
+std::unordered_map&lt;int, double&gt; instrument_prices;
+instrument_prices[12345] = 100.5;  // instrument ID -> price
+
+// For composite keys, provide a custom hash
+struct InstrumentKey {
+    int venue_id;
+    int symbol_id;
+    bool operator==(const InstrumentKey&amp; o) const {
+        return venue_id == o.venue_id &amp;&amp; symbol_id == o.symbol_id;
+    }
+};
+
+struct InstrumentHash {
+    std::size_t operator()(const InstrumentKey&amp; k) const {
+        return std::hash&lt;int&gt;{}(k.venue_id) ^
+               (std::hash&lt;int&gt;{}(k.symbol_id) &lt;&lt; 16);
+    }
+};
+
+std::unordered_map&lt;InstrumentKey, double, InstrumentHash&gt; prices;
+prices[{1, 42}] = 100.5;</code></pre>
+</div>

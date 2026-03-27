@@ -1,0 +1,86 @@
+---
+layout: cpp-post
+title: "Idempotency and At-Least-Once Delivery"
+description: "What happens when a message is processed twice. Idempotency keys, deduplication."
+date: 2026-05-06
+tags: [reliability, idempotency, messaging]
+permalink: /cpp/idempotency/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The at-least-once problem</h3>
+  <p>In any distributed system, message delivery is either at-most-once (may lose messages) or at-least-once (may deliver duplicates). At-least-once is usually safer - better to process twice than not at all - but only if your processing is idempotent.</p>
+  <p><strong>Idempotency:</strong> an operation is idempotent if applying it multiple times has the same effect as applying it once. Setting a position to 100 is idempotent. Adding 100 to a position is not.</p>
+  <p><strong>Finance examples:</strong> a fill message delivered twice must not double the position. A trade confirmation processed after a system restart must be recognised as already processed. An EOD job that fails halfway and restarts must not produce duplicate records.</p>
+  <p><strong>Solution - idempotency keys:</strong> assign a unique ID to each operation. Before processing, check if the ID has been seen. If yes, return the cached result. Store processed IDs in a persistent store. Use database unique constraints as enforcement.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python idempotency</h3>
+  <pre><code class="language-python">import hashlib, json
+
+class IdempotentTradeProcessor:
+    def __init__(self): self._processed: dict[str, dict] = {}
+
+    def process_fill(self, fill: dict) -> dict:
+        key = fill.get("fill_id") or self._hash_fill(fill)
+        if key in self._processed:
+            return {**self._processed[key], "idempotent": True}
+        result = self._apply_fill(fill)
+        self._processed[key] = result
+        return result
+
+    def _apply_fill(self, fill: dict) -> dict:
+        symbol   = fill["symbol"]
+        quantity = fill["quantity"]   # absolute, not delta
+        self._positions[symbol] = quantity  # SET not ADD
+        return {"symbol": symbol, "quantity": quantity, "status": "processed"}
+
+    def _hash_fill(self, fill: dict) -> str:
+        canonical = json.dumps(fill, sort_keys=True).encode()
+        return hashlib.sha256(canonical).hexdigest()[:16]</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# idempotent processing</h3>
+  <pre><code class="language-csharp">public class IdempotentTradeProcessor {
+    private readonly HashSet&lt;string&gt; _processedIds = new();
+    private readonly Dictionary&lt;string, double&gt; _positions = new();
+
+    public ProcessResult ProcessFill(Fill fill) {
+        if (_processedIds.Contains(fill.FillId))
+            return new ProcessResult(fill.Symbol, _positions.GetValueOrDefault(fill.Symbol), true);
+        _positions[fill.Symbol] = fill.Quantity;  // SET not ADD
+        _processedIds.Add(fill.FillId);
+        return new ProcessResult(fill.Symbol, fill.Quantity, false);
+    }
+}
+
+// In a real system, use a database unique constraint:
+// INSERT INTO processed_fills (fill_id, processed_at) VALUES (@id, NOW())
+// ON CONFLICT (fill_id) DO NOTHING  -- returns 0 rows if duplicate</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ idempotent processing</h3>
+  <pre><code class="language-cpp">#include &lt;string&gt;
+#include &lt;unordered_set&gt;
+#include &lt;unordered_map&gt;
+
+struct Fill { std::string fill_id, symbol; double quantity; };
+struct ProcessResult { std::string symbol; double quantity; bool was_duplicate; };
+
+class IdempotentFillProcessor {
+    std::unordered_set&lt;std::string&gt;        processed_ids_;  // use persistent store in production
+    std::unordered_map&lt;std::string, double&gt; positions_;
+public:
+    ProcessResult process(const Fill& fill) {
+        if (processed_ids_.count(fill.fill_id))
+            return {fill.symbol, positions_[fill.symbol], true};
+        positions_[fill.symbol] = fill.quantity;   // SET not ADD
+        processed_ids_.insert(fill.fill_id);
+        return {fill.symbol, fill.quantity, false};
+    }
+};</code></pre>
+  <div class="cpp-note">Design your data model for idempotency from the start. Store absolute state (position = 100) rather than deltas (position += 10). Require idempotency keys on all mutating operations. Use database unique constraints as enforcement - they are the only reliable deduplication mechanism when multiple processes can run concurrently.</div>
+</div>

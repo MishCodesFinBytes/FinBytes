@@ -1,0 +1,142 @@
+---
+layout: cpp-post
+title: "Const Correctness"
+description: "const references, const member functions, mutable, constexpr."
+date: 2025-09-10
+tags: [cpp, const, api-design]
+permalink: /cpp/const-correctness/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>What const correctness means</h3>
+  <p>Mark everything that shouldn't change as <code>const</code>. The compiler enforces it. This serves two purposes: it prevents accidental mutation, and it documents intent — a <code>const</code> reference parameter tells callers "I won't modify this".</p>
+
+  <h3>Three kinds of const in C++</h3>
+  <ul>
+    <li><code>const T&amp;</code> — const reference parameter: "I'll read this but not modify it"</li>
+    <li><code>const</code> member function — "calling this method doesn't change the object"</li>
+    <li><code>constexpr</code> — evaluated at compile time: zero runtime overhead</li>
+  </ul>
+
+  <h3>The mutable keyword</h3>
+  <p>Escape hatch: a <code>mutable</code> member can be modified even in a const member function. Legitimate uses: caching a computed value (lazy evaluation), mutex locks. Abusing it defeats const correctness.</p>
+
+  <h3>Why this matters</h3>
+  <p>A function taking <code>const std::vector&lt;double&gt;&amp;</code> can be called with a temporary, a const vector, or a non-const vector. A function taking <code>std::vector&lt;double&gt;&amp;</code> can only be called with a non-const lvalue. Const-correct APIs are more flexible and more expressive.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — no enforcement, conventions only</h3>
+  <pre><code class="language-python">from typing import Final, Sequence
+from dataclasses import dataclass
+
+# Final — type checker enforces immutability
+MAX_POSITIONS: Final = 100
+
+# Tuple — immutable sequence
+prices: tuple[float, ...] = (100.0, 101.5, 99.8)
+
+# @dataclass(frozen=True) — immutable dataclass
+@dataclass(frozen=True)
+class Strike:
+    value: float
+
+    def __post_init__(self):
+        if self.value &lt;= 0:
+            raise ValueError("strike must be positive")
+
+k = Strike(100.0)
+# k.value = 99.0  # raises FrozenInstanceError
+
+# Sequence[T] — read-only view (type hint only, not enforced at runtime)
+def compute_vwap(prices: Sequence[float], volumes: Sequence[float]) -> float:
+    return sum(p*v for p,v in zip(prices,volumes)) / sum(volumes)</code></pre>
+  <div class="cpp-note">Python has no runtime enforcement of const-like constraints (except frozen dataclasses and Final for type checkers). In C++, const is enforced by the compiler — violations are compile errors, not runtime errors.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — readonly and in parameters</h3>
+  <pre><code class="language-csharp">// readonly field — set only in constructor
+public class Bond {
+    public readonly string Symbol;
+    public readonly double Coupon;
+
+    public Bond(string symbol, double coupon) {
+        Symbol = symbol;
+        Coupon = coupon;
+    }
+}
+
+// const — compile-time constant
+public const double DAYS_IN_YEAR = 365.25;
+
+// in parameter — read-only reference (like const T&amp; in C++)
+double ComputePrice(in double[] cashFlows, in double rate) {
+    // cashFlows and rate cannot be modified here
+    return cashFlows.Select((cf, t) => cf / Math.Pow(1 + rate, t + 1)).Sum();
+}
+
+// IReadOnlyList&lt;T&gt; — read-only view
+IReadOnlyList&lt;double&gt; GetPrices() =&gt; new[] { 100.0, 101.5 };
+</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ const in detail</h3>
+
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;numeric&gt;
+
+// const reference parameter — no copy, no mutation
+double compute_vwap(const std::vector&lt;double&gt;& prices,
+                    const std::vector&lt;double&gt;& volumes) {
+    double pv = std::inner_product(prices.begin(), prices.end(),
+                                   volumes.begin(), 0.0);
+    double tv = std::accumulate(volumes.begin(), volumes.end(), 0.0);
+    return tv > 0 ? pv / tv : 0.0;
+}
+
+// const member functions
+class Portfolio {
+public:
+    void add(const std::string& sym, double qty) {
+        positions_[sym] += qty;  // mutates — non-const
+    }
+
+    double total() const {  // const — cannot modify members
+        double sum = 0;
+        for (const auto& [sym, qty] : positions_) sum += qty;
+        return sum;
+    }
+
+    int size() const { return static_cast&lt;int&gt;(positions_.size()); }
+
+    // const overload — returns read-only reference
+    const double& operator[](const std::string& sym) const {
+        return positions_.at(sym);
+    }
+
+private:
+    std::unordered_map&lt;std::string, double&gt; positions_;
+    mutable int access_count_ = 0;  // mutable: ok to modify in const functions
+};
+
+// constexpr — compile-time constants and functions
+constexpr double DAYS_IN_YEAR = 365.25;
+constexpr int    SETTLE_DAYS  = 2;
+
+constexpr double years_to_days(double years) {
+    return years * DAYS_IN_YEAR;
+}
+
+static_assert(years_to_days(1.0) == 365.25);  // verified at compile time
+
+// const and pointers — read carefully
+const double* p1 = nullptr;  // pointer to const double (can't modify *p1)
+double* const p2 = nullptr;  // const pointer to double (can't modify p2)
+const double* const p3 = nullptr;  // both const
+</code></pre>
+
+  <div class="cpp-note">💡 Read const declarations right-to-left: <code>const double*</code> = "pointer to const double". <code>double* const</code> = "const pointer to double". When in doubt, use <code>const auto&amp;</code> and let the compiler deduce the right thing.</div>
+</div>

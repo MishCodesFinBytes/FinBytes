@@ -1,0 +1,246 @@
+---
+layout: cpp-post
+title: "CSV Parsing and Transformation"
+description: "Manual parsing vs csv.reader vs CsvHelper vs fast-cpp-csv-parser. Tick to OHLCV."
+date: 2025-06-18
+tags: [practical, file-io, csv]
+permalink: /cpp/csv-parsing/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>CSV is deceptively hard</h3>
+  <p>Splitting on commas works until you hit a field containing a comma inside quotes. Then quoted fields containing escaped quotes. Then Windows line endings. Then BOM markers. Use a proper CSV library unless you control the format entirely.</p>
+
+  <h3>The task</h3>
+  <p>Transform a raw tick file (timestamp, symbol, price, volume — one row per trade) into an OHLCV bar file (one row per minute). A real-world ETL task you'll do constantly in quant work.</p>
+
+  <h3>Performance note</h3>
+  <p>For files under ~100MB, any approach works. For large historical datasets (years of tick data), C++ with a fast CSV parser and SoA storage is the only approach that completes in reasonable time. Python/pandas will work but may take 10–50x longer.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — csv module and pandas</h3>
+
+  <pre><code class="language-python">import csv
+from dataclasses import dataclass
+from collections import defaultdict
+from datetime import datetime
+
+@dataclass
+class Tick:
+    timestamp: datetime
+    symbol:    str
+    price:     float
+    volume:    int
+
+@dataclass
+class OHLCVBar:
+    minute: str
+    symbol: str
+    open:   float
+    high:   float
+    low:    float
+    close:  float
+    volume: int
+
+def read_ticks(path: str) -> list[Tick]:
+    ticks = []
+    with open(path, newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            ticks.append(Tick(
+                timestamp = datetime.fromisoformat(row["timestamp"]),
+                symbol    = row["symbol"],
+                price     = float(row["price"]),
+                volume    = int(row["volume"]),
+            ))
+    return ticks
+
+def ticks_to_ohlcv(ticks: list[Tick]) -> list[OHLCVBar]:
+    bars: dict[tuple, list[float]] = defaultdict(list)
+    vols: dict[tuple, int]         = defaultdict(int)
+
+    for t in ticks:
+        key = (t.timestamp.strftime("%Y-%m-%d %H:%M"), t.symbol)
+        bars[key].append(t.price)
+        vols[key] += t.volume
+
+    result = []
+    for (minute, symbol), prices in bars.items():
+        result.append(OHLCVBar(
+            minute=minute, symbol=symbol,
+            open=prices[0], high=max(prices),
+            low=min(prices),  close=prices[-1],
+            volume=vols[(minute, symbol)],
+        ))
+    return sorted(result, key=lambda b: (b.minute, b.symbol))</code></pre>
+
+  <h3>pandas version (faster for large files)</h3>
+  <pre><code class="language-python">import pandas as pd
+
+def ticks_to_ohlcv_pandas(path: str) -> pd.DataFrame:
+    df = pd.read_csv(path, parse_dates=["timestamp"])
+    df["minute"] = df["timestamp"].dt.floor("min")
+    return (df
+        .groupby(["minute", "symbol"])
+        .agg(open=("price", "first"),
+             high=("price", "max"),
+             low=("price",  "min"),
+             close=("price", "last"),
+             volume=("volume", "sum"))
+        .reset_index()
+    )</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — CsvHelper</h3>
+
+  <pre><code class="language-csharp">// Install: dotnet add package CsvHelper
+using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
+
+record Tick(DateTime Timestamp, string Symbol, double Price, int Volume);
+record OHLCVBar(string Minute, string Symbol,
+                double Open, double High, double Low, double Close, int Volume);
+
+List&lt;Tick&gt; ReadTicks(string path) {
+    var config = new CsvConfiguration(CultureInfo.InvariantCulture) {
+        HasHeaderRecord = true,
+    };
+    using var reader = new StreamReader(path);
+    using var csv    = new CsvReader(reader, config);
+    return csv.GetRecords&lt;Tick&gt;().ToList();
+}
+
+List&lt;OHLCVBar&gt; TicksToOHLCV(List&lt;Tick&gt; ticks) {
+    return ticks
+        .GroupBy(t =&gt; (Minute: t.Timestamp.ToString("yyyy-MM-dd HH:mm"), t.Symbol))
+        .Select(g =&gt; new OHLCVBar(
+            g.Key.Minute, g.Key.Symbol,
+            Open:   g.First().Price,
+            High:   g.Max(t =&gt; t.Price),
+            Low:    g.Min(t =&gt; t.Price),
+            Close:  g.Last().Price,
+            Volume: g.Sum(t =&gt; t.Volume)))
+        .OrderBy(b =&gt; b.Minute).ThenBy(b =&gt; b.Symbol)
+        .ToList();
+}
+
+void WriteOHLCV(List&lt;OHLCVBar&gt; bars, string path) {
+    using var writer = new StreamWriter(path);
+    using var csv    = new CsvWriter(writer, CultureInfo.InvariantCulture);
+    csv.WriteRecords(bars);
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — manual parser and std::map aggregation</h3>
+
+  <h4>Manual CSV parser (no dependencies)</h4>
+  <pre><code class="language-cpp">#include &lt;fstream&gt;
+#include &lt;sstream&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include &lt;map&gt;
+#include &lt;algorithm&gt;
+#include &lt;stdexcept&gt;
+
+struct Tick {
+    std::string timestamp;  // "2024-01-15 09:30:01"
+    std::string symbol;
+    double      price;
+    int         volume;
+};
+
+struct OHLCVBar {
+    std::string minute;
+    std::string symbol;
+    double      open, high, low, close;
+    int         volume;
+};
+
+// Split a CSV line respecting quoted fields
+std::vector&lt;std::string&gt; split_csv(const std::string& line) {
+    std::vector&lt;std::string&gt; fields;
+    std::string field;
+    bool in_quotes = false;
+
+    for (char c : line) {
+        if (c == '"')       { in_quotes = !in_quotes; continue; }
+        if (c == ',' && !in_quotes) { fields.push_back(field); field.clear(); continue; }
+        field += c;
+    }
+    fields.push_back(field);
+    return fields;
+}
+
+std::vector&lt;Tick&gt; read_ticks(const std::string& path) {
+    std::ifstream f(path);
+    if (!f.is_open()) throw std::runtime_error("Cannot open: " + path);
+
+    std::vector&lt;Tick&gt; ticks;
+    std::string line;
+    std::getline(f, line);  // skip header
+
+    while (std::getline(f, line)) {
+        auto cols = split_csv(line);
+        if (cols.size() &lt; 4) continue;
+        ticks.push_back({
+            cols[0], cols[1],
+            std::stod(cols[2]),
+            std::stoi(cols[3])
+        });
+    }
+    return ticks;
+}</code></pre>
+
+  <h4>Aggregation to OHLCV</h4>
+  <pre><code class="language-cpp">// Extract "YYYY-MM-DD HH:MM" from "YYYY-MM-DD HH:MM:SS"
+std::string to_minute(const std::string& ts) {
+    return ts.substr(0, 16);  // first 16 chars
+}
+
+std::vector&lt;OHLCVBar&gt; ticks_to_ohlcv(const std::vector&lt;Tick&gt;& ticks) {
+    struct BarAcc {
+        double open = 0, high = -1e18, low = 1e18, close = 0;
+        int    volume = 0;
+        bool   first  = true;
+    };
+
+    std::map&lt;std::pair&lt;std::string,std::string&gt;, BarAcc&gt; acc;
+
+    for (const auto& t : ticks) {
+        auto key = std::make_pair(to_minute(t.timestamp), t.symbol);
+        auto& b  = acc[key];
+        if (b.first) { b.open = t.price; b.first = false; }
+        b.high   = std::max(b.high,  t.price);
+        b.low    = std::min(b.low,   t.price);
+        b.close  = t.price;
+        b.volume += t.volume;
+    }
+
+    std::vector&lt;OHLCVBar&gt; bars;
+    bars.reserve(acc.size());
+    for (const auto& [key, b] : acc) {
+        bars.push_back({key.first, key.second,
+                        b.open, b.high, b.low, b.close, b.volume});
+    }
+    return bars;  // already sorted — std::map is ordered
+}</code></pre>
+
+  <h4>Write result</h4>
+  <pre><code class="language-cpp">void write_ohlcv(const std::vector&lt;OHLCVBar&gt;& bars, const std::string& path) {
+    std::ofstream f(path);
+    if (!f.is_open()) throw std::runtime_error("Cannot open: " + path);
+    f &lt;&lt; "minute,symbol,open,high,low,close,volume\n";
+    for (const auto& b : bars) {
+        f &lt;&lt; b.minute &lt;&lt; ',' &lt;&lt; b.symbol &lt;&lt; ','
+          &lt;&lt; b.open   &lt;&lt; ',' &lt;&lt; b.high &lt;&lt; ','
+          &lt;&lt; b.low    &lt;&lt; ',' &lt;&lt; b.close &lt;&lt; ','
+          &lt;&lt; b.volume &lt;&lt; '\n';
+    }
+}</code></pre>
+
+  <div class="cpp-note">💡 For production-quality CSV parsing, use <a href="https://github.com/vincentlaucsb/csv-parser">csv-parser</a> or <a href="https://github.com/ben-strasser/fast-cpp-csv-parser">fast-cpp-csv-parser</a>. The manual parser above handles quoted fields but not escaped quotes inside quoted fields (<code>""</code> encoding).</div>
+</div>

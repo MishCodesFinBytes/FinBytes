@@ -1,0 +1,207 @@
+---
+layout: cpp-post
+title: "Numerical Precision — float vs double vs Fixed Point"
+description: "IEEE 754, precision traps in financial calculations, integer arithmetic for prices"
+date: 2025-03-05
+tags: [quant, precision, foundations]
+permalink: /cpp/numerical-precision/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Floating point is not exact</h3>
+  <p>Every developer eventually hits this: <code>0.1 + 0.2 != 0.3</code>. In most software it's a minor annoyance. In financial software it can mean incorrect P&amp;L, wrong risk numbers, or failed reconciliations. Understanding why — and what to do about it — is essential for production quant code.</p>
+
+  <h3>IEEE 754</h3>
+  <p>The standard that defines floating point arithmetic on virtually all modern hardware. Numbers are stored as sign + exponent + mantissa in binary. Most decimal fractions (0.1, 0.3, 0.7) cannot be represented exactly in binary — they're stored as the nearest representable value.</p>
+
+  <h3>float vs double</h3>
+  <ul>
+    <li><code>float</code> — 32-bit, ~7 significant decimal digits. Faster on some hardware, fits more in cache.</li>
+    <li><code>double</code> — 64-bit, ~15 significant decimal digits. The default for financial calculations.</li>
+    <li><code>long double</code> — 80-bit on x86, ~18 decimal digits. Rarely needed.</li>
+  </ul>
+
+  <h3>Fixed-point integer arithmetic</h3>
+  <p>For prices and quantities where you control the precision, store as integers scaled by a power of 10. £100.25 stored as 10025 (pence). No floating point, no rounding error, exact arithmetic. Used widely in exchange matching engines and risk systems.</p>
+
+  <h3>The rule</h3>
+  <p>Use <code>double</code> for rates, Greeks, and intermediate calculations. Use fixed-point integers for prices and notionals where exact arithmetic matters. Never use <code>float</code> for financial calculations.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — floats and the decimal module</h3>
+
+  <pre><code class="language-python">print(0.1 + 0.2)          # 0.30000000000000004
+print(0.1 + 0.2 == 0.3)   # False
+
+# The Decimal module for exact arithmetic
+from decimal import Decimal, ROUND_HALF_UP
+
+price = Decimal("100.25")
+qty   = Decimal("1000")
+notional = price * qty
+print(notional)  # 100250.00  — exact
+
+# Rounding to 2dp
+value = Decimal("100.255")
+rounded = value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+print(rounded)  # 100.26</code></pre>
+
+  <h3>Integer prices</h3>
+  <pre><code class="language-python"># Store prices as integer pence
+price_pence = 10025   # £100.25
+qty         = 1000
+notional_pence = price_pence * qty   # 10025000
+notional_gbp   = notional_pence / 100  # 100250.0
+
+# Or use a Price class
+class Price:
+    def __init__(self, pence: int):
+        self._pence = pence
+
+    @classmethod
+    def from_float(cls, f: float) -> "Price":
+        return cls(round(f * 100))
+
+    def __add__(self, other: "Price") -> "Price":
+        return Price(self._pence + other._pence)
+
+    def __float__(self) -> float:
+        return self._pence / 100
+
+    def __repr__(self) -> str:
+        return f"£{self._pence / 100:.2f}"
+
+p = Price.from_float(100.25)
+print(p)  # £100.25</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — decimal type</h3>
+  <p>C# has a built-in <code>decimal</code> type — 128-bit, base-10 floating point, designed for financial calculations. Unlike Python's Decimal, it's a primitive value type with no GC overhead.</p>
+
+  <pre><code class="language-csharp">Console.WriteLine(0.1 + 0.2);           // 0.30000000000000004 (double)
+Console.WriteLine(0.1m + 0.2m);         // 0.3 (decimal — exact)
+Console.WriteLine(0.1m + 0.2m == 0.3m); // True
+
+decimal price    = 100.25m;
+decimal qty      = 1000m;
+decimal notional = price * qty;  // 100250.00 — exact
+
+// Rounding
+decimal raw     = 100.255m;
+decimal rounded = Math.Round(raw, 2, MidpointRounding.AwayFromZero);
+Console.WriteLine(rounded);  // 100.26</code></pre>
+
+  <h3>Integer prices in C#</h3>
+  <pre><code class="language-csharp">// Fixed-point price (pence)
+readonly struct Price {
+    private readonly long _pence;
+
+    public Price(long pence) => _pence = pence;
+
+    public static Price FromDecimal(decimal d) =>
+        new Price((long)(d * 100));
+
+    public static Price operator +(Price a, Price b) =>
+        new Price(a._pence + b._pence);
+
+    public decimal ToDecimal() => _pence / 100m;
+    public override string ToString() => $"£{ToDecimal():F2}";
+}
+
+var p = Price.FromDecimal(100.25m);
+Console.WriteLine(p);  // £100.25</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — precision in detail</h3>
+
+  <h4>The floating point problem</h4>
+  <pre><code class="language-cpp">#include &lt;iostream&gt;
+#include &lt;iomanip&gt;
+#include &lt;cmath&gt;
+
+int main() {
+    double a = 0.1 + 0.2;
+    std::cout &lt;&lt; std::setprecision(17) &lt;&lt; a &lt;&lt; "\n";  // 0.30000000000000004
+    std::cout &lt;&lt; (a == 0.3 ? "equal" : "not equal") &lt;&lt; "\n";  // not equal
+
+    // Safe comparison with epsilon
+    auto approx_eq = [](double x, double y, double eps = 1e-9) {
+        return std::abs(x - y) &lt; eps;
+    };
+    std::cout &lt;&lt; (approx_eq(a, 0.3) ? "approx equal" : "not equal") &lt;&lt; "\n";
+    return 0;
+}</code></pre>
+
+  <h4>Fixed-point Price type</h4>
+  <pre><code class="language-cpp">#include &lt;cstdint&gt;
+#include &lt;stdexcept&gt;
+#include &lt;iostream&gt;
+#include &lt;iomanip&gt;
+
+// Price stored as integer pence — no floating point error
+class Price {
+public:
+    static constexpr int64_t SCALE = 100;  // pence
+
+    explicit Price(int64_t pence) : pence_(pence) {}
+
+    static Price from_double(double d) {
+        return Price(static_cast&lt;int64_t&gt;(std::llround(d * SCALE)));
+    }
+
+    Price operator+(const Price&amp; o) const { return Price(pence_ + o.pence_); }
+    Price operator-(const Price&amp; o) const { return Price(pence_ - o.pence_); }
+    bool  operator==(const Price&amp; o) const { return pence_ == o.pence_; }
+    bool  operator&lt;(const Price&amp; o)  const { return pence_ &lt;  o.pence_; }
+
+    double  to_double() const { return static_cast&lt;double&gt;(pence_) / SCALE; }
+    int64_t pence()     const { return pence_; }
+
+    friend std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const Price&amp; p) {
+        return os &lt;&lt; "£" &lt;&lt; std::fixed &lt;&lt; std::setprecision(2) &lt;&lt; p.to_double();
+    }
+
+private:
+    int64_t pence_;
+};
+
+int main() {
+    Price p1 = Price::from_double(100.25);
+    Price p2 = Price::from_double(0.75);
+    Price p3 = p1 + p2;
+
+    std::cout &lt;&lt; p1 &lt;&lt; "\n";   // £100.25
+    std::cout &lt;&lt; p3 &lt;&lt; "\n";   // £101.00 — exact, no float error
+    std::cout &lt;&lt; (p3 == Price::from_double(101.00) ? "equal" : "not equal") &lt;&lt; "\n";
+    return 0;
+}</code></pre>
+
+  <div class="cpp-note">💡 <code>std::llround</code> rounds to the nearest integer, handling the halfway case correctly. Never use <code>static_cast&lt;int64_t&gt;(d * 100)</code> directly — truncation errors for values like 100.1 * 100 = 10009.999... → 10009.</div>
+
+  <h4>Kahan summation — reducing accumulation error</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+
+// Naïve summation accumulates error
+double naive_sum(const std::vector&lt;double&gt;&amp; v) {
+    double sum = 0;
+    for (double x : v) sum += x;
+    return sum;
+}
+
+// Kahan summation — tracks the error term
+double kahan_sum(const std::vector&lt;double&gt;&amp; v) {
+    double sum = 0, c = 0;
+    for (double x : v) {
+        double y = x - c;
+        double t = sum + y;
+        c   = (t - sum) - y;
+        sum = t;
+    }
+    return sum;
+}
+
+// For 1M additions of 0.1: naïve error ~1e-8, kahan error ~1e-15</code></pre>
+</div>

@@ -1,0 +1,122 @@
+---
+layout: cpp-post
+title: "Observer / Event Pattern"
+description: "Market data subscribers, risk aggregators. Python callbacks, C# events, C++ signal/slot."
+date: 2025-12-10
+tags: [design-patterns, observer, events]
+permalink: /cpp/observer-pattern/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Decoupling producers from consumers</h3>
+  <p>The Observer pattern lets one object (publisher) notify many others (subscribers) when its state changes, without knowing who those others are. It is the backbone of market data distribution: a feed publishes price updates; pricers, risk engines, and dashboards all subscribe independently.</p>
+  <p><strong>Push vs pull:</strong> Push sends data to observers immediately. Pull notifies observers something changed; they fetch what they need. Push is simpler and lower-latency. Pull avoids sending data to observers that do not need it.</p>
+  <p>A market data event arrives. Multiple subscribers handle it: the option pricer re-prices, the delta hedger recomputes the hedge, the risk monitor updates PnL. None of them need to know about each other.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python observer pattern</h3>
+  <pre><code class="language-python">from typing import Callable, Protocol
+from dataclasses import dataclass
+
+@dataclass
+class PriceUpdate:
+    symbol: str
+    price:  float
+    volume: int
+
+class PriceObserver(Protocol):
+    def on_price(self, update: PriceUpdate) -> None: ...
+
+class MarketDataFeed:
+    def __init__(self): self._observers: list[PriceObserver] = []
+    def subscribe(self, obs: PriceObserver) -> None: self._observers.append(obs)
+    def unsubscribe(self, obs: PriceObserver) -> None: self._observers.remove(obs)
+    def publish(self, update: PriceUpdate) -> None:
+        for obs in self._observers: obs.on_price(update)
+
+class OptionPricer:
+    def on_price(self, u: PriceUpdate) -> None:
+        print(f"Pricer: repricing {u.symbol} @ {u.price}")
+
+class RiskMonitor:
+    def on_price(self, u: PriceUpdate) -> None:
+        print(f"Risk: updating PnL for {u.symbol}")
+
+feed = MarketDataFeed()
+feed.subscribe(OptionPricer())
+feed.subscribe(RiskMonitor())
+feed.publish(PriceUpdate("AAPL", 151.25, 10_000))
+
+# Callable observer variant
+class SimpleEventBus:
+    def __init__(self): self._handlers: list[Callable] = []
+    def on(self, fn: Callable) -> None: self._handlers.append(fn)
+    def emit(self, *args) -> None:
+        for h in self._handlers: h(*args)</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# events and delegates</h3>
+  <pre><code class="language-csharp">public record PriceUpdate(string Symbol, double Price, int Volume);
+
+public class MarketDataFeed {
+    public event EventHandler&lt;PriceUpdate&gt;? PriceReceived;
+    public void Publish(PriceUpdate update) => PriceReceived?.Invoke(this, update);
+}
+
+public class OptionPricer {
+    public void OnPrice(object? sender, PriceUpdate u) =>
+        Console.WriteLine($"Pricer: repricing {u.Symbol} @ {u.Price}");
+}
+
+var feed   = new MarketDataFeed();
+var pricer = new OptionPricer();
+feed.PriceReceived += pricer.OnPrice;
+feed.PriceReceived += (_, u) => Console.WriteLine($"LOG: {u.Symbol}");
+feed.Publish(new PriceUpdate("AAPL", 151.25, 10_000));
+feed.PriceReceived -= pricer.OnPrice;  // unsubscribe</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ observer - interface-based and callback-based</h3>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;functional&gt;
+#include &lt;string&gt;
+#include &lt;algorithm&gt;
+
+struct PriceUpdate { std::string symbol; double price; int volume; };
+
+// Interface-based
+struct IPriceObserver {
+    virtual ~IPriceObserver() = default;
+    virtual void on_price(const PriceUpdate&) = 0;
+};
+
+class MarketDataFeed {
+    std::vector&lt;IPriceObserver*&gt; observers_;
+public:
+    void subscribe(IPriceObserver* obs) { observers_.push_back(obs); }
+    void unsubscribe(IPriceObserver* obs) {
+        observers_.erase(std::remove(observers_.begin(), observers_.end(), obs), observers_.end());
+    }
+    void publish(const PriceUpdate& u) {
+        for (auto* obs : observers_) obs->on_price(u);
+    }
+};
+
+// Callback-based (accepts lambdas, member functions, free functions)
+class EventFeed {
+    using Handler = std::function&lt;void(const PriceUpdate&)&gt;;
+    std::vector&lt;Handler&gt; handlers_;
+public:
+    void on(Handler h)           { handlers_.push_back(std::move(h)); }
+    void emit(const PriceUpdate& u) { for (const auto& h : handlers_) h(u); }
+};
+
+EventFeed feed;
+feed.on([](const PriceUpdate& u) { /* reprice */ });
+feed.on([](const PriceUpdate& u) { /* risk update */ });
+feed.emit({"AAPL", 151.25, 10'000});</code></pre>
+  <div class="cpp-note">Raw observer pointers work if observer lifetimes are managed carefully (unsubscribe before destruction). For shared ownership, use <code>weak_ptr</code> observers - the publisher skips any that have expired, avoiding dangling pointer crashes.</div>
+</div>

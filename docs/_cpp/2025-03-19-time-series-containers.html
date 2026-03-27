@@ -1,0 +1,160 @@
+---
+layout: cpp-post
+title: "Time Series Containers — Efficient Tick Storage"
+description: "Storing OHLCV data with minimal allocation, circular buffers, benchmarking vs pandas"
+date: 2025-03-19
+tags: [quant, data-structures, performance]
+permalink: /cpp/time-series-containers/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The problem with naive tick storage</h3>
+  <p>A naive implementation stores ticks in a growing vector, allocates on every push, and copies the whole thing for rolling windows. For real-time systems processing millions of ticks per second, this doesn't work.</p>
+  <h3>What we need</h3>
+  <ul>
+    <li><strong>Fixed-capacity circular buffer</strong> — O(1) push, O(1) random access, no allocation after construction</li>
+    <li><strong>SoA layout</strong> — separate arrays for price, volume, time for cache-friendly loop performance</li>
+    <li><strong>Pre-allocated</strong> — all memory reserved upfront, no dynamic allocation in the hot path</li>
+  </ul>
+  <h3>Circular buffer</h3>
+  <p>A fixed-size array with a head pointer. New elements overwrite the oldest. Capacity is fixed — no reallocation. Perfect for rolling windows: always keep the last N ticks without any shifting or copying.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python tick storage</h3>
+  <pre><code class="language-python">from collections import deque
+from dataclasses import dataclass
+import time
+
+@dataclass
+class OHLCV:
+    open:   float
+    high:   float
+    low:    float
+    close:  float
+    volume: int
+
+# deque as circular buffer
+class TickBuffer:
+    def __init__(self, capacity: int):
+        self.buf = deque(maxlen=capacity)
+
+    def push(self, bar: OHLCV) -> None:
+        self.buf.append(bar)
+
+    def close_prices(self) -> list[float]:
+        return [b.close for b in self.buf]
+
+    def __len__(self) -> int:
+        return len(self.buf)
+
+buf = TickBuffer(256)
+for i in range(300):
+    buf.push(OHLCV(100+i, 102+i, 99+i, 101+i, 1000))
+print(len(buf))            # 256 — older bars dropped
+print(buf.close_prices()[-1])  # 400.0</code></pre>
+  <div class="cpp-note">Python's <code>deque(maxlen=N)</code> is a circular buffer — O(1) append, O(1) pop, auto-drops oldest when full. Internally it's a doubly-linked list of fixed-size blocks, not a single contiguous array — less cache-friendly than C++.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# circular buffer</h3>
+  <pre><code class="language-csharp">struct OHLCV {
+    public double Open, High, Low, Close;
+    public int    Volume;
+}
+
+class CircularBuffer&lt;T&gt; {
+    private readonly T[] _buf;
+    private int _head, _count;
+
+    public CircularBuffer(int capacity) {
+        _buf = new T[capacity];
+    }
+
+    public void Push(T item) {
+        _buf[_head] = item;
+        _head = (_head + 1) % _buf.Length;
+        if (_count &lt; _buf.Length) _count++;
+    }
+
+    public T this[int i] =&gt; _buf[(_head - _count + i + _buf.Length) % _buf.Length];
+    public int Count =&gt; _count;
+}
+
+var bars = new CircularBuffer&lt;OHLCV&gt;(256);
+for (int i = 0; i &lt; 300; i++)
+    bars.Push(new OHLCV { Close = 100 + i });
+Console.WriteLine(bars.Count);  // 256</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ circular tick buffer — SoA layout</h3>
+  <pre><code class="language-cpp">#include &lt;array&gt;
+#include &lt;cstddef&gt;
+#include &lt;stdexcept&gt;
+#include &lt;numeric&gt;
+#include &lt;iostream&gt;
+
+// Compile-time capacity — all on the stack if small enough
+template&lt;std::size_t N&gt;
+class OHLCVBuffer {
+public:
+    struct Bar {
+        double open, high, low, close;
+        int    volume;
+    };
+
+    void push(const Bar&amp; bar) {
+        open_[head_]   = bar.open;
+        high_[head_]   = bar.high;
+        low_[head_]    = bar.low;
+        close_[head_]  = bar.close;
+        volume_[head_] = bar.volume;
+        head_ = (head_ + 1) % N;
+        if (count_ &lt; N) ++count_;
+    }
+
+    // Access by logical index (0 = oldest)
+    double close(std::size_t i) const {
+        return close_[logical_to_physical(i)];
+    }
+
+    // Mean of close prices — tight loop over contiguous doubles
+    double mean_close() const {
+        if (count_ == 0) return 0.0;
+        double sum = 0;
+        for (std::size_t i = 0; i &lt; count_; ++i)
+            sum += close_[i];  // raw array — fully vectorisable
+        return sum / count_;
+    }
+
+    std::size_t size()     const { return count_; }
+    bool        full()     const { return count_ == N; }
+
+private:
+    std::size_t logical_to_physical(std::size_t i) const {
+        return (head_ - count_ + i + N) % N;
+    }
+
+    // SoA — each field in its own contiguous array
+    std::array&lt;double, N&gt; open_{};
+    std::array&lt;double, N&gt; high_{};
+    std::array&lt;double, N&gt; low_{};
+    std::array&lt;double, N&gt; close_{};
+    std::array&lt;int, N&gt;    volume_{};
+    std::size_t head_  = 0;
+    std::size_t count_ = 0;
+};
+
+int main() {
+    OHLCVBuffer&lt;256&gt; buf;  // 256 bars, stack allocated
+
+    for (int i = 0; i &lt; 300; ++i)
+        buf.push({100.0+i, 102.0+i, 99.0+i, 101.0+i, 1000});
+
+    std::cout &lt;&lt; "size:  "       &lt;&lt; buf.size()       &lt;&lt; "\n";  // 256
+    std::cout &lt;&lt; "mean close: " &lt;&lt; buf.mean_close()  &lt;&lt; "\n";
+    return 0;
+}</code></pre>
+  <div class="cpp-note">💡 With <code>N</code> as a template parameter, the buffer size is known at compile time. <code>std::array</code> lives on the stack for small N — zero heap allocation. The SoA layout means <code>mean_close()</code> touches only the close_ array — perfect cache behaviour.</div>
+</div>

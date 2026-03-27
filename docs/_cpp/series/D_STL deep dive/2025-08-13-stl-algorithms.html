@@ -1,0 +1,148 @@
+---
+layout: cpp-post
+title: "STL Algorithms — Replace Your Loops"
+description: "sort, find_if, transform, accumulate, reduce, partition. Ranges (C++20)."
+date: 2025-08-13
+tags: [stl, algorithms, cpp]
+permalink: /cpp/stl-algorithms/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Algorithms over loops</h3>
+  <p>The STL ships 100+ algorithms in <code>&lt;algorithm&gt;</code> and <code>&lt;numeric&gt;</code>. They're worth knowing because they're expressive, tested, and often faster than hand-written loops (the compiler can see the intent and optimise accordingly).</p>
+
+  <h3>The mental model</h3>
+  <p>STL algorithms take iterators (begin/end) and optionally a callable (lambda, function pointer). C++20 Ranges simplifies this: pass the container directly and chain operations with <code>|</code>.</p>
+
+  <h3>Most useful for finance</h3>
+  <ul>
+    <li><code>std::sort</code> / <code>std::partial_sort</code> / <code>std::nth_element</code></li>
+    <li><code>std::accumulate</code> / <code>std::reduce</code> (parallel-friendly)</li>
+    <li><code>std::transform</code> — apply function element-wise</li>
+    <li><code>std::find_if</code> / <code>std::any_of</code> / <code>std::all_of</code></li>
+    <li><code>std::partition</code> / <code>std::stable_partition</code></li>
+    <li><code>std::inner_product</code> — dot product</li>
+  </ul>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python functional equivalents</h3>
+  <pre><code class="language-python">from functools import reduce
+import operator
+
+prices = [100.0, 95.0, 102.0, 98.5, 103.0]
+
+# sort
+sorted_prices = sorted(prices)           # new list
+prices.sort()                            # in-place
+top3 = sorted(prices, reverse=True)[:3] # top 3
+
+# map/filter — Python's transform/find_if
+returns  = list(map(lambda p: p/prices[0] - 1, prices))
+positive = list(filter(lambda r: r > 0, returns))
+
+# reduce — accumulate
+total   = reduce(operator.add, prices, 0.0)
+product = reduce(operator.mul, prices, 1.0)
+
+# any/all
+any_above_100 = any(p > 100 for p in prices)
+all_positive  = all(p > 0   for p in prices)
+
+# List comprehensions (preferred over map/filter in Python)
+returns_lc  = [p/prices[0] - 1 for p in prices]
+positive_lc = [r for r in returns_lc if r > 0]
+
+# zip for inner product
+weights    = [0.3, 0.2, 0.2, 0.15, 0.15]
+port_value = sum(w * p for w, p in zip(weights, prices))</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# LINQ</h3>
+  <pre><code class="language-csharp">var prices = new[] { 100.0, 95.0, 102.0, 98.5, 103.0 };
+
+// Sort
+var sorted  = prices.OrderBy(p => p).ToArray();
+var top3    = prices.OrderByDescending(p => p).Take(3).ToArray();
+
+// Transform
+var returns = prices.Select(p => p / prices[0] - 1).ToArray();
+
+// Filter
+var positive = returns.Where(r => r > 0).ToArray();
+
+// Aggregate (reduce)
+var total   = prices.Sum();
+var product = prices.Aggregate(1.0, (acc, p) => acc * p);
+
+// Any/All
+bool anyAbove100 = prices.Any(p => p > 100);
+bool allPositive = prices.All(p => p > 0);
+
+// Inner product
+var weights    = new[] { 0.3, 0.2, 0.2, 0.15, 0.15 };
+var portValue  = prices.Zip(weights, (p, w) => p * w).Sum();</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ STL algorithms</h3>
+  <pre><code class="language-cpp">#include &lt;algorithm&gt;
+#include &lt;numeric&gt;
+#include &lt;vector&gt;
+#include &lt;ranges&gt;   // C++20
+#include &lt;iostream&gt;
+
+std::vector&lt;double&gt; prices = {100.0, 95.0, 102.0, 98.5, 103.0};
+
+// Sort
+std::sort(prices.begin(), prices.end());                   // ascending in-place
+std::sort(prices.begin(), prices.end(), std::greater&lt;&gt;()); // descending
+std::nth_element(prices.begin(), prices.begin()+2, prices.end()); // median-partition
+
+// Transform (map equivalent)
+std::vector&lt;double&gt; returns(prices.size());
+std::transform(prices.begin(), prices.end(), returns.begin(),
+    [base = prices[0]](double p) { return p / base - 1.0; });
+
+// Accumulate / reduce
+double total   = std::accumulate(prices.begin(), prices.end(), 0.0);
+double product = std::accumulate(prices.begin(), prices.end(), 1.0,
+    std::multiplies&lt;double&gt;{});
+
+// C++17 parallel reduce
+double par_sum = std::reduce(std::execution::par_unseq,
+    prices.begin(), prices.end(), 0.0);
+
+// Find
+auto it = std::find_if(prices.begin(), prices.end(),
+    [](double p) { return p > 100.0; });
+if (it != prices.end())
+    std::cout &lt;&lt; "First above 100: " &lt;&lt; *it &lt;&lt; "
+";
+
+// Any/all
+bool any_above = std::any_of(prices.begin(), prices.end(), [](double p) { return p > 100; });
+bool all_pos   = std::all_of(prices.begin(), prices.end(), [](double p) { return p > 0;   });
+
+// Partition — split into two groups
+auto mid = std::partition(prices.begin(), prices.end(),
+    [](double p) { return p > 100.0; });
+// [begin, mid) = above 100; [mid, end) = at or below
+
+// Inner product (dot product)
+std::vector&lt;double&gt; weights = {0.3, 0.2, 0.2, 0.15, 0.15};
+double port_value = std::inner_product(
+    prices.begin(), prices.end(), weights.begin(), 0.0);
+
+// C++20 Ranges — pipe syntax
+namespace rv = std::ranges::views;
+auto above_100 = prices
+    | rv::filter([](double p) { return p > 100.0; })
+    | rv::transform([](double p) { return p * 1.1; });  // lazy — no allocation
+
+for (double p : above_100)
+    std::cout &lt;&lt; p &lt;&lt; " ";
+</code></pre>
+  <div class="cpp-note">💡 C++20 Ranges are lazy — the pipeline doesn't execute until you iterate. Chaining <code>filter | transform | take(5)</code> processes only as many elements as needed. This matches Python generator behaviour but with zero overhead.</div>
+</div>

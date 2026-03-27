@@ -1,0 +1,110 @@
+---
+layout: cpp-post
+title: "Health Checks and Watchdogs"
+description: "Liveness vs readiness. Watchdog threads. Heartbeat patterns. Silent failures."
+date: 2026-04-22
+tags: [reliability, health-checks, monitoring]
+permalink: /cpp/health-checks/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Two kinds of health</h3>
+  <p><strong>Liveness:</strong> is the process alive? Fails if the process is stuck in an infinite loop, deadlocked, or OOM. Correct response: restart the process.</p>
+  <p><strong>Readiness:</strong> is the process ready to serve traffic? Fails if alive but warming up, draining, or dependencies unavailable. Correct response: stop routing traffic to it, but do not restart it.</p>
+  <p>Kubernetes uses both. A failed liveness probe triggers a restart. A failed readiness probe removes the pod from the service's endpoint list. For a pricing service: liveness = heartbeat still ticking; readiness = market data feed connected and vol surface loaded.</p>
+  <p><strong>Silent failures:</strong> the hardest to detect. The process is running, the heartbeat is ticking, but it is processing incorrect data. For example: the feed is connected but returning stale prices. The process appears healthy but computes wrong Greeks. Staleness checks are essential.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python health check server</h3>
+  <pre><code class="language-python">from flask import Flask, jsonify
+import threading, time
+
+app    = Flask(__name__)
+state  = {"ready": False, "feed_age_s": 0.0}
+last_heartbeat = time.monotonic()
+
+def processing_thread():
+    global last_heartbeat
+    while True:
+        process_some_work()
+        last_heartbeat = time.monotonic()
+        time.sleep(0.1)
+
+@app.get("/healthz")     # liveness
+def liveness():
+    age = time.monotonic() - last_heartbeat
+    if age > 30.0:
+        return jsonify({"status": "unhealthy", "reason": f"no heartbeat for {age:.0f}s"}), 503
+    return jsonify({"status": "ok"})
+
+@app.get("/readyz")      # readiness
+def readiness():
+    checks = {
+        "feed_connected":     market_feed.is_connected(),
+        "vol_surface_loaded": vol_surface is not None,
+        "feed_fresh":         state["feed_age_s"] &lt; 60.0,
+    }
+    if all(checks.values()):
+        return jsonify({"status": "ready", "checks": checks})
+    return jsonify({"status": "not_ready", "checks": checks}), 503</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# health checks (ASP.NET)</h3>
+  <pre><code class="language-csharp">builder.Services.AddHealthChecks()
+    .AddCheck("market_feed", () => {
+        var age = DateTime.UtcNow - lastFeedUpdate;
+        return age.TotalSeconds &lt; 60
+            ? HealthCheckResult.Healthy($"Feed age: {age.TotalSeconds:F0}s")
+            : HealthCheckResult.Unhealthy($"Feed stale: {age.TotalSeconds:F0}s");
+    })
+    .AddCheck("vol_surface", () =>
+        volSurface is not null
+            ? HealthCheckResult.Healthy()
+            : HealthCheckResult.Unhealthy("Vol surface not loaded"));
+
+app.MapHealthChecks("/healthz");  // liveness
+app.MapHealthChecks("/readyz", new HealthCheckOptions {
+    Predicate = check => check.Tags.Contains("ready")
+});</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ health endpoint + watchdog</h3>
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;chrono&gt;
+#include &lt;string&gt;
+
+std::atomic&lt;int64_t&gt; heartbeat_ns{0};
+std::atomic&lt;int64_t&gt; last_feed_ns{0};
+
+void update_heartbeat() {
+    heartbeat_ns.store(
+        std::chrono::steady_clock::now().time_since_epoch().count(),
+        std::memory_order_relaxed);
+}
+
+bool is_alive(std::chrono::seconds max_age = std::chrono::seconds(30)) {
+    auto now  = std::chrono::steady_clock::now().time_since_epoch().count();
+    auto last = heartbeat_ns.load(std::memory_order_relaxed);
+    return (now - last) &lt; std::chrono::nanoseconds(max_age).count();
+}
+
+bool is_feed_fresh(std::chrono::seconds max_age = std::chrono::seconds(60)) {
+    auto now  = std::chrono::steady_clock::now().time_since_epoch().count();
+    auto last = last_feed_ns.load(std::memory_order_relaxed);
+    return (now - last) &lt; std::chrono::nanoseconds(max_age).count();
+}
+
+struct HealthStatus { bool live; bool ready; std::string message; };
+
+HealthStatus get_health() {
+    bool live  = is_alive();
+    bool ready = live && is_feed_fresh() && vol_surface_loaded.load();
+    std::string msg = ready ? "ok" : !live ? "deadlocked" :
+                      !is_feed_fresh() ? "feed stale" : "not ready";
+    return {live, ready, msg};
+}</code></pre>
+  <div class="cpp-note">Separate liveness and readiness endpoints. Kubernetes calls them on different schedules with different thresholds. A liveness failure triggers a restart - make sure liveness only fails for genuinely unrecoverable conditions, not transient dependency issues.</div>
+</div>

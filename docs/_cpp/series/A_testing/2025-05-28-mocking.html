@@ -1,0 +1,272 @@
+---
+layout: cpp-post
+title: "Mocking and Dependency Injection"
+description: "unittest.mock vs Moq vs GoogleMock. Isolating units from external dependencies."
+date: 2025-05-28
+tags: [testing, mocking, dependency-injection]
+permalink: /cpp/mocking/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The problem with real dependencies</h3>
+  <p>A unit test should test one thing. But real code calls databases, HTTP APIs, file systems, clocks. If your pricer test hits a live market data feed, it's slow, flaky, and non-deterministic. Mocking replaces real dependencies with controlled fakes.</p>
+
+  <h3>Dependency injection</h3>
+  <p>The prerequisite for mocking: instead of creating dependencies inside a class, <em>inject</em> them from outside. A <code>Pricer</code> that creates its own <code>MarketDataFeed</code> can't be tested in isolation. A <code>Pricer</code> that accepts an <code>IMarketDataFeed</code> can be given a fake one in tests.</p>
+
+  <h3>The interface/abstract class pattern</h3>
+  <p>Define an interface (Python: Protocol or ABC; C#: interface; C++: abstract base class). The real implementation and the mock both implement it. Tests inject the mock; production code injects the real thing.</p>
+
+  <h3>What we're mocking</h3>
+  <p>A <code>PriceService</code> that fetches spot prices from an external feed. We want to test the pricing logic without a real feed — inject a mock that returns controlled prices.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — unittest.mock and Protocol</h3>
+
+  <h4>Interface and implementation</h4>
+  <pre><code class="language-python"># price_service.py
+from typing import Protocol
+
+class MarketDataFeed(Protocol):
+    def get_spot(self, symbol: str) -> float: ...
+    def get_vol(self, symbol: str)   -> float: ...
+
+class PriceService:
+    def __init__(self, feed: MarketDataFeed) -> None:
+        self._feed = feed
+
+    def pv01(self, symbol: str, notional: float) -> float:
+        spot = self._feed.get_spot(symbol)
+        vol  = self._feed.get_vol(symbol)
+        return notional * spot * vol * 0.01  # simplified
+
+    def is_liquid(self, symbol: str) -> bool:
+        return self._feed.get_vol(symbol) &lt; 0.5</code></pre>
+
+  <h4>Tests with unittest.mock</h4>
+  <pre><code class="language-python"># test_price_service.py
+from unittest.mock import MagicMock, patch, call
+import pytest
+from price_service import PriceService
+
+class TestPriceService:
+    def test_pv01_uses_feed_correctly(self):
+        # Arrange — create mock with controlled return values
+        mock_feed = MagicMock()
+        mock_feed.get_spot.return_value = 100.0
+        mock_feed.get_vol.return_value  = 0.2
+        svc = PriceService(mock_feed)
+
+        # Act
+        result = svc.pv01("AAPL", 1_000_000)
+
+        # Assert value
+        assert result == pytest.approx(200_000.0)
+
+        # Assert interactions — feed was called with right args
+        mock_feed.get_spot.assert_called_once_with("AAPL")
+        mock_feed.get_vol.assert_called_once_with("AAPL")
+
+    def test_is_liquid_when_vol_low(self):
+        mock_feed = MagicMock()
+        mock_feed.get_vol.return_value = 0.2  # low vol = liquid
+        svc = PriceService(mock_feed)
+        assert svc.is_liquid("AAPL") is True
+
+    def test_is_illiquid_when_vol_high(self):
+        mock_feed = MagicMock()
+        mock_feed.get_vol.return_value = 0.8  # high vol = illiquid
+        svc = PriceService(mock_feed)
+        assert svc.is_liquid("AAPL") is False
+
+    def test_feed_called_in_order(self):
+        mock_feed = MagicMock()
+        mock_feed.get_spot.return_value = 100.0
+        mock_feed.get_vol.return_value  = 0.2
+        svc = PriceService(mock_feed)
+        svc.pv01("AAPL", 1_000_000)
+
+        # Verify call order
+        assert mock_feed.method_calls == [
+            call.get_spot("AAPL"),
+            call.get_vol("AAPL"),
+        ]</code></pre>
+
+  <div class="cpp-note"><code>MagicMock()</code> auto-creates any attribute or method you access on it. Use <code>spec=MarketDataFeed</code> to restrict it to the real interface — catches typos in method names.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — Moq</h3>
+
+  <h4>Interface and implementation</h4>
+  <pre><code class="language-csharp">// IMarketDataFeed.cs
+public interface IMarketDataFeed {
+    double GetSpot(string symbol);
+    double GetVol(string symbol);
+}
+
+// PriceService.cs
+public class PriceService {
+    private readonly IMarketDataFeed _feed;
+    public PriceService(IMarketDataFeed feed) =&gt; _feed = feed;
+
+    public double Pv01(string symbol, double notional) {
+        var spot = _feed.GetSpot(symbol);
+        var vol  = _feed.GetVol(symbol);
+        return notional * spot * vol * 0.01;
+    }
+
+    public bool IsLiquid(string symbol) =&gt; _feed.GetVol(symbol) &lt; 0.5;
+}</code></pre>
+
+  <h4>Tests with Moq</h4>
+  <pre><code class="language-csharp">// PriceServiceTests.cs
+using Moq;
+using Xunit;
+
+public class PriceServiceTests {
+    private readonly Mock&lt;IMarketDataFeed&gt; _mockFeed = new();
+    private readonly PriceService _svc;
+
+    public PriceServiceTests() {
+        _mockFeed.Setup(f =&gt; f.GetSpot("AAPL")).Returns(100.0);
+        _mockFeed.Setup(f =&gt; f.GetVol("AAPL")).Returns(0.2);
+        _svc = new PriceService(_mockFeed.Object);
+    }
+
+    [Fact]
+    public void Pv01_UsesCorrectFormula() {
+        var result = _svc.Pv01("AAPL", 1_000_000);
+        Assert.Equal(200_000.0, result, precision: 6);
+    }
+
+    [Fact]
+    public void Pv01_CallsFeedWithCorrectSymbol() {
+        _svc.Pv01("AAPL", 1_000_000);
+        _mockFeed.Verify(f =&gt; f.GetSpot("AAPL"), Times.Once);
+        _mockFeed.Verify(f =&gt; f.GetVol("AAPL"),  Times.Once);
+    }
+
+    [Fact]
+    public void IsLiquid_WhenVolLow_ReturnsTrue() {
+        Assert.True(_svc.IsLiquid("AAPL"));
+    }
+
+    [Fact]
+    public void IsLiquid_WhenVolHigh_ReturnsFalse() {
+        _mockFeed.Setup(f =&gt; f.GetVol("MSFT")).Returns(0.8);
+        Assert.False(_svc.IsLiquid("MSFT"));
+    }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — manual fakes and GoogleMock</h3>
+
+  <h4>Abstract interface</h4>
+  <pre><code class="language-cpp">// market_data_feed.h
+#pragma once
+#include &lt;string&gt;
+
+class IMarketDataFeed {
+public:
+    virtual ~IMarketDataFeed() = default;
+    virtual double get_spot(const std::string& symbol) const = 0;
+    virtual double get_vol(const std::string&  symbol) const = 0;
+};
+
+// price_service.h
+#pragma once
+#include "market_data_feed.h"
+
+class PriceService {
+public:
+    explicit PriceService(const IMarketDataFeed& feed) : feed_(feed) {}
+
+    double pv01(const std::string& symbol, double notional) const {
+        return notional * feed_.get_spot(symbol) * feed_.get_vol(symbol) * 0.01;
+    }
+
+    bool is_liquid(const std::string& symbol) const {
+        return feed_.get_vol(symbol) &lt; 0.5;
+    }
+
+private:
+    const IMarketDataFeed& feed_;
+};</code></pre>
+
+  <h4>Manual fake (no framework needed)</h4>
+  <pre><code class="language-cpp">// In test file — a hand-rolled fake
+#include &lt;catch2/catch_test_macros.hpp&gt;
+#include &lt;catch2/matchers/catch_matchers_floating_point.hpp&gt;
+#include "price_service.h"
+
+struct FakeFeed : IMarketDataFeed {
+    double spot = 100.0;
+    double vol  = 0.2;
+    mutable int spot_calls = 0;
+    mutable int vol_calls  = 0;
+
+    double get_spot(const std::string&) const override {
+        ++spot_calls; return spot;
+    }
+    double get_vol(const std::string&) const override {
+        ++vol_calls; return vol;
+    }
+};
+
+TEST_CASE("PriceService pv01", "[pricer]") {
+    FakeFeed feed;
+    PriceService svc(feed);
+
+    SECTION("correct formula") {
+        auto result = svc.pv01("AAPL", 1'000'000);
+        REQUIRE_THAT(result, Catch::Matchers::WithinAbs(200'000.0, 1e-6));
+    }
+
+    SECTION("feed called once per field") {
+        svc.pv01("AAPL", 1'000'000);
+        REQUIRE(feed.spot_calls == 1);
+        REQUIRE(feed.vol_calls  == 1);
+    }
+}
+
+TEST_CASE("PriceService liquidity", "[pricer]") {
+    FakeFeed feed;
+    PriceService svc(feed);
+
+    SECTION("liquid when vol low") {
+        feed.vol = 0.2;
+        REQUIRE(svc.is_liquid("AAPL") == true);
+    }
+
+    SECTION("illiquid when vol high") {
+        feed.vol = 0.8;
+        REQUIRE(svc.is_liquid("AAPL") == false);
+    }
+}</code></pre>
+
+  <h4>GoogleMock (for interaction verification without hand-rolling)</h4>
+  <pre><code class="language-cpp">// With GoogleMock (part of GoogleTest)
+#include &lt;gmock/gmock.h&gt;
+#include &lt;gtest/gtest.h&gt;
+#include "price_service.h"
+
+class MockFeed : public IMarketDataFeed {
+public:
+    MOCK_METHOD(double, get_spot, (const std::string&), (const, override));
+    MOCK_METHOD(double, get_vol,  (const std::string&), (const, override));
+};
+
+TEST(PriceServiceTest, Pv01CallsFeedCorrectly) {
+    MockFeed mock;
+    EXPECT_CALL(mock, get_spot("AAPL")).Times(1).WillOnce(testing::Return(100.0));
+    EXPECT_CALL(mock, get_vol("AAPL")).Times(1).WillOnce(testing::Return(0.2));
+
+    PriceService svc(mock);
+    EXPECT_NEAR(svc.pv01("AAPL", 1'000'000), 200'000.0, 1e-6);
+}</code></pre>
+
+  <div class="cpp-note">💡 For most C++ testing, a hand-rolled fake is simpler than GoogleMock — less setup, no extra framework dependency. Reach for GoogleMock when you have many mock methods or complex interaction requirements.</div>
+</div>

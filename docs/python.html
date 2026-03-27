@@ -1,0 +1,119 @@
+---
+layout: page
+title: Python
+permalink: /python/
+---
+<style>
+.py-lede { color:#666; font-size:.95rem; margin-bottom:2.5rem; max-width:580px; line-height:1.7; }
+.py-section { margin-bottom:2.5rem; }
+.py-section-hdr {
+  display:flex; align-items:baseline; gap:.75rem;
+  font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#999;
+  margin-bottom:.6rem; padding-bottom:.5rem; border-bottom:1px solid #ebebeb;
+}
+.py-section-hdr .sub { font-weight:400; font-size:.7rem; color:#bbb; letter-spacing:0; text-transform:none; }
+.py-list { list-style:none; margin:0; padding:0; }
+.py-list li { display:flex; align-items:baseline; gap:1rem; padding:.4rem 0; border-bottom:1px solid #f4f4f4; }
+.py-list li:last-child { border-bottom:none; }
+.py-date { font-size:.78rem; color:#ccc; white-space:nowrap; min-width:72px; }
+.py-list a { font-size:.93rem; color:#333; text-decoration:none; line-height:1.4; }
+.py-list a:hover { color:#2a7ae2; text-decoration:underline; }
+</style>
+
+<p class="py-lede">A documentary learning journal. Python from finance basics through to testing, systems, and tooling — written as I learned it.</p>
+
+<div class="py-section" id="basics">
+  <div class="py-section-hdr">Python fundamentals <span class="sub">core language &middot; early 2023</span></div>
+  <ul class="py-list">
+    {% for p in site.posts %}
+      {% assign pd = p.date | date: "%Y-%m-%d" %}
+      {% assign sl = p.slug %}
+      {% assign show = false %}
+      {% if p.section == "basics" %}{% assign show = true %}{% endif %}
+      {% if pd >= "2023-03-18" and pd <= "2023-04-22" %}
+        {% if sl contains "variable" or sl contains "error" or sl contains "loop" or sl contains "functions-in" or sl contains "role-of-python-in-modern" or sl contains "big-o" or sl contains "creating-a-person" or sl contains "decorator" or sl contains "module" or sl contains "caching-in-net" %}
+          {% assign show = true %}
+        {% endif %}
+      {% endif %}
+      {% if show %}
+        <li><span class="py-date">{{ p.date | date: "%-d %b %Y" }}</span><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="py-section" id="finance">
+  <div class="py-section-hdr">Finance &amp; data projects <span class="sub">applied Python &middot; early 2023</span></div>
+  <ul class="py-list">
+    {% for p in site.posts %}
+      {% assign pd = p.date | date: "%Y-%m-%d" %}
+      {% assign sl = p.slug %}
+      {% assign show = false %}
+      {% if p.section == "finance" %}{% assign show = true %}{% endif %}
+      {% if pd >= "2023-03-18" and pd <= "2023-04-22" %}
+        {% unless sl contains "variable" or sl contains "error" or sl contains "loop" or sl contains "functions-in" or sl contains "role-of-python-in-modern" or sl contains "big-o" or sl contains "creating-a-person" or sl contains "decorator" or sl contains "module" or sl contains "caching-in-net" %}
+          {% assign show = true %}
+        {% endunless %}
+      {% endif %}
+      {% if show %}
+        <li><span class="py-date">{{ p.date | date: "%-d %b %Y" }}</span><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="py-section" id="testing">
+  <div class="py-section-hdr">Testing — pytest deep dive <span class="sub">monkeypatch, fixtures, enterprise gotchas &middot; Nov&ndash;Dec 2025</span></div>
+  <ul class="py-list">
+    {% for p in site.posts %}
+      {% assign pd = p.date | date: "%Y-%m-%d" %}
+      {% assign show = false %}
+      {% if p.section == "testing" or p.tags contains "pytest" or p.tags contains "monkeypatch" %}{% assign show = true %}{% endif %}
+      {% if pd >= "2025-11-14" and pd <= "2025-12-31" %}{% assign show = true %}{% endif %}
+      {% if show %}
+        <li><span class="py-date">{{ p.date | date: "%-d %b %Y" }}</span><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="py-section" id="systems">
+  <div class="py-section-hdr">Systems and infrastructure <span class="sub">Redis, caching, request tracing &middot; Jan&ndash;Feb 2026</span></div>
+  <ul class="py-list">
+    {% for p in site.posts %}
+      {% assign pd = p.date | date: "%Y-%m-%d" %}
+      {% assign show = false %}
+      {% if p.section == "systems" or p.tags contains "redis" or p.tags contains "caching" %}{% assign show = true %}{% endif %}
+      {% if pd >= "2026-01-01" and pd <= "2026-02-08" %}{% assign show = true %}{% endif %}
+      {% if show %}
+        <li><span class="py-date">{{ p.date | date: "%-d %b %Y" }}</span><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="py-section" id="tools">
+  <div class="py-section-hdr">Tools and workflow <span class="sub">argparse, CLI, Git &middot; Feb&ndash;Mar 2026</span></div>
+  <ul class="py-list">
+    {% for p in site.posts %}
+      {% assign pd = p.date | date: "%Y-%m-%d" %}
+      {% assign show = false %}
+      {% if p.section == "tools" or p.tags contains "argparse" or p.tags contains "git" or p.tags contains "cli" %}{% assign show = true %}{% endif %}
+      {% if pd >= "2026-02-09" and pd <= "2026-03-31" %}{% assign show = true %}{% endif %}
+      {% if show %}
+        <li><span class="py-date">{{ p.date | date: "%-d %b %Y" }}</span><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="py-section" id="all">
+  <div class="py-section-hdr">All posts <span class="sub">{{ site.posts.size }} total &middot; newest first</span></div>
+  <ul class="py-list">
+    {% for p in site.posts %}
+      {% unless p.tags contains "cpp" or p.tags contains "c++" or p.tags contains "design-patterns" or p.tags contains "defensive" or p.tags contains "queues" or p.tags contains "reliability" %}
+        <li><span class="py-date">{{ p.date | date: "%-d %b %Y" }}</span><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+      {% endunless %}
+    {% endfor %}
+  </ul>
+</div>

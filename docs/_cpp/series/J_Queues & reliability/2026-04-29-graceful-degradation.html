@@ -1,0 +1,134 @@
+---
+layout: cpp-post
+title: "Graceful Degradation and Fallback Strategies"
+description: "Stale prices, last-known-good values, reduced mode operation."
+date: 2026-04-29
+tags: [reliability, resilience, fallback]
+permalink: /cpp/graceful-degradation/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Fail safe, not fail hard</h3>
+  <p>When a dependency fails, the choice is not just work normally vs crash. A third option: degrade gracefully. Continue operating with reduced functionality, use stale data when fresh data is unavailable, and be transparent about what mode you are in.</p>
+  <p><strong>Degradation strategies:</strong></p>
+  <ul>
+    <li><strong>Stale pricing:</strong> if the feed is unavailable, use last known prices with an age indicator.</li>
+    <li><strong>Model fallback:</strong> if complex vol surface calibration fails, fall back to flat vol. Report which model was used.</li>
+    <li><strong>Read-only mode:</strong> if the booking system is unavailable, allow read (risk/position queries) but reject new trades.</li>
+    <li><strong>Cached results:</strong> if a pricer is overloaded, return cached results for repeated queries until capacity recovers.</li>
+  </ul>
+  <p><strong>The key rule:</strong> always be transparent about degraded state. A system that silently returns stale data is dangerous. One that logs "using stale price from 45s ago" gives the trader context to decide whether to act on it.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python graceful degradation</h3>
+  <pre><code class="language-python">import time, logging
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class PriceResult:
+    price:    float
+    symbol:   str
+    age_s:    float
+    is_stale: bool
+    source:   str  # "live", "cached", "stale_cache"
+
+class ResilientPricer:
+    STALE_THRESHOLD_S = 60.0
+
+    def __init__(self, live_feed, fallback_feed=None):
+        self._live     = live_feed
+        self._fallback = fallback_feed
+        self._cache:   dict[str, tuple[float, float]] = {}  # sym -> (price, ts)
+
+    def get_price(self, symbol: str) -> PriceResult:
+        try:
+            price = self._live.get_price(symbol)
+            self._cache[symbol] = (price, time.monotonic())
+            return PriceResult(price, symbol, 0.0, False, "live")
+        except Exception as e:
+            logging.warning(f"Live feed failed for {symbol}: {e}")
+
+        if symbol in self._cache:
+            cached_price, ts = self._cache[symbol]
+            age = time.monotonic() - ts
+            stale = age > self.STALE_THRESHOLD_S
+            if stale: logging.warning(f"Stale price for {symbol}: {age:.0f}s old")
+            return PriceResult(cached_price, symbol, age, stale,
+                               "stale_cache" if stale else "cached")
+
+        raise RuntimeError(f"No price available for {symbol}")</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# graceful degradation</h3>
+  <pre><code class="language-csharp">public record PriceResult(double Price, string Symbol,
+    double AgeSeconds, bool IsStale, string Source);
+
+public class ResilientPricer {
+    private readonly IMarketFeed _live;
+    private readonly Dictionary&lt;string, (double Price, DateTime Ts)&gt; _cache = new();
+    private const double StaleSec = 60.0;
+
+    public ResilientPricer(IMarketFeed live) => _live = live;
+
+    public PriceResult GetPrice(string symbol) {
+        try {
+            var price = _live.GetPrice(symbol);
+            _cache[symbol] = (price, DateTime.UtcNow);
+            return new(price, symbol, 0, false, "live");
+        } catch (Exception ex) {
+            Log.Warning(ex, "Live feed failed for {Symbol}", symbol);
+        }
+        if (_cache.TryGetValue(symbol, out var cached)) {
+            var age   = (DateTime.UtcNow - cached.Ts).TotalSeconds;
+            var stale = age > StaleSec;
+            if (stale) Log.Warning("Stale price for {Symbol}: {Age:F0}s", symbol, age);
+            return new(cached.Price, symbol, age, stale, stale ? "stale_cache" : "cached");
+        }
+        throw new InvalidOperationException($"No price available for {symbol}");
+    }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ graceful degradation</h3>
+  <pre><code class="language-cpp">#include &lt;string&gt;
+#include &lt;unordered_map&gt;
+#include &lt;chrono&gt;
+#include &lt;optional&gt;
+#include &lt;stdexcept&gt;
+
+struct PriceResult {
+    double price; std::string symbol; double age_s; bool is_stale; std::string source;
+};
+
+class ResilientPricer {
+    static constexpr double STALE_S = 60.0;
+    struct CacheEntry { double price; double ts; };
+    std::unordered_map&lt;std::string, CacheEntry&gt; cache_;
+
+    double now_s() const {
+        return std::chrono::duration&lt;double&gt;(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+public:
+    PriceResult get_price(const std::string& sym) {
+        try {
+            double price = live_feed_.get_price(sym);
+            cache_[sym] = {price, now_s()};
+            return {price, sym, 0.0, false, "live"};
+        } catch (...) {}
+
+        auto it = cache_.find(sym);
+        if (it != cache_.end()) {
+            double age   = now_s() - it->second.ts;
+            bool   stale = age > STALE_S;
+            return {it->second.price, sym, age, stale, stale ? "stale_cache" : "cached"};
+        }
+        throw std::runtime_error("No price available: " + sym);
+    }
+};</code></pre>
+  <div class="cpp-note">Always include <code>source</code> and <code>age</code> in your price result. Downstream consumers - risk engines, traders - need to know whether they are acting on live or stale data. A price without provenance is an untrusted number.</div>
+</div>

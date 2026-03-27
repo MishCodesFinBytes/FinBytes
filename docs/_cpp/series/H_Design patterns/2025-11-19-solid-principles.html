@@ -1,0 +1,161 @@
+---
+layout: cpp-post
+title: "SOLID Principles - A Practitioner's Guide"
+description: "Single responsibility, open/closed, Liskov, interface segregation, dependency inversion."
+date: 2025-11-19
+tags: [design-patterns, solid, architecture]
+permalink: /cpp/solid-principles/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why SOLID matters in quant code</h3>
+  <p>SOLID is not abstract theory. It is a set of heuristics that make code easier to test, extend, and reason about. In a pricing system, violations cluster in predictable places: a class that prices <em>and</em> persists <em>and</em> logs (SRP), a pricer that needs modifying every time a new model is added (OCP), or a risk engine that takes a concrete database rather than an interface (DIP).</p>
+  <ul>
+    <li><strong>S - Single Responsibility:</strong> a class should have one reason to change</li>
+    <li><strong>O - Open/Closed:</strong> open for extension, closed for modification</li>
+    <li><strong>L - Liskov Substitution:</strong> subtypes must be substitutable for their base types</li>
+    <li><strong>I - Interface Segregation:</strong> clients should not depend on interfaces they do not use</li>
+    <li><strong>D - Dependency Inversion:</strong> depend on abstractions, not concretions</li>
+  </ul>
+  <p>All examples use a simplified options pricing system. The same <code>Pricer</code> evolves through each principle to show before and after.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python SOLID examples</h3>
+  <h4>S - Single Responsibility</h4>
+  <pre><code class="language-python"># BAD: one class, three reasons to change
+class BadPricer:
+    def price(self, trade): ...
+    def save_to_db(self, trade): ...
+    def log_result(self, result): ...
+
+# GOOD: separated concerns
+class Pricer:         def price(self, trade) -> float: ...
+class TradeRepository:def save(self, trade) -> None: ...
+class PricingLogger:  def log(self, result) -> None: ...</code></pre>
+
+  <h4>O - Open/Closed</h4>
+  <pre><code class="language-python">from abc import ABC, abstractmethod
+
+class PricingModel(ABC):
+    @abstractmethod
+    def price(self, trade) -> float: ...
+
+class BlackScholes(PricingModel):
+    def price(self, trade) -> float: ...
+
+class MonteCarlo(PricingModel):
+    def price(self, trade) -> float: ...
+
+# Add Binomial without touching existing code
+class Binomial(PricingModel):
+    def price(self, trade) -> float: ...</code></pre>
+
+  <h4>D - Dependency Inversion</h4>
+  <pre><code class="language-python">from typing import Protocol
+
+class PositionStore(Protocol):
+    def get_positions(self, portfolio_id: str) -> list: ...
+
+class RiskEngine:
+    def __init__(self, store: PositionStore):
+        self.store = store  # injected: testable, swappable</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# SOLID examples</h3>
+  <h4>S - Single Responsibility</h4>
+  <pre><code class="language-csharp">public class Pricer          { public double Price(Trade t) { ... } }
+public class TradeRepository { public void Save(Trade t)   { ... } }
+public class PricingLogger   { public void Log(double r)   { ... } }</code></pre>
+
+  <h4>O - Open/Closed</h4>
+  <pre><code class="language-csharp">public interface IPricingModel { double Price(Trade trade); }
+
+public class BlackScholes : IPricingModel { public double Price(Trade t) { ... } }
+public class MonteCarlo   : IPricingModel { public double Price(Trade t) { ... } }
+
+public class Pricer {
+    private readonly IPricingModel _model;
+    public Pricer(IPricingModel model) => _model = model;
+    public double Price(Trade t) => _model.Price(t);
+}</code></pre>
+
+  <h4>I - Interface Segregation</h4>
+  <pre><code class="language-csharp">// BAD: fat interface forces implementors to stub unused methods
+public interface IBadFeed {
+    double GetSpot(string sym);
+    double GetVol(string sym);
+    OrderBook GetBook(string sym);  // not all consumers need this
+}
+
+// GOOD: split into focused interfaces
+public interface ISpotFeed { double GetSpot(string sym); }
+public interface IVolFeed  { double GetVol(string sym);  }
+
+public class Pricer {
+    public Pricer(ISpotFeed spots, IVolFeed vols) { ... }
+}</code></pre>
+
+  <h4>L - Liskov Substitution</h4>
+  <pre><code class="language-csharp">// BAD: subtype throws where base does not
+public class VolSurface {
+    public virtual double GetVol(double strike, double expiry) => 0.2;
+}
+public class EmptyVolSurface : VolSurface {
+    public override double GetVol(double strike, double expiry)
+        => throw new NotSupportedException();  // VIOLATION
+}
+
+// GOOD: return nullable instead
+public double? TryGetVol(double strike, double expiry) => null;</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ SOLID examples</h3>
+  <h4>S - Single Responsibility</h4>
+  <pre><code class="language-cpp">class Pricer          { public: double price(const Trade& t); };
+class TradeRepository { public: void   save(const Trade& t);  };
+class PricingLogger   { public: void   log(double result);    };</code></pre>
+
+  <h4>O - Open/Closed: runtime polymorphism</h4>
+  <pre><code class="language-cpp">struct IPricingModel {
+    virtual ~IPricingModel() = default;
+    virtual double price(const Trade& t) const = 0;
+};
+
+struct BlackScholes : IPricingModel {
+    double price(const Trade& t) const override { return 0; }
+};
+
+class Pricer {
+    std::unique_ptr&lt;IPricingModel&gt; model_;
+public:
+    explicit Pricer(std::unique_ptr&lt;IPricingModel&gt; m) : model_(std::move(m)) {}
+    double price(const Trade& t) const { return model_->price(t); }
+};</code></pre>
+
+  <h4>O - Open/Closed: compile-time (zero-overhead)</h4>
+  <pre><code class="language-cpp">template&lt;typename Model&gt;
+class StaticPricer {
+    Model model_;
+public:
+    double price(const Trade& t) const { return model_.price(t); }
+};
+
+StaticPricer&lt;BlackScholes&gt; bs_pricer;
+StaticPricer&lt;MonteCarlo&gt;   mc_pricer;</code></pre>
+
+  <h4>D - Dependency Inversion</h4>
+  <pre><code class="language-cpp">struct IPositionStore {
+    virtual ~IPositionStore() = default;
+    virtual std::vector&lt;Position&gt; get_positions(const std::string& id) const = 0;
+};
+
+class RiskEngine {
+    const IPositionStore& store_;
+public:
+    explicit RiskEngine(const IPositionStore& store) : store_(store) {}
+};</code></pre>
+  <div class="cpp-note">C++ gives you two open/closed strategies: runtime polymorphism (virtual functions, testable, flexible) and compile-time polymorphism (templates, zero overhead). Use runtime when the model is chosen at runtime. Use templates when it is fixed at compile time and performance matters.</div>
+</div>

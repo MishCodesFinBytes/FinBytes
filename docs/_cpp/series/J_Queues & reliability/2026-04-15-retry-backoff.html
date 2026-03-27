@@ -1,0 +1,125 @@
+---
+layout: cpp-post
+title: "Retry Logic - Exponential Backoff and Jitter"
+description: "Naive retry causes thundering herd. Backoff with jitter. Dead letter queues."
+date: 2026-04-15
+tags: [reliability, retry, backoff]
+permalink: /cpp/retry-backoff/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why naive retry is dangerous</h3>
+  <p>A service goes down. One thousand clients each retry immediately. All one thousand hit the service at the same instant it recovers. The burst overwhelms it and takes it down again. This is the thundering herd problem.</p>
+  <p><strong>Exponential backoff:</strong> after each failure, wait twice as long before retrying: 1s, 2s, 4s, 8s, 16s... With many clients all starting at different times, load is spread across time rather than concentrated into a spike.</p>
+  <p><strong>Jitter:</strong> even with exponential backoff, clients that start at the same time will retry together. Adding random jitter - a random fraction of the backoff delay - desynchronises them.</p>
+  <p><strong>Dead letter queue:</strong> some failures are permanent. After N retries, stop and route the message to a DLQ for manual inspection. Without a DLQ, permanently-failing messages loop forever.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python retry with backoff</h3>
+  <pre><code class="language-python">import time, random, logging, json
+from typing import Callable, TypeVar
+from pathlib import Path
+
+T = TypeVar("T")
+
+def retry_with_backoff(
+    fn: Callable[[], T], max_attempts: int = 5,
+    base_delay_s: float = 1.0, max_delay_s: float = 60.0, jitter: bool = True,
+) -> T:
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return fn()
+        except Exception as e:
+            if attempt == max_attempts: raise
+            delay = min(base_delay_s * (2 ** (attempt - 1)), max_delay_s)
+            if jitter: delay *= random.uniform(0.5, 1.5)
+            logging.warning(f"Attempt {attempt} failed: {e}. Retrying in {delay:.1f}s")
+            time.sleep(delay)
+
+def connect_to_feed():
+    return MarketDataFeed.connect("tcp://feed:5555")
+
+feed = retry_with_backoff(connect_to_feed, max_attempts=5, base_delay_s=1.0)
+
+# Dead letter queue
+class DeadLetterQueue:
+    def __init__(self, path: str = "dlq.jsonl"): self._path = Path(path)
+    def push(self, msg: dict, reason: str) -> None:
+        entry = {"msg": msg, "reason": reason, "ts": time.time()}
+        with open(self._path, "a") as f: f.write(json.dumps(entry) + "
+")
+        logging.error(f"DLQ: {reason}")</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# retry with Polly</h3>
+  <pre><code class="language-csharp">using Polly;
+
+var retryPolicy = Policy
+    .Handle&lt;Exception&gt;()
+    .WaitAndRetryAsync(
+        retryCount: 5,
+        sleepDurationProvider: attempt => {
+            var delay  = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+            var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 500));
+            return delay + jitter;
+        },
+        onRetry: (ex, ts, attempt, _) =>
+            Log.Warning(ex, "Attempt {N} failed, retrying in {Delay}s", attempt, ts.TotalSeconds)
+    );
+
+// Combined: retry + circuit breaker + fallback
+var policy = Policy
+    .Handle&lt;Exception&gt;()
+    .FallbackAsync(async ct => lastKnownPrice)
+    .WrapAsync(Policy.Handle&lt;Exception&gt;().CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)))
+    .WrapAsync(retryPolicy);
+
+double price = await policy.ExecuteAsync(ct => feed.GetPriceAsync(sym, ct), ct);</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ retry with backoff</h3>
+  <pre><code class="language-cpp">#include &lt;chrono&gt;
+#include &lt;thread&gt;
+#include &lt;random&gt;
+#include &lt;functional&gt;
+#include &lt;stdexcept&gt;
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+
+struct RetryConfig {
+    int    max_attempts = 5;
+    double base_delay_s = 1.0;
+    double max_delay_s  = 60.0;
+    bool   jitter       = true;
+};
+
+template&lt;typename F&gt;
+auto retry_with_backoff(F fn, const RetryConfig& cfg = {}) -&gt; decltype(fn()) {
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution&lt;double&gt; jitter_dist(0.5, 1.5);
+
+    for (int attempt = 1; attempt &lt;= cfg.max_attempts; ++attempt) {
+        try {
+            return fn();
+        } catch (const std::exception& e) {
+            if (attempt == cfg.max_attempts) throw;
+            double delay = std::min(cfg.base_delay_s * std::pow(2.0, attempt-1), cfg.max_delay_s);
+            if (cfg.jitter) delay *= jitter_dist(rng);
+            std::cerr &lt;&lt; "Attempt " &lt;&lt; attempt &lt;&lt; " failed: " &lt;&lt; e.what()
+                      &lt;&lt; " - retrying in " &lt;&lt; delay &lt;&lt; "s
+";
+            std::this_thread::sleep_for(std::chrono::duration&lt;double&gt;(delay));
+        }
+    }
+    throw std::runtime_error("unreachable");
+}
+
+auto feed = retry_with_backoff(
+    []{ return MarketDataFeed::connect("tcp://feed:5555"); },
+    {.max_attempts = 5, .base_delay_s = 1.0}
+);</code></pre>
+  <div class="cpp-note">Equal jitter (<code>delay/2 + random(0, delay/2)</code>) prevents very short retries while still desynchronising clients. Full jitter (<code>random(0, delay)</code>) provides maximum spread but can result in very short waits. For financial reconnects, equal jitter is usually the right choice.</div>
+</div>

@@ -1,0 +1,217 @@
+---
+layout: cpp-post
+title: "Reading and Writing Text Files"
+description: "fstream vs open() vs pathlib. Line-by-line, buffered, and memory-mapped reads."
+date: 2025-06-11
+tags: [practical, file-io]
+permalink: /cpp/file-io-text/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>File I/O — where C++ feels verbose</h3>
+  <p>Python's file handling is two lines. C++ requires explicit stream objects, error checking, and buffer management. But in return you get control: choose your buffer size, memory-map large files, read with zero allocation.</p>
+
+  <h3>Three reading strategies</h3>
+  <ul>
+    <li><strong>Line-by-line</strong> — simple, works for most log and CSV files</li>
+    <li><strong>Whole file into string</strong> — fast for small files, simple to process</li>
+    <li><strong>Memory-mapped</strong> — fastest for large files; the OS handles paging, no explicit reads</li>
+  </ul>
+
+  <h3>Always check errors</h3>
+  <p>Unlike Python which throws immediately, C++ streams fail silently by default. Always check <code>is_open()</code> after opening and <code>good()</code> after reading. Or use exceptions on the stream: <code>file.exceptions(std::ios::failbit)</code>.</p>
+
+  <h3>Use case</h3>
+  <p>Reading a trade log file line by line, parsing each line, writing a filtered output file.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python file I/O</h3>
+
+  <pre><code class="language-python">from pathlib import Path
+
+# Line-by-line read
+def read_trades(path: str) -> list[str]:
+    with open(path, "r", encoding="utf-8") as f:
+        return [line.rstrip("\n") for line in f]
+
+# Or using pathlib
+path = Path("trades.log")
+lines = path.read_text(encoding="utf-8").splitlines()
+
+# Write
+def write_filtered(lines: list[str], out_path: str, symbol: str) -> int:
+    count = 0
+    with open(out_path, "w", encoding="utf-8") as f:
+        for line in lines:
+            if symbol in line:
+                f.write(line + "\n")
+                count += 1
+    return count
+
+# Large file — iterate without loading all into memory
+def count_trades(path: str, symbol: str) -> int:
+    count = 0
+    with open(path, "r") as f:
+        for line in f:             # lazy — reads one line at a time
+            if symbol in line:
+                count += 1
+    return count</code></pre>
+
+  <h3>Reading entire file at once</h3>
+  <pre><code class="language-python">from pathlib import Path
+
+content = Path("trades.log").read_text(encoding="utf-8")
+lines   = content.splitlines()
+
+# Write atomically (write to temp, rename)
+import os, tempfile
+
+def write_atomic(path: str, content: str) -> None:
+    dir_ = os.path.dirname(path) or "."
+    with tempfile.NamedTemporaryFile("w", dir=dir_, delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+    os.replace(tmp_path, path)  # atomic on POSIX</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# file I/O</h3>
+
+  <pre><code class="language-csharp">using System.IO;
+
+// Line-by-line
+IEnumerable&lt;string&gt; ReadTrades(string path) {
+    foreach (var line in File.ReadLines(path))  // lazy enumeration
+        yield return line;
+}
+
+// Whole file
+string[] lines = File.ReadAllLines("trades.log");
+string   all   = File.ReadAllText("trades.log");
+
+// Write
+void WriteFiltered(string[] lines, string outPath, string symbol) {
+    var filtered = lines.Where(l =&gt; l.Contains(symbol));
+    File.WriteAllLines(outPath, filtered);
+}
+
+// StreamReader for large files
+int CountTrades(string path, string symbol) {
+    int count = 0;
+    using var reader = new StreamReader(path);
+    while (reader.ReadLine() is string line)
+        if (line.Contains(symbol)) count++;
+    return count;
+}
+
+// Async I/O
+async Task&lt;string[]&gt; ReadTradesAsync(string path) {
+    return await File.ReadAllLinesAsync(path);
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ file I/O</h3>
+
+  <h4>Line-by-line read</h4>
+  <pre><code class="language-cpp">#include &lt;fstream&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include &lt;stdexcept&gt;
+#include &lt;iostream&gt;
+
+std::vector&lt;std::string&gt; read_lines(const std::string& path) {
+    std::ifstream file(path);
+    if (!file.is_open())
+        throw std::runtime_error("Cannot open: " + path);
+
+    std::vector&lt;std::string&gt; lines;
+    std::string line;
+    while (std::getline(file, line))
+        lines.push_back(std::move(line));
+
+    return lines;
+}</code></pre>
+
+  <h4>Filter and write</h4>
+  <pre><code class="language-cpp">#include &lt;fstream&gt;
+#include &lt;string_view&gt;
+
+int write_filtered(const std::string& in_path,
+                   const std::string& out_path,
+                   std::string_view   symbol)
+{
+    std::ifstream in(in_path);
+    std::ofstream out(out_path);
+    if (!in.is_open())  throw std::runtime_error("Cannot open input");
+    if (!out.is_open()) throw std::runtime_error("Cannot open output");
+
+    int count = 0;
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.find(symbol) != std::string::npos) {
+            out &lt;&lt; line &lt;&lt; '\n';
+            ++count;
+        }
+    }
+    return count;
+}</code></pre>
+
+  <h4>Whole file into string (fast)</h4>
+  <pre><code class="language-cpp">#include &lt;fstream&gt;
+#include &lt;sstream&gt;
+#include &lt;string&gt;
+
+std::string read_all(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open())
+        throw std::runtime_error("Cannot open: " + path);
+    std::ostringstream ss;
+    ss &lt;&lt; file.rdbuf();  // read entire file in one shot
+    return ss.str();
+}
+
+// Faster: pre-size the string
+std::string read_all_fast(const std::string& path) {
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    if (!file.is_open())
+        throw std::runtime_error("Cannot open: " + path);
+    auto size = file.tellg();
+    file.seekg(0);
+    std::string content(size, '\0');
+    file.read(content.data(), size);
+    return content;
+}</code></pre>
+
+  <h4>Buffered write with flush control</h4>
+  <pre><code class="language-cpp">#include &lt;fstream&gt;
+
+class TradeWriter {
+public:
+    explicit TradeWriter(const std::string& path)
+        : file_(path)
+    {
+        if (!file_.is_open())
+            throw std::runtime_error("Cannot open: " + path);
+        // Large buffer for bulk writes
+        file_.rdbuf()-&gt;pubsetbuf(buf_, sizeof(buf_));
+    }
+
+    void write(std::string_view line) {
+        file_ &lt;&lt; line &lt;&lt; '\n';
+        ++count_;
+    }
+
+    void flush() { file_.flush(); }
+    int  count() const { return count_; }
+
+private:
+    std::ofstream file_;
+    char          buf_[1 &lt;&lt; 16]{};  // 64KB buffer
+    int           count_ = 0;
+};
+</code></pre>
+
+  <div class="cpp-note">💡 <code>std::ofstream</code> buffers writes internally. For maximum throughput, set a large buffer with <code>pubsetbuf</code>. For safety-critical writes (trade records), call <code>flush()</code> after each record — or use <code>std::ios::sync_with_stdio(false)</code> and avoid mixing C and C++ I/O.</div>
+</div>

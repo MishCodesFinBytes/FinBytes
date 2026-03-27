@@ -1,0 +1,145 @@
+---
+layout: cpp-post
+title: "Circuit Breaker Pattern"
+description: "Protect downstream systems from cascading failures. States: closed, open, half-open."
+date: 2026-04-08
+tags: [reliability, circuit-breaker, resilience]
+permalink: /cpp/circuit-breaker/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Cascading failures</h3>
+  <p>When a downstream service is slow or failing, naively retrying every request amplifies the problem. Every caller blocks waiting for a timeout; thread pools fill up; the calling system fails too. A circuit breaker detects the failure and short-circuits calls immediately, giving the downstream system time to recover.</p>
+  <p><strong>Three states:</strong></p>
+  <ul>
+    <li><strong>Closed:</strong> normal operation. Requests pass through. Failures are counted.</li>
+    <li><strong>Open:</strong> failure threshold exceeded. Requests fail immediately without calling downstream. A timer runs.</li>
+    <li><strong>Half-open:</strong> timer expired. One test request is allowed through. Success closes the circuit; failure re-opens it.</li>
+  </ul>
+  <p><strong>Finance application:</strong> a risk engine calls a market data feed. The feed becomes slow (network issue). Without a circuit breaker, every pricing request blocks for 30 seconds. With one, after 5 failures the circuit opens and the risk engine immediately uses stale (last-known-good) prices.</p>
+  <p><strong>Always alert when a circuit opens.</strong> It is a production incident, not a silent fallback.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python circuit breaker</h3>
+  <pre><code class="language-python">import time, threading
+from enum import Enum, auto
+from typing import Callable, TypeVar
+
+T = TypeVar("T")
+
+class State(Enum):
+    CLOSED = auto(); OPEN = auto(); HALF_OPEN = auto()
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=5, recovery_timeout=30.0):
+        self._threshold = failure_threshold; self._timeout = recovery_timeout
+        self._state = State.CLOSED; self._failures = 0; self._opened_at = 0.0
+        self._lock = threading.Lock()
+
+    def call(self, fn: Callable[[], T]) -> T:
+        with self._lock:
+            if self._state == State.OPEN:
+                if time.monotonic() - self._opened_at > self._timeout:
+                    self._state = State.HALF_OPEN
+                else:
+                    raise RuntimeError("Circuit open - using fallback")
+        try:
+            result = fn()
+            with self._lock: self._failures = 0; self._state = State.CLOSED
+            return result
+        except Exception as e:
+            with self._lock:
+                self._failures += 1
+                if self._failures &gt;= self._threshold:
+                    self._state = State.OPEN; self._opened_at = time.monotonic()
+            raise
+
+breaker = CircuitBreaker(failure_threshold=5, recovery_timeout=30.0)
+
+def get_price_safe(symbol: str) -> float:
+    try:
+        return breaker.call(lambda: market_feed.get_price(symbol))
+    except RuntimeError:
+        return last_known_price.get(symbol, float("nan"))</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# circuit breaker with Polly</h3>
+  <pre><code class="language-csharp">// dotnet add package Polly
+using Polly;
+
+var circuitBreaker = Policy
+    .Handle&lt;Exception&gt;()
+    .CircuitBreakerAsync(
+        exceptionsAllowedBeforeBreaking: 5,
+        durationOfBreak: TimeSpan.FromSeconds(30),
+        onBreak:    (ex, ts) => Log.Warning("Circuit opened: {Reason}", ex.Message),
+        onReset:    ()       => Log.Information("Circuit closed"),
+        onHalfOpen: ()       => Log.Information("Circuit half-open")
+    );
+
+var policy = Policy
+    .Handle&lt;BrokenCircuitException&gt;()
+    .FallbackAsync(async ct => lastKnownPrice)
+    .WrapAsync(circuitBreaker);
+
+double price = await policy.ExecuteAsync(
+    ct => feedClient.GetPriceAsync(symbol, ct), cancellationToken);</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ circuit breaker</h3>
+  <pre><code class="language-cpp">#include &lt;chrono&gt;
+#include &lt;mutex&gt;
+#include &lt;functional&gt;
+#include &lt;stdexcept&gt;
+
+enum class CBState { Closed, Open, HalfOpen };
+
+class CircuitBreaker {
+    int       threshold_;
+    double    timeout_s_;
+    CBState   state_     = CBState::Closed;
+    int       failures_  = 0;
+    double    opened_at_ = 0;
+    std::mutex mtx_;
+
+    double now() const {
+        return std::chrono::duration&lt;double&gt;(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+public:
+    CircuitBreaker(int threshold = 5, double timeout_s = 30.0)
+        : threshold_(threshold), timeout_s_(timeout_s) {}
+
+    template&lt;typename F&gt;
+    auto call(F fn) -&gt; decltype(fn()) {
+        {
+            std::lock_guard lock(mtx_);
+            if (state_ == CBState::Open) {
+                if (now() - opened_at_ &gt; timeout_s_) state_ = CBState::HalfOpen;
+                else throw std::runtime_error("Circuit open");
+            }
+        }
+        try {
+            auto result = fn();
+            std::lock_guard lock(mtx_);
+            failures_ = 0; state_ = CBState::Closed;
+            return result;
+        } catch (...) {
+            std::lock_guard lock(mtx_);
+            if (++failures_ &gt;= threshold_) { state_ = CBState::Open; opened_at_ = now(); }
+            throw;
+        }
+    }
+    CBState state() const { std::lock_guard l(mtx_); return state_; }
+};
+
+CircuitBreaker breaker(5, 30.0);
+double get_price_safe(const std::string& sym) {
+    try { return breaker.call([&]{ return feed.get_price(sym); }); }
+    catch (...) { return last_known_price.at(sym); }
+}</code></pre>
+  <div class="cpp-note">Circuit breakers should be monitored and alarmed. An open circuit is a production incident. Alert immediately when a circuit opens so an engineer can investigate - do not silently fall back to stale data without notifying anyone.</div>
+</div>

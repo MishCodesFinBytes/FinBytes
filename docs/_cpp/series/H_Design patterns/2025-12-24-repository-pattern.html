@@ -1,0 +1,135 @@
+---
+layout: cpp-post
+title: "Repository and Data Mapper Patterns"
+description: "Separate domain logic from persistence. Trade repository, position mapper. Testability."
+date: 2025-12-24
+tags: [design-patterns, repository, persistence]
+permalink: /cpp/repository-pattern/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Separating domain from persistence</h3>
+  <p>Without a repository, domain objects fetch themselves from the database. A <code>Trade</code> class calls <code>SELECT * FROM trades</code>. Testing domain logic requires a real database. Changing from Postgres to a message queue requires changing the domain class.</p>
+  <p>A <strong>repository</strong> presents a collection-like interface. Domain code calls <code>repo.find_by_id()</code> and gets back a <code>Trade</code>. The repository handles all persistence details. A <strong>data mapper</strong> translates between domain objects and database rows - the domain object knows nothing about the database.</p>
+  <p>The real win: with a repository interface, tests inject an in-memory fake. No database setup, no teardown, no slow I/O. The entire domain test suite runs in milliseconds.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python repository pattern</h3>
+  <pre><code class="language-python">from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class Trade:
+    id:       str
+    symbol:   str
+    notional: float
+    status:   str = "PENDING"
+
+class ITradeRepository(ABC):
+    @abstractmethod
+    def find_by_id(self, trade_id: str) -> Optional[Trade]: ...
+    @abstractmethod
+    def find_by_symbol(self, symbol: str) -> list[Trade]: ...
+    @abstractmethod
+    def save(self, trade: Trade) -> None: ...
+
+# In-memory fake for tests
+class InMemoryTradeRepo(ITradeRepository):
+    def __init__(self): self._store: dict[str, Trade] = {}
+    def find_by_id(self, tid: str) -> Optional[Trade]: return self._store.get(tid)
+    def find_by_symbol(self, sym: str) -> list[Trade]:
+        return [t for t in self._store.values() if t.symbol == sym]
+    def save(self, trade: Trade) -> None: self._store[trade.id] = trade
+
+class TradeService:
+    def __init__(self, repo: ITradeRepository): self._repo = repo
+    def execute_trade(self, trade: Trade) -> None:
+        trade.status = "EXECUTED"
+        self._repo.save(trade)
+
+# Test with fake - no database
+repo    = InMemoryTradeRepo()
+service = TradeService(repo)
+trade   = Trade("T001", "AAPL", 100_000)
+service.execute_trade(trade)
+assert repo.find_by_id("T001").status == "EXECUTED"</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# repository pattern</h3>
+  <pre><code class="language-csharp">public record Trade(string Id, string Symbol, double Notional, string Status = "PENDING");
+
+public interface ITradeRepository {
+    Trade?       FindById(string id);
+    List&lt;Trade&gt;  FindBySymbol(string symbol);
+    void         Save(Trade trade);
+}
+
+public class InMemoryTradeRepository : ITradeRepository {
+    private readonly Dictionary&lt;string, Trade&gt; _store = new();
+    public Trade?      FindById(string id)      => _store.GetValueOrDefault(id);
+    public List&lt;Trade&gt; FindBySymbol(string sym) => _store.Values.Where(t => t.Symbol == sym).ToList();
+    public void        Save(Trade t)            => _store[t.Id] = t;
+}
+
+// EF Core implementation (same interface)
+public class EFTradeRepository : ITradeRepository {
+    private readonly TradingDbContext _ctx;
+    public EFTradeRepository(TradingDbContext ctx) => _ctx = ctx;
+    public Trade? FindById(string id) => _ctx.Trades.Find(id);
+    public List&lt;Trade&gt; FindBySymbol(string sym) => _ctx.Trades.Where(t => t.Symbol == sym).ToList();
+    public void Save(Trade t) { _ctx.Trades.Update(t); _ctx.SaveChanges(); }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ repository pattern</h3>
+  <pre><code class="language-cpp">#include &lt;string&gt;
+#include &lt;vector&gt;
+#include &lt;unordered_map&gt;
+#include &lt;optional&gt;
+#include &lt;memory&gt;
+#include &lt;stdexcept&gt;
+
+struct Trade { std::string id, symbol; double notional; std::string status = "PENDING"; };
+
+struct ITradeRepository {
+    virtual ~ITradeRepository() = default;
+    virtual std::optional&lt;Trade&gt; find_by_id(const std::string& id) const = 0;
+    virtual std::vector&lt;Trade&gt;   find_by_symbol(const std::string& sym) const = 0;
+    virtual void                  save(const Trade& t) = 0;
+};
+
+class InMemoryTradeRepository : public ITradeRepository {
+    std::unordered_map&lt;std::string, Trade&gt; store_;
+public:
+    std::optional&lt;Trade&gt; find_by_id(const std::string& id) const override {
+        auto it = store_.find(id);
+        if (it == store_.end()) return std::nullopt;
+        return it->second;
+    }
+    std::vector&lt;Trade&gt; find_by_symbol(const std::string& sym) const override {
+        std::vector&lt;Trade&gt; result;
+        for (const auto& [id, t] : store_)
+            if (t.symbol == sym) result.push_back(t);
+        return result;
+    }
+    void save(const Trade& t) override { store_[t.id] = t; }
+};
+
+class TradeService {
+    ITradeRepository& repo_;
+public:
+    explicit TradeService(ITradeRepository& repo) : repo_(repo) {}
+    void execute(const std::string& trade_id) {
+        auto opt = repo_.find_by_id(trade_id);
+        if (!opt) throw std::runtime_error("Trade not found: " + trade_id);
+        Trade t = *opt;
+        t.status = "EXECUTED";
+        repo_.save(t);
+    }
+};</code></pre>
+  <div class="cpp-note"><code>std::optional&lt;Trade&gt;</code> is cleaner than a raw pointer (which the caller might forget to null-check) or an exception (which is not appropriate for "not found"). Always return optional for queries that may find nothing.</div>
+</div>

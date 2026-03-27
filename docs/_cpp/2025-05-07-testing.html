@@ -1,0 +1,162 @@
+---
+layout: cpp-post
+title: "Testing C++ — Catch2 and Property-Based Testing"
+description: "Unit testing with Catch2, testing numerical code for precision"
+date: 2025-05-07
+tags: [testing, tooling, production]
+permalink: /cpp/testing/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Testing matters more in C++</h3>
+  <p>Python gives you immediate feedback — run a snippet, see the result. C++ is compiled, and bugs can be silent (undefined behaviour doesn't always crash). A good test suite catches regressions early and gives you confidence to refactor.</p>
+  <h3>Catch2</h3>
+  <p>The most popular C++ testing framework. Header-only, expressive syntax, good output. Think pytest but for C++. Tests are functions tagged with <code>TEST_CASE</code>, assertions use <code>REQUIRE</code> and <code>CHECK</code>.</p>
+  <h3>Testing numerical code</h3>
+  <p>Financial code has two layers of correctness: does it produce the right answer, and is it numerically stable? For prices and Greeks, test against known analytical solutions. For precision, test with <code>Approx</code> tolerances rather than exact equality.</p>
+  <h3>Property-based testing</h3>
+  <p>Instead of writing specific test cases, define properties that should always hold: put-call parity, delta bounds, option price monotonicity in spot. Generate random inputs and check the property holds for all of them. Catches edge cases you wouldn't think to write manually.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — pytest and hypothesis</h3>
+  <pre><code class="language-python">import pytest
+from hypothesis import given, strategies as st
+import numpy as np
+from scipy.stats import norm
+
+def black_scholes_call(S, K, T, r, sigma):
+    d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma*np.sqrt(T)
+    return S*norm.cdf(d1) - K*np.exp(-r*T)*norm.cdf(d2)
+
+def black_scholes_put(S, K, T, r, sigma):
+    d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma*np.sqrt(T)
+    return K*np.exp(-r*T)*norm.cdf(-d2) - S*norm.cdf(-d1)
+
+# Specific test cases
+def test_atm_call_positive():
+    price = black_scholes_call(100, 100, 1, 0.05, 0.2)
+    assert price > 0
+
+def test_put_call_parity():
+    S, K, T, r, sigma = 100, 100, 1, 0.05, 0.2
+    call = black_scholes_call(S, K, T, r, sigma)
+    put  = black_scholes_put(S, K, T, r, sigma)
+    pv_k = K * np.exp(-r * T)
+    assert abs(call - put - (S - pv_k)) &lt; 1e-10
+
+# Property-based with hypothesis
+@given(
+    S     = st.floats(min_value=1, max_value=500),
+    K     = st.floats(min_value=1, max_value=500),
+    T     = st.floats(min_value=0.01, max_value=5),
+    r     = st.floats(min_value=0, max_value=0.2),
+    sigma = st.floats(min_value=0.01, max_value=1.0),
+)
+def test_put_call_parity_property(S, K, T, r, sigma):
+    call = black_scholes_call(S, K, T, r, sigma)
+    put  = black_scholes_put(S, K, T, r, sigma)
+    pv_k = K * np.exp(-r * T)
+    assert abs(call - put - (S - pv_k)) &lt; 1e-6</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — xUnit and FsCheck</h3>
+  <pre><code class="language-csharp">using Xunit;
+
+public class BlackScholesTests
+{
+    private static double Call(double S, double K, double T, double r, double sigma)
+    {
+        // ... Black-Scholes implementation
+        return 0;
+    }
+
+    [Fact]
+    public void AtmCall_IsPositive()
+    {
+        var price = Call(100, 100, 1, 0.05, 0.2);
+        Assert.True(price &gt; 0);
+    }
+
+    [Theory]
+    [InlineData(100, 100, 1, 0.05, 0.2)]
+    [InlineData(110,  95, 2, 0.03, 0.3)]
+    public void PutCallParity_Holds(double S, double K, double T, double r, double sigma)
+    {
+        var call = Call(S, K, T, r, sigma);
+        var put  = Put(S, K, T, r, sigma);
+        var pvK  = K * Math.Exp(-r * T);
+        Assert.Equal(call - put, S - pvK, precision: 8);
+    }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — Catch2</h3>
+
+  <h4>CMakeLists.txt</h4>
+  <pre><code class="language-cmake">include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.5.0
+)
+FetchContent_MakeAvailable(Catch2)
+
+add_executable(tests tests.cpp pricer.cpp)
+target_link_libraries(tests Catch2::Catch2WithMain)</code></pre>
+
+  <h4>Test file</h4>
+  <pre><code class="language-cpp">#include &lt;catch2/catch_test_macros.hpp&gt;
+#include &lt;catch2/matchers/catch_matchers_floating_point.hpp&gt;
+#include &lt;catch2/generators/catch_generators.hpp&gt;
+#include &lt;cmath&gt;
+
+// Functions under test
+double bs_call(double S, double K, double T, double r, double sigma);
+double bs_put (double S, double K, double T, double r, double sigma);
+
+using namespace Catch::Matchers;
+
+TEST_CASE("ATM call is positive", "[pricer]") {
+    double price = bs_call(100, 100, 1, 0.05, 0.2);
+    REQUIRE(price &gt; 0);
+}
+
+TEST_CASE("Put-call parity holds", "[pricer]") {
+    double S = 100, K = 100, T = 1, r = 0.05, sigma = 0.2;
+    double call = bs_call(S, K, T, r, sigma);
+    double put  = bs_put (S, K, T, r, sigma);
+    double pv_k = K * std::exp(-r * T);
+
+    REQUIRE_THAT(call - put, WithinAbs(S - pv_k, 1e-10));
+}
+
+TEST_CASE("Delta is in [0,1] for calls", "[greeks]") {
+    // Parameterised test with GENERATE
+    double S     = GENERATE(80.0, 100.0, 120.0);
+    double sigma = GENERATE(0.1, 0.2, 0.4);
+
+    double h     = 0.01;
+    double delta = (bs_call(S+h, 100, 1, 0.05, sigma)
+                  - bs_call(S-h, 100, 1, 0.05, sigma)) / (2*h);
+
+    REQUIRE(delta &gt;= 0.0);
+    REQUIRE(delta &lt;= 1.0);
+}
+
+TEST_CASE("Option price increases with spot (call)", "[pricer]") {
+    double K = 100, T = 1, r = 0.05, sigma = 0.2;
+    double prev = bs_call(80, K, T, r, sigma);
+    for (double S = 85; S &lt;= 120; S += 5) {
+        double curr = bs_call(S, K, T, r, sigma);
+        REQUIRE(curr &gt; prev);  // monotonic in S
+        prev = curr;
+    }
+}</code></pre>
+
+  <div class="cpp-note">💡 <code>REQUIRE</code> stops the test on failure; <code>CHECK</code> continues and reports all failures. Use <code>REQUIRE_THAT(..., WithinAbs(expected, tolerance))</code> for floating-point comparisons — never <code>==</code>. The <code>GENERATE</code> macro creates a parameterised test without writing a loop.</div>
+</div>

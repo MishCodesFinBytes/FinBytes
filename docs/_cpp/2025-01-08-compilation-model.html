@@ -1,0 +1,156 @@
+---
+layout: cpp-post
+title: "The Compilation Model — Headers, Translation Units, Linking"
+description: "What actually happens between .cpp and an executable"
+date: 2025-01-08
+tags: [foundations, tooling, compilation]
+permalink: /cpp/compilation-model/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why this matters</h3>
+  <p>In Python you run a file. In C# you compile a project. In C++ you compile <em>translation units</em> and link them together — and understanding that pipeline explains half the errors you'll see as a beginner.</p>
+
+  <p>This post covers what actually happens when you build a C++ program: preprocessing, compilation, assembly, linking — and why the header/.cpp split exists.</p>
+
+  <h3>The pipeline</h3>
+  <ul>
+    <li><strong>Preprocessor</strong> — expands <code>#include</code>, <code>#define</code>, <code>#ifdef</code>. Pure text substitution.</li>
+    <li><strong>Compiler</strong> — turns each <code>.cpp</code> (translation unit) into an object file <code>.o</code></li>
+    <li><strong>Linker</strong> — combines object files into an executable, resolves symbol references</li>
+  </ul>
+
+  <h3>The header / .cpp split</h3>
+  <p>Headers (<code>.h</code>) declare — they tell the compiler what exists. Source files (<code>.cpp</code>) define — they provide the actual implementation. This split lets multiple translation units share declarations without duplicating code.</p>
+
+  <h3>One Definition Rule (ODR)</h3>
+  <p>Every symbol must be defined exactly once across all translation units. Define a function in a header (without <code>inline</code>) and include it in two <code>.cpp</code> files — the linker will complain about duplicate symbols. This is one of the most common C++ beginner errors.</p>
+
+  <h3>Build systems</h3>
+  <p>You don't invoke the compiler manually for real projects. CMake is the standard — it generates build files for your platform. A minimal <code>CMakeLists.txt</code> is shown in the C++ tab.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — no compilation step</h3>
+  <p>Python is interpreted. There's no separate compile step — the interpreter reads and executes source directly. <code>.pyc</code> files are a bytecode cache, not compiled machine code.</p>
+
+  <pre><code class="language-python"># Just run it — no headers, no linking
+# module_a.py
+def greet(name: str) -> str:
+    return f"Hello, {name}"
+
+# main.py
+from module_a import greet  # runtime import
+
+print(greet("Mish"))  # Hello, Mish</code></pre>
+
+  <div class="cpp-note">Python imports happen at runtime. If <code>module_a.py</code> doesn't exist, you find out when the line executes — not before.</div>
+
+  <h3>Circular imports</h3>
+  <pre><code class="language-python"># Python handles circular imports (awkwardly)
+# a.py imports b.py which imports a.py
+# Usually fixed by restructuring or lazy imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from b import SomeType  # only for type checker, not runtime</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — project-based compilation</h3>
+  <p>C# compiles an entire project at once into an assembly (<code>.dll</code> or <code>.exe</code>). No header files — the compiler reads all <code>.cs</code> files in the project and resolves references automatically.</p>
+
+  <pre><code class="language-csharp">// Greeter.cs — declaration and definition in one file
+public class Greeter
+{
+    public string Greet(string name) => $"Hello, {name}";
+}
+
+// Program.cs — just reference the class, no include needed
+var g = new Greeter();
+Console.WriteLine(g.Greet("Mish"));  // Hello, Mish</code></pre>
+
+  <div class="cpp-note">C# has no equivalent of the header/.cpp split. The compiler resolves all symbols within the project automatically. Cross-project references use assembly references in the .csproj file.</div>
+
+  <h3>Project file (csproj)</h3>
+  <pre><code class="language-xml">&lt;Project Sdk="Microsoft.NET.Sdk"&gt;
+  &lt;PropertyGroup&gt;
+    &lt;OutputType&gt;Exe&lt;/OutputType&gt;
+    &lt;TargetFramework&gt;net8.0&lt;/TargetFramework&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;ItemGroup&gt;
+    &lt;PackageReference Include="SomeLib" Version="1.0.0" /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — headers, translation units, linking</h3>
+
+  <h4>Header file — declaration only</h4>
+  <pre><code class="language-cpp">// greeter.h — declares the interface
+#pragma once  // include guard: prevents double-inclusion
+
+#include &lt;string&gt;
+
+class Greeter {
+public:
+    std::string greet(const std::string&amp; name) const;
+};</code></pre>
+
+  <h4>Source file — definition</h4>
+  <pre><code class="language-cpp">// greeter.cpp — defines the implementation
+#include "greeter.h"
+
+std::string Greeter::greet(const std::string&amp; name) const {
+    return "Hello, " + name;
+}</code></pre>
+
+  <h4>Main</h4>
+  <pre><code class="language-cpp">// main.cpp
+#include &lt;iostream&gt;
+#include "greeter.h"  // only the declaration needed here
+
+int main() {
+    Greeter g;
+    std::cout &lt;&lt; g.greet("Mish") &lt;&lt; std::endl;
+    return 0;
+}</code></pre>
+
+  <h4>Building manually</h4>
+  <pre><code class="language-bash"># Compile each translation unit to an object file
+g++ -c greeter.cpp -o greeter.o
+g++ -c main.cpp    -o main.o
+
+# Link into an executable
+g++ greeter.o main.o -o app
+
+./app  # Hello, Mish</code></pre>
+
+  <h4>CMakeLists.txt — the standard build system</h4>
+  <pre><code class="language-cmake">cmake_minimum_required(VERSION 3.20)
+project(MyApp)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable(app
+    main.cpp
+    greeter.cpp
+)</code></pre>
+
+  <pre><code class="language-bash"># Build with CMake
+mkdir build &amp;&amp; cd build
+cmake ..
+cmake --build .</code></pre>
+
+  <div class="cpp-note">💡 <code>#pragma once</code> is a non-standard but universally supported include guard. The traditional alternative is <code>#ifndef GREETER_H / #define GREETER_H / ... / #endif</code> — same effect, more typing.</div>
+
+  <h4>inline — the ODR escape hatch</h4>
+  <pre><code class="language-cpp">// In a header — safe because of inline
+inline int square(int x) { return x * x; }
+
+// Without inline, including this in two .cpp files
+// would cause a linker error: duplicate symbol 'square'</code></pre>
+
+  <div class="cpp-note">💡 <code>inline</code> doesn't mean the function gets inlined by the compiler — it means "multiple definitions are allowed, they're all the same". The compiler decides whether to actually inline based on its own heuristics.</div>
+</div>

@@ -1,0 +1,233 @@
+---
+layout: cpp-post
+title: "Rebuilding std::vector From Scratch"
+description: "Dynamic arrays, capacity doubling, placement new, iterator invalidation"
+date: 2025-02-05
+tags: [data-structures, templates, memory]
+permalink: /cpp/rebuilding-vector/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why build what already exists?</h3>
+  <p>Understanding how <code>std::vector</code> works internally changes how you use it. Once you've built one yourself — the capacity doubling, the placement new, the iterator invalidation rules — none of its behaviour surprises you again.</p>
+
+  <h3>What std::vector actually is</h3>
+  <p>A dynamic array: a contiguous block of memory on the heap, a <em>size</em> (elements currently stored), and a <em>capacity</em> (elements the block can hold before reallocation). When size reaches capacity, it allocates a larger block, moves everything across, and frees the old one.</p>
+
+  <h3>Capacity doubling</h3>
+  <p>Why double? Amortised O(1) push_back. If you grow by 1 each time, every push_back copies everything — O(n) per operation. If you double capacity when full, each element is moved at most log₂(n) times across its lifetime — O(1) amortised.</p>
+
+  <h3>Placement new</h3>
+  <p>Normal <code>new</code> allocates memory <em>and</em> constructs an object. When building a vector, you allocate a raw memory block upfront, then construct objects into it as elements are added. That requires <em>placement new</em> — construct at a specific address without allocating.</p>
+
+  <h3>Iterator invalidation</h3>
+  <p>Any operation that causes reallocation (push_back beyond capacity, insert, reserve) invalidates all pointers, references, and iterators into the vector. This is why storing <code>vec[0]&amp;</code> across a push_back is undefined behaviour.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python list — similar concept, different implementation</h3>
+  <p>Python's <code>list</code> is also a dynamic array under the hood, but stores pointers to heap objects rather than the objects themselves. Growth factor is ~1.125 rather than 2.</p>
+
+  <pre><code class="language-python">import sys
+
+lst = []
+prev_size = sys.getsizeof(lst)
+for i in range(20):
+    lst.append(i)
+    size = sys.getsizeof(lst)
+    if size != prev_size:
+        print(f"len={len(lst)}: reallocated to {size} bytes")
+        prev_size = size
+
+# Output shows reallocation points as capacity is exceeded</code></pre>
+
+  <h3>Building a simple dynamic array in Python</h3>
+  <pre><code class="language-python">class DynArray:
+    def __init__(self):
+        self._data = [None] * 1
+        self._size = 0
+        self._cap  = 1
+
+    def append(self, item):
+        if self._size == self._cap:
+            self._grow()
+        self._data[self._size] = item
+        self._size += 1
+
+    def _grow(self):
+        new_cap  = self._cap * 2
+        new_data = [None] * new_cap
+        for i in range(self._size):
+            new_data[i] = self._data[i]
+        self._data = new_data
+        self._cap  = new_cap
+
+    def __getitem__(self, i): return self._data[i]
+    def __len__(self):        return self._size
+
+arr = DynArray()
+for i in range(10):
+    arr.append(i)
+print([arr[i] for i in range(len(arr))])</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# List&lt;T&gt; — same idea, managed memory</h3>
+  <p><code>List&lt;T&gt;</code> in C# is also a dynamic array, with a default initial capacity of 4 and doubling growth. The GC handles memory — no placement new, no manual cleanup.</p>
+
+  <pre><code class="language-csharp">using System.Reflection;
+
+var list = new List&lt;double&gt;();
+int prevCap = list.Capacity;
+
+for (int i = 0; i &lt; 20; i++) {
+    list.Add(i);
+    if (list.Capacity != prevCap) {
+        Console.WriteLine($"Count={list.Count}: capacity -> {list.Capacity}");
+        prevCap = list.Capacity;
+    }
+}
+// Count=1:  capacity -> 4
+// Count=5:  capacity -> 8
+// Count=9:  capacity -> 16
+// Count=17: capacity -> 32</code></pre>
+
+  <h3>Pre-allocating capacity</h3>
+  <pre><code class="language-csharp">// If you know the size upfront, reserve it
+var prices = new List&lt;double&gt;(capacity: 100_000);
+// No reallocations as long as count stays under 100,000</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — building Vec&lt;T&gt; from scratch</h3>
+
+  <pre><code class="language-cpp">#include &lt;cstddef&gt;
+#include &lt;stdexcept&gt;
+#include &lt;utility&gt;
+#include &lt;new&gt;
+#include &lt;iostream&gt;
+
+template&lt;typename T&gt;
+class Vec {
+public:
+    Vec() = default;
+
+    explicit Vec(std::size_t n, const T&amp; val = T{}) {
+        reserve(n);
+        for (std::size_t i = 0; i &lt; n; ++i)
+            push_back(val);
+    }
+
+    ~Vec() {
+        clear();
+        ::operator delete(data_);
+    }
+
+    // Disable copy for simplicity (real vector supports it)
+    Vec(const Vec&amp;)            = delete;
+    Vec&amp; operator=(const Vec&amp;) = delete;
+
+    // Move constructor
+    Vec(Vec&amp;&amp; other) noexcept
+        : data_(other.data_), size_(other.size_), cap_(other.cap_)
+    {
+        other.data_ = nullptr;
+        other.size_ = other.cap_ = 0;
+    }
+
+    void push_back(const T&amp; val) {
+        if (size_ == cap_) grow();
+        new(data_ + size_) T(val);  // placement new
+        ++size_;
+    }
+
+    void push_back(T&amp;&amp; val) {
+        if (size_ == cap_) grow();
+        new(data_ + size_) T(std::move(val));  // placement new (move)
+        ++size_;
+    }
+
+    void reserve(std::size_t new_cap) {
+        if (new_cap &lt;= cap_) return;
+        reallocate(new_cap);
+    }
+
+    T&amp;       operator[](std::size_t i)       { return data_[i]; }
+    const T&amp; operator[](std::size_t i) const { return data_[i]; }
+
+    T*       begin()       { return data_; }
+    T*       end()         { return data_ + size_; }
+    const T* begin() const { return data_; }
+    const T* end()   const { return data_ + size_; }
+
+    std::size_t size()     const { return size_; }
+    std::size_t capacity() const { return cap_; }
+    bool        empty()    const { return size_ == 0; }
+
+    void clear() {
+        for (std::size_t i = 0; i &lt; size_; ++i)
+            data_[i].~T();  // explicitly call destructor
+        size_ = 0;
+    }
+
+private:
+    void grow() {
+        reallocate(cap_ == 0 ? 1 : cap_ * 2);
+    }
+
+    void reallocate(std::size_t new_cap) {
+        // Allocate raw memory — no construction yet
+        T* new_data = static_cast&lt;T*&gt;(::operator new(new_cap * sizeof(T)));
+
+        // Move existing elements into new buffer
+        for (std::size_t i = 0; i &lt; size_; ++i) {
+            new(new_data + i) T(std::move(data_[i]));
+            data_[i].~T();
+        }
+
+        ::operator delete(data_);
+        data_ = new_data;
+        cap_  = new_cap;
+    }
+
+    T*          data_ = nullptr;
+    std::size_t size_ = 0;
+    std::size_t cap_  = 0;
+};
+
+int main() {
+    Vec&lt;double&gt; v;
+    for (int i = 0; i &lt; 10; ++i) {
+        v.push_back(i * 1.1);
+        std::cout &lt;&lt; "size=" &lt;&lt; v.size()
+                  &lt;&lt; " cap=" &lt;&lt; v.capacity() &lt;&lt; "\n";
+    }
+
+    double sum = 0;
+    for (auto x : v) sum += x;
+    std::cout &lt;&lt; "sum=" &lt;&lt; sum &lt;&lt; "\n";
+    return 0;
+}</code></pre>
+
+  <div class="cpp-note">💡 <code>::operator new(n)</code> allocates n bytes of raw memory without constructing anything. <code>new(ptr) T(args)</code> (placement new) constructs a T at address ptr without allocating. Together they let you separate allocation from construction — the core of how containers work.</div>
+
+  <h4>Iterator invalidation in practice</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;iostream&gt;
+
+int main() {
+    std::vector&lt;double&gt; v = {1.0, 2.0, 3.0};
+
+    double&amp; ref = v[0];          // reference to first element
+    auto*   ptr = v.data();      // pointer to buffer
+
+    v.push_back(4.0);            // may reallocate!
+
+    // ref and ptr are now dangling — undefined behaviour
+    // std::cout &lt;&lt; ref &lt;&lt; "\n";  // DO NOT DO THIS
+
+    // Safe: re-index after any mutating operation
+    std::cout &lt;&lt; v[0] &lt;&lt; "\n";   // fine — v[0] is always valid
+    return 0;
+}</code></pre>
+</div>

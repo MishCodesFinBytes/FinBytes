@@ -1,0 +1,168 @@
+---
+layout: cpp-post
+title: "Error Handling — Exceptions vs std::expected"
+description: "C++ exception model, std::expected (C++23), error codes, no-exception paths"
+date: 2025-04-30
+tags: [patterns, modern-cpp, production]
+permalink: /cpp/error-handling/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Three approaches</h3>
+  <p>C++ gives you three ways to handle errors, and the right choice depends on context:</p>
+  <ul>
+    <li><strong>Exceptions</strong> — the traditional C++ approach. Good for truly exceptional conditions. Banned in many low-latency paths because they can add latency in the unhappy path.</li>
+    <li><strong>Error codes</strong> — return an int or enum indicating success/failure. Fast, explicit, easy to ignore (which is the problem).</li>
+    <li><strong>std::expected&lt;T, E&gt;</strong> (C++23) — return either a value or an error. Forces the caller to handle both cases. No overhead on the success path. The modern approach.</li>
+  </ul>
+  <h3>In quant/finance code</h3>
+  <p>Exceptions for setup/teardown and file I/O. <code>std::expected</code> for pricing and risk functions that can fail with meaningful errors (bad input, convergence failure). Error codes for C-style APIs and hot paths where you need maximum predictability.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — exceptions are idiomatic</h3>
+  <pre><code class="language-python">from typing import Union
+from dataclasses import dataclass
+from enum import Enum
+
+# Standard Python: exceptions
+def price_option(S: float, K: float, T: float) -> float:
+    if S &lt;= 0: raise ValueError(f"S must be positive, got {S}")
+    if T &lt;= 0: raise ValueError(f"T must be positive, got {T}")
+    return max(S - K, 0)  # simplified
+
+# Result type — Python doesn't enforce this but it's a useful pattern
+class PricingError(Enum):
+    INVALID_INPUT   = "invalid_input"
+    NO_CONVERGENCE  = "no_convergence"
+
+@dataclass
+class Ok:
+    value: float
+
+@dataclass
+class Err:
+    error: PricingError
+    message: str
+
+Result = Union[Ok, Err]
+
+def price_option_safe(S: float, K: float, T: float) -> Result:
+    if S &lt;= 0:
+        return Err(PricingError.INVALID_INPUT, f"S must be positive, got {S}")
+    return Ok(max(S - K, 0))
+
+match price_option_safe(100, 95, 1):
+    case Ok(value=v):   print(f"Price: {v}")
+    case Err(message=m): print(f"Error: {m}")</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — exceptions and Result patterns</h3>
+  <pre><code class="language-csharp">// Standard: exceptions
+double PriceOption(double S, double K, double T) {
+    if (S &lt;= 0) throw new ArgumentException($"S must be positive, got {S}");
+    if (T &lt;= 0) throw new ArgumentException($"T must be positive, got {T}");
+    return Math.Max(S - K, 0);
+}
+
+// Result pattern (manual, or use FluentResults / ErrorOr libraries)
+public record Result&lt;T&gt;(T? Value, string? Error) {
+    public bool IsOk  =&gt; Error is null;
+    public bool IsErr =&gt; Error is not null;
+
+    public static Result&lt;T&gt; Ok(T value)       =&gt; new(value, null);
+    public static Result&lt;T&gt; Err(string error)  =&gt; new(default, error);
+}
+
+Result&lt;double&gt; PriceOptionSafe(double S, double K, double T) {
+    if (S &lt;= 0) return Result&lt;double&gt;.Err($"S must be positive, got {S}");
+    return Result&lt;double&gt;.Ok(Math.Max(S - K, 0));
+}
+
+var result = PriceOptionSafe(100, 95, 1);
+if (result.IsOk) Console.WriteLine($"Price: {result.Value}");
+else             Console.WriteLine($"Error: {result.Error}");</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ error handling approaches</h3>
+
+  <h4>Exceptions — traditional</h4>
+  <pre><code class="language-cpp">#include &lt;stdexcept&gt;
+#include &lt;cmath&gt;
+
+double price_option(double S, double K, double T) {
+    if (S &lt;= 0) throw std::invalid_argument("S must be positive");
+    if (T &lt;= 0) throw std::invalid_argument("T must be positive");
+    return std::max(S - K, 0.0);
+}
+
+try {
+    auto px = price_option(-1, 100, 1);
+} catch (const std::invalid_argument&amp; e) {
+    std::cerr &lt;&lt; "Error: " &lt;&lt; e.what() &lt;&lt; "\n";
+}</code></pre>
+
+  <h4>std::expected — C++23 (recommended for new code)</h4>
+  <pre><code class="language-cpp">#include &lt;expected&gt;
+#include &lt;string&gt;
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+
+enum class PricingError {
+    InvalidInput,
+    NoConvergence,
+};
+
+std::string to_string(PricingError e) {
+    switch (e) {
+        case PricingError::InvalidInput:   return "invalid input";
+        case PricingError::NoConvergence:  return "no convergence";
+    }
+    return "unknown";
+}
+
+std::expected&lt;double, PricingError&gt;
+price_option(double S, double K, double T) {
+    if (S &lt;= 0 || T &lt;= 0)
+        return std::unexpected(PricingError::InvalidInput);
+    return std::max(S - K, 0.0);
+}
+
+// Chaining with and_then / transform
+auto result = price_option(100, 95, 1)
+    .transform([](double px) { return px * 1.0; })  // apply discount
+    .and_then([](double px) -&gt; std::expected&lt;double, PricingError&gt; {
+        if (px &lt; 0) return std::unexpected(PricingError::InvalidInput);
+        return px;
+    });
+
+if (result)
+    std::cout &lt;&lt; "Price: " &lt;&lt; *result &lt;&lt; "\n";
+else
+    std::cout &lt;&lt; "Error: " &lt;&lt; to_string(result.error()) &lt;&lt; "\n";</code></pre>
+
+  <div class="cpp-note">💡 <code>std::expected</code> has zero overhead on the success path — it's just a union of T and E with a flag. Unlike exceptions, there's no stack unwinding cost. The caller is forced to check the result (or explicitly ignore it), unlike error codes which are easy to forget.</div>
+
+  <h4>Error codes — for C APIs and maximum predictability</h4>
+  <pre><code class="language-cpp">// Common in low-latency paths that cannot afford exception machinery
+enum class Status : int {
+    Ok            = 0,
+    InvalidInput  = 1,
+    NoConvergence = 2,
+};
+
+Status price_option_fast(
+    double S, double K, double T,
+    double&amp; out_price)  // output parameter
+{
+    if (S &lt;= 0 || T &lt;= 0) return Status::InvalidInput;
+    out_price = std::max(S - K, 0.0);
+    return Status::Ok;
+}
+
+double px;
+if (auto s = price_option_fast(100, 95, 1, px); s == Status::Ok)
+    std::cout &lt;&lt; px &lt;&lt; "\n";</code></pre>
+</div>

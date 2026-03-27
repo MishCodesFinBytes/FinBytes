@@ -1,0 +1,181 @@
+---
+layout: cpp-post
+title: "Atomics and the Memory Model"
+description: "std::atomic, memory ordering, lock-free counters"
+date: 2025-04-09
+tags: [concurrency, memory-model, performance]
+permalink: /cpp/atomics-memory-model/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why atomics exist</h3>
+  <p>A mutex protects a critical section by blocking other threads. For simple operations like incrementing a counter or reading a flag, this is overkill. Atomics give you thread-safe operations on single values without any blocking — implemented using hardware instructions (LOCK prefix on x86, LDXR/STXR on ARM).</p>
+  <h3>The C++ memory model</h3>
+  <p>Before C++11, the standard said nothing about threads — you were relying on platform behaviour. C++11 introduced a formal memory model: rules about when writes by one thread become visible to other threads. Without these rules, the compiler and CPU are free to reorder instructions in ways that break multithreaded code.</p>
+  <h3>Memory ordering</h3>
+  <ul>
+    <li><code>memory_order_relaxed</code> — no ordering guarantees. Just atomicity. Use for statistics counters.</li>
+    <li><code>memory_order_acquire</code> / <code>memory_order_release</code> — the most useful pair. Release stores synchronise with acquire loads — everything written before a release is visible after an acquire on the same variable.</li>
+    <li><code>memory_order_seq_cst</code> — sequential consistency. Strongest guarantee, default. Slowest on weakly-ordered architectures (ARM).</li>
+  </ul>
+  <h3>When to use atomics vs mutexes</h3>
+  <p>Atomics for single values: flags, counters, sequence numbers. Mutexes for compound state: updating multiple related variables that must stay consistent together.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — GIL provides implicit atomicity</h3>
+  <p>The GIL means most simple Python operations are already effectively atomic at the bytecode level. But this is an implementation detail of CPython, not a guarantee — and it doesn't help with multiprocessing.</p>
+
+  <pre><code class="language-python">import threading
+
+# This looks like a data race but works in CPython due to the GIL
+counter = 0
+lock = threading.Lock()
+
+def increment_safe(n: int) -> None:
+    global counter
+    for _ in range(n):
+        with lock:  # still needed for correctness across implementations
+            counter += 1
+
+threads = [threading.Thread(target=increment_safe, args=(10_000,)) for _ in range(8)]
+for t in threads: t.start()
+for t in threads: t.join()
+print(counter)  # 80000</code></pre>
+
+  <div class="cpp-note">Python has no equivalent of C++ atomics because the GIL provides a coarser guarantee. In C++, without atomics or mutexes, concurrent access to a plain <code>int</code> is undefined behaviour — the compiler can assume it won't happen and optimise accordingly.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — Interlocked class</h3>
+  <p>C# provides atomic operations via the <code>Interlocked</code> class and the <code>volatile</code> keyword. <code>Interlocked</code> maps directly to hardware atomic instructions, same as C++ atomics.</p>
+
+  <pre><code class="language-csharp">using System.Threading;
+
+int counter = 0;
+
+// Atomic increment — no mutex needed
+Interlocked.Increment(ref counter);
+Interlocked.Add(ref counter, 5);
+
+// Compare-and-swap
+int oldVal = Interlocked.CompareExchange(ref counter, newValue: 10, comparand: 5);
+// Sets counter to 10 only if it was 5; returns old value
+
+// Atomic flag
+int flag = 0;
+bool wasSet = Interlocked.CompareExchange(ref flag, 1, 0) == 0;
+
+// volatile — visibility guarantee, no atomicity
+volatile bool done = false;
+// One thread sets done = true; another reads it
+// volatile ensures the write is visible, but doesn't prevent data races on compound ops</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ atomics</h3>
+
+  <h4>Atomic counter</h4>
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;thread&gt;
+#include &lt;vector&gt;
+#include &lt;iostream&gt;
+
+std::atomic&lt;int&gt; counter{0};
+
+void increment(int n) {
+    for (int i = 0; i &lt; n; ++i)
+        counter.fetch_add(1, std::memory_order_relaxed);
+        // relaxed: no ordering constraint — just atomicity
+        // fine for a counter where we only read the total at the end
+}
+
+int main() {
+    std::vector&lt;std::thread&gt; threads;
+    for (int i = 0; i &lt; 8; ++i)
+        threads.emplace_back(increment, 10'000);
+    for (auto&amp; t : threads) t.join();
+    std::cout &lt;&lt; counter.load() &lt;&lt; "\n";  // always 80000
+    return 0;
+}</code></pre>
+
+  <h4>Acquire/release — the common pattern</h4>
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;thread&gt;
+#include &lt;string&gt;
+#include &lt;iostream&gt;
+
+std::string data;
+std::atomic&lt;bool&gt; ready{false};
+
+void producer() {
+    data = "Hello from producer";     // write data
+    ready.store(true, std::memory_order_release);  // signal: data is ready
+    // Everything written before the release store is visible
+    // to any thread that acquires the same atomic
+}
+
+void consumer() {
+    while (!ready.load(std::memory_order_acquire))
+        ;  // spin until ready
+    // At this point, data is guaranteed to be "Hello from producer"
+    // The acquire load synchronises with the release store
+    std::cout &lt;&lt; data &lt;&lt; "\n";
+}
+
+int main() {
+    std::thread p(producer);
+    std::thread c(consumer);
+    p.join(); c.join();
+    return 0;
+}</code></pre>
+
+  <h4>Compare-and-swap — the basis of lock-free code</h4>
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;iostream&gt;
+
+// Lock-free max update
+std::atomic&lt;double&gt; max_price{0.0};
+
+void update_max(double price) {
+    double current = max_price.load(std::memory_order_relaxed);
+    while (price &gt; current) {
+        // Try to swap: only succeeds if max_price still equals current
+        if (max_price.compare_exchange_weak(
+                current, price,
+                std::memory_order_release,
+                std::memory_order_relaxed))
+            break;  // succeeded
+        // Failed: current updated with latest value, retry
+    }
+}
+
+int main() {
+    std::vector&lt;std::thread&gt; threads;
+    for (double p : {101.5, 99.0, 103.2, 98.5, 104.0})
+        threads.emplace_back(update_max, p);
+    for (auto&amp; t : threads) t.join();
+    std::cout &lt;&lt; max_price.load() &lt;&lt; "\n";  // 104.0
+    return 0;
+}</code></pre>
+
+  <div class="cpp-note">💡 <code>compare_exchange_weak</code> can spuriously fail on some architectures (ARM) — that's fine in a loop. Use <code>compare_exchange_strong</code> only when you can't retry (e.g. in an if statement without a loop).</div>
+
+  <h4>Sequence number pattern — common in quant systems</h4>
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;cstdint&gt;
+
+// Assign monotonically increasing IDs without a mutex
+class OrderIdGenerator {
+public:
+    uint64_t next() {
+        return seq_.fetch_add(1, std::memory_order_relaxed);
+    }
+private:
+    std::atomic&lt;uint64_t&gt; seq_{1};
+};
+
+// One global instance — all threads get unique IDs
+OrderIdGenerator order_ids;
+auto id = order_ids.next();</code></pre>
+</div>

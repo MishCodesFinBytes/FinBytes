@@ -1,0 +1,164 @@
+---
+layout: cpp-post
+title: "Iterators, Views, and Ranges"
+description: "Iterator categories, range adaptors, lazy evaluation."
+date: 2025-08-20
+tags: [stl, iterators, ranges, cpp]
+permalink: /cpp/iterators-ranges/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why iterators exist</h3>
+  <p>Iterators are C++'s abstraction for "a position in a sequence". Every STL algorithm takes iterators — which is why the same <code>std::sort</code> works on vectors, arrays, deques, and custom containers. You write the algorithm once; it works everywhere.</p>
+
+  <h3>Iterator categories</h3>
+  <ul>
+    <li><strong>Input</strong> — read-once, forward only (network stream)</li>
+    <li><strong>Forward</strong> — re-readable, forward only (singly linked list)</li>
+    <li><strong>Bidirectional</strong> — forward and backward (std::list, std::map)</li>
+    <li><strong>Random access</strong> — jump to any position in O(1) (std::vector, std::array)</li>
+    <li><strong>Contiguous</strong> — random access + elements are contiguous in memory (std::vector, std::array, std::span)</li>
+  </ul>
+
+  <h3>C++20 Ranges</h3>
+  <p>Ranges wrap begin/end pairs into a single object. Range adaptors (<code>filter</code>, <code>transform</code>, <code>take</code>, <code>drop</code>) compose with <code>|</code> into lazy pipelines. Similar to Python generators but statically typed and zero-overhead.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python generators — lazy sequences</h3>
+  <pre><code class="language-python">from itertools import islice, filterfalse, takewhile, chain
+
+prices = [100.0, 95.0, 102.0, 98.5, 103.0]
+
+# Generators are lazy — values computed on demand
+def above_threshold(data, threshold):
+    for x in data:
+        if x > threshold:
+            yield x
+
+gen = above_threshold(prices, 100.0)  # nothing computed yet
+first = next(gen)                      # compute first matching element
+
+# itertools pipeline
+top3 = list(islice(
+    filter(lambda p: p > 95.0, reversed(sorted(prices))),
+    3
+))
+
+# Generator expression (lazy)
+returns = (p / prices[0] - 1 for p in prices)  # not evaluated yet
+pos_ret = (r for r in returns if r > 0)
+
+# range() is lazy in Python 3
+big_range = range(1_000_000)   # no list created
+third     = big_range[2]       # O(1) random access</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# IEnumerable and LINQ</h3>
+  <pre><code class="language-csharp">// LINQ is lazy — pipelines don't execute until enumerated
+var prices = new[] { 100.0, 95.0, 102.0, 98.5, 103.0 };
+
+// Lazy pipeline — nothing computed here
+var pipeline = prices
+    .Where(p => p > 100.0)
+    .Select(p => p * 1.1)
+    .Take(3);
+
+// Executed here
+foreach (var p in pipeline) Console.WriteLine(p);
+
+// Custom iterator with yield return
+IEnumerable&lt;double&gt; RollingMean(IEnumerable&lt;double&gt; source, int n) {
+    var window = new Queue&lt;double&gt;();
+    foreach (var x in source) {
+        window.Enqueue(x);
+        if (window.Count > n) window.Dequeue();
+        if (window.Count == n)
+            yield return window.Average();
+    }
+}
+
+var ma5 = RollingMean(prices, 3).ToList();</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ iterators and C++20 ranges</h3>
+
+  <h4>Custom iterator</h4>
+  <pre><code class="language-cpp">#include &lt;iterator&gt;
+#include &lt;cstddef&gt;
+
+// Simple forward iterator for a fixed-size ring buffer
+template&lt;typename T, std::size_t N&gt;
+class RingBuffer {
+public:
+    void push(T val) {
+        buf_[head_] = val;
+        head_ = (head_ + 1) % N;
+        if (count_ &lt; N) ++count_;
+    }
+
+    // Iterator — random access into logical order
+    struct iterator {
+        using value_type        = T;
+        using difference_type   = std::ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+
+        const RingBuffer* rb;
+        std::size_t       idx;  // logical index
+
+        T operator*() const {
+            std::size_t phys = (rb->head_ - rb->count_ + idx + N) % N;
+            return rb->buf_[phys];
+        }
+        iterator& operator++() { ++idx; return *this; }
+        bool operator!=(const iterator& o) const { return idx != o.idx; }
+    };
+
+    iterator begin() const { return {this, 0}; }
+    iterator end()   const { return {this, count_}; }
+    std::size_t size() const { return count_; }
+
+private:
+    T           buf_[N]{};
+    std::size_t head_  = 0;
+    std::size_t count_ = 0;
+};</code></pre>
+
+  <h4>C++20 Ranges pipeline</h4>
+  <pre><code class="language-cpp">#include &lt;ranges&gt;
+#include &lt;vector&gt;
+#include &lt;iostream&gt;
+#include &lt;numeric&gt;
+
+std::vector&lt;double&gt; prices = {100.0, 95.0, 102.0, 98.5, 103.0, 99.0, 104.5};
+
+namespace rv = std::ranges::views;
+
+// Lazy pipeline: filter above 100, scale by 1.1, take first 3
+auto pipeline = prices
+    | rv::filter([](double p)    { return p > 100.0; })
+    | rv::transform([](double p) { return p * 1.1; })
+    | rv::take(3);
+
+for (double p : pipeline)
+    std::cout &lt;&lt; p &lt;&lt; " ";
+// Output: 112.2 113.3 114.95
+
+// Rolling mean using iota + sliding window view (C++23)
+// C++20 version with manual sliding
+auto rolling_mean = [&](int n) {
+    std::vector&lt;double&gt; result;
+    for (int i = n-1; i &lt; (int)prices.size(); ++i) {
+        double sum = std::accumulate(prices.begin()+i-n+1,
+                                     prices.begin()+i+1, 0.0);
+        result.push_back(sum / n);
+    }
+    return result;
+};
+
+auto ma3 = rolling_mean(3);</code></pre>
+
+  <div class="cpp-note">💡 C++20 range adaptors are completely lazy and zero-overhead — no temporary vectors, no heap allocations. The compiler sees the entire pipeline at compile time and generates optimal machine code, often equivalent to a hand-written loop.</div>
+</div>

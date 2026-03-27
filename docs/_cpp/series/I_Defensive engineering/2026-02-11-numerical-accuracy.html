@@ -1,0 +1,125 @@
+---
+layout: cpp-post
+title: "Numerical Accuracy - When Calculations Silently Lie"
+description: "Catastrophic cancellation, accumulation error, NaN propagation, inf arithmetic."
+date: 2026-02-11
+tags: [defensive, numerical, accuracy]
+permalink: /cpp/numerical-accuracy/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Silent wrong answers</h3>
+  <p>Crashes announce themselves. Numerical errors do not. A pricer returning 10.4523 when the answer is 10.4521 passes casual inspection but fails desk reconciliation.</p>
+  <p><strong>Catastrophic cancellation:</strong> subtracting two nearly-equal numbers destroys significant digits. Black-Scholes d1-d2 for deep ITM/OTM options, variance <code>E[X^2] - E[X]^2</code>, barrier option payoffs near the barrier - all can suffer this.</p>
+  <p><strong>NaN and Inf propagation:</strong> NaN and Inf propagate silently through arithmetic. A single bad input can corrupt an entire risk report without any exception. Always validate inputs and outputs at system boundaries.</p>
+  <p><strong>The fix:</strong> switching from float to double postpones the problem, it does not solve it. Reformulate the calculation to avoid cancellation, use compensated summation, and validate at boundaries.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python numerical accuracy</h3>
+  <pre><code class="language-python">import math
+
+# Catastrophic cancellation
+a, b = 1e-15, 1.0
+bad  = (a + b) - b
+print(f"bad:  {bad}")   # 1.11e-16 (wrong!)
+print(f"true: {a}")     # 1e-15
+
+# NaN propagation
+x = float("nan")
+print(x + 1)       # nan
+print(x > 0)       # False - not an error!
+print(x == x)      # False (NaN != NaN by IEEE 754)
+print(math.isnan(x))  # True - use this to check
+
+# Validate at boundaries
+def safe_price(S: float, K: float, T: float, sigma: float) -> float:
+    inputs = {"S": S, "K": K, "T": T, "sigma": sigma}
+    for name, val in inputs.items():
+        if not math.isfinite(val): raise ValueError(f"Non-finite {name}={val}")
+        if name in ("S", "K", "sigma") and val &lt;= 0: raise ValueError(f"{name} must be positive")
+    result = _price_impl(S, K, T, sigma)
+    if not math.isfinite(result): raise ArithmeticError(f"Non-finite result: {result}")
+    return result
+
+# Kahan summation for large sums
+def kahan_sum(values):
+    s, c = 0.0, 0.0
+    for v in values:
+        y = v - c; t = s + y; c = (t - s) - y; s = t
+    return s</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# numerical accuracy</h3>
+  <pre><code class="language-csharp">// NaN / Inf checking
+double x = double.NaN;
+Console.WriteLine(x + 1);            // NaN
+Console.WriteLine(x > 0);            // False - no error!
+Console.WriteLine(double.IsNaN(x));   // True
+
+// Validate inputs and outputs
+double SafePrice(double S, double K, double T, double sigma) {
+    if (!double.IsFinite(S) || S &lt;= 0) throw new ArgumentException($"Bad S: {S}");
+    if (!double.IsFinite(K) || K &lt;= 0) throw new ArgumentException($"Bad K: {K}");
+    if (!double.IsFinite(T) || T &lt;= 0) throw new ArgumentException($"Bad T: {T}");
+    if (!double.IsFinite(sigma) || sigma &lt;= 0) throw new ArgumentException($"Bad sigma: {sigma}");
+    var result = PriceImpl(S, K, T, sigma);
+    if (!double.IsFinite(result)) throw new ArithmeticException($"Non-finite result: {result}");
+    return result;
+}
+
+// Kahan summation
+static double KahanSum(IEnumerable&lt;double&gt; values) {
+    double sum = 0, c = 0;
+    foreach (var v in values) {
+        double y = v - c, t = sum + y;
+        c = (t - sum) - y; sum = t;
+    }
+    return sum;
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ numerical accuracy</h3>
+  <pre><code class="language-cpp">#include &lt;cmath&gt;
+#include &lt;stdexcept&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// NaN and Inf propagate silently
+double x = std::numeric_limits&lt;double&gt;::quiet_NaN();
+bool b  = (x > 0.0);   // false - no exception
+bool eq = (x == x);    // false - NaN != NaN
+
+// Validate at system boundaries
+void validate_inputs(double S, double K, double T, double sigma) {
+    auto check = [](double v, const std::string& name) {
+        if (!std::isfinite(v)) throw std::invalid_argument(name + " is not finite");
+        if (v &lt;= 0) throw std::invalid_argument(name + " must be positive");
+    };
+    check(S, "S"); check(K, "K"); check(T, "T"); check(sigma, "sigma");
+}
+
+// Welford online algorithm - numerically stable variance
+double variance_stable(const std::vector&lt;double&gt;& x) {
+    double mean = 0, M2 = 0;
+    for (std::size_t n = 1; n &lt;= x.size(); ++n) {
+        double delta = x[n-1] - mean;
+        mean += delta / n;
+        M2   += delta * (x[n-1] - mean);
+    }
+    return M2 / (x.size() - 1);
+}
+
+// Kahan compensated sum
+double kahan_sum(const std::vector&lt;double&gt;& v) {
+    double sum = 0, c = 0;
+    for (double xi : v) {
+        double y = xi - c, t = sum + y;
+        c = (t - sum) - y; sum = t;
+    }
+    return sum;
+}</code></pre>
+  <div class="cpp-note">Enable <code>-fno-fast-math</code> to prevent the compiler reordering floating-point ops in ways that break Kahan summation. Use <code>-fsanitize=float-divide-by-zero</code> to catch division by zero during development.</div>
+</div>

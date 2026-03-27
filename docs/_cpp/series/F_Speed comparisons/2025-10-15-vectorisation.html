@@ -1,0 +1,147 @@
+---
+layout: cpp-post
+title: "Vectorisation and SIMD — When C++ Goes Supersonic"
+description: "Auto-vectorisation, AVX2 intrinsics, when Python/C# can't compete."
+date: 2025-10-15
+tags: [performance, simd, vectorisation, cpp]
+permalink: /cpp/vectorisation/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>What SIMD is</h3>
+  <p>Modern x86 CPUs have AVX2 instructions that process 4 doubles (or 8 floats) in a single clock cycle — the same time as one scalar operation. "SIMD" = Single Instruction, Multiple Data. For numerical loops, this is a 4x theoretical speedup on top of everything else.</p>
+
+  <h3>Auto-vectorisation</h3>
+  <p>The compiler can often vectorise simple loops automatically with <code>-O2</code> or <code>-O3</code>. Write clean, simple loops over contiguous data with no loop-carried dependencies, and the compiler will often emit AVX2 instructions without any effort from you.</p>
+
+  <h3>Manual intrinsics</h3>
+  <p>When the compiler misses an optimisation, you can use AVX2 intrinsics directly — C functions that map to specific SIMD instructions. More portable than assembly, but still architecture-specific. Generally only worth it after profiling proves the compiler isn't auto-vectorising.</p>
+
+  <h3>Python and C#</h3>
+  <p>NumPy and .NET's vectorisation paths can use SIMD — but only for specific operations on specific types. Arbitrary Python loops cannot be auto-vectorised. C++ gives you guaranteed access to the hardware.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — NumPy uses SIMD under the hood</h3>
+  <pre><code class="language-python">import numpy as np
+import time
+
+N = 10_000_000
+
+# NumPy — uses BLAS/LAPACK which uses SIMD
+arr = np.random.random(N).astype(np.float32)  # float32 fits 8 per AVX2 register
+
+t0 = time.perf_counter()
+total = arr.sum()
+print(f"NumPy sum: {(time.perf_counter()-t0)*1000:.2f}ms")  # ~3ms
+
+# Pure Python loop — NO vectorisation
+lst = list(arr)
+t0 = time.perf_counter()
+total2 = sum(lst)
+print(f"Python sum: {(time.perf_counter()-t0)*1000:.2f}ms")  # ~300ms
+
+# Numba — JIT compiles Python to LLVM with SIMD
+from numba import njit
+
+@njit(parallel=True)
+def numba_sum(a):
+    return a.sum()
+
+numba_sum(arr)  # warm up
+t0 = time.perf_counter()
+total3 = numba_sum(arr)
+print(f"Numba sum: {(time.perf_counter()-t0)*1000:.2f}ms")  # ~1ms</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — System.Runtime.Intrinsics</h3>
+  <pre><code class="language-csharp">using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.InteropServices;
+
+// Auto-vectorised by the JIT for simple loops
+static double SumAuto(ReadOnlySpan&lt;double&gt; arr) {
+    double sum = 0;
+    foreach (var x in arr) sum += x;  // JIT may vectorise this
+    return sum;
+}
+
+// Manual AVX2 intrinsics in C#
+static unsafe double SumAVX2(double[] arr) {
+    fixed (double* p = arr) {
+        var acc = Vector256&lt;double&gt;.Zero;
+        int i = 0;
+        for (; i &lt;= arr.Length - 4; i += 4) {
+            var v = Avx.LoadVector256(p + i);
+            acc = Avx.Add(acc, v);
+        }
+        // Horizontal sum of acc
+        var lo  = acc.GetLower();
+        var hi  = acc.GetUpper();
+        var sum = Sse2.Add(lo, hi);
+        double result = sum[0] + sum[1];
+        for (; i &lt; arr.Length; i++) result += arr[i];
+        return result;
+    }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — auto-vectorisation and AVX2 intrinsics</h3>
+
+  <h4>Auto-vectorised loop</h4>
+  <pre><code class="language-cpp">// Compile with: g++ -O2 -march=native -o bench bench.cpp
+// Check assembly at godbolt.org — look for vmovpd/vaddpd (AVX2)
+
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+#include &lt;cstddef&gt;
+
+// Simple loop — compiler auto-vectorises with -O2
+double sum_auto(const double* data, std::size_t n) {
+    double s = 0;
+    for (std::size_t i = 0; i &lt; n; ++i)
+        s += data[i];
+    return s;
+}
+
+// std::reduce with execution policy — explicit parallelism
+#include &lt;execution&gt;
+double sum_parallel(const std::vector&lt;double&gt;& v) {
+    return std::reduce(std::execution::par_unseq, v.begin(), v.end(), 0.0);
+}</code></pre>
+
+  <h4>Manual AVX2 intrinsics</h4>
+  <pre><code class="language-cpp">#include &lt;immintrin.h&gt;  // AVX2
+#include &lt;cstddef&gt;
+
+// Process 4 doubles per iteration using 256-bit registers
+double sum_avx2(const double* data, std::size_t n) {
+    __m256d acc = _mm256_setzero_pd();  // 4x zero doubles
+
+    std::size_t i = 0;
+    for (; i + 4 &lt;= n; i += 4) {
+        __m256d v = _mm256_loadu_pd(data + i);  // load 4 doubles
+        acc = _mm256_add_pd(acc, v);             // add 4 doubles simultaneously
+    }
+
+    // Horizontal sum: reduce 4 doubles in acc to one
+    double tmp[4];
+    _mm256_storeu_pd(tmp, acc);
+    double result = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+
+    // Handle remainder
+    for (; i &lt; n; ++i) result += data[i];
+    return result;
+}</code></pre>
+
+  <h4>Benchmark result</h4>
+  <pre><code class="language-cpp">// N = 10M doubles
+// sum_auto  (no hints):  ~4ms  (compiler may or may not vectorise)
+// sum_auto  (-O2 -march=native): ~1ms (auto-vectorised AVX2)
+// sum_avx2  (manual):   ~1ms  (same — auto-vectoriser is good)
+// sum_parallel (par_unseq): ~0.3ms (8 threads + SIMD)</code></pre>
+
+  <div class="cpp-note">💡 For most code, <code>-O2 -march=native</code> is all you need. The auto-vectoriser is remarkably good at simple loops. Reach for manual intrinsics only after: (1) profiling confirms the loop is the bottleneck, and (2) looking at the assembly with Compiler Explorer confirms the auto-vectoriser is not doing what you expect.</div>
+</div>

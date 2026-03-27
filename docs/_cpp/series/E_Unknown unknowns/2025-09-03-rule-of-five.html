@@ -1,0 +1,180 @@
+---
+layout: cpp-post
+title: "The Rule of Five"
+description: "Destructor, copy ctor, copy assign, move ctor, move assign — when you define one, define all."
+date: 2025-09-03
+tags: [cpp, memory, ownership]
+permalink: /cpp/rule-of-five/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The rule in one sentence</h3>
+  <p>If you define any of the five special member functions (destructor, copy constructor, copy assignment, move constructor, move assignment), you should explicitly define or delete all five. The compiler-generated defaults often do the wrong thing when you've overridden one.</p>
+
+  <h3>Why it matters</h3>
+  <p>If you define a destructor (because you own a raw resource), the compiler still generates copy and move operations — but they'll do a shallow copy of your raw pointer. Two objects now think they own the same memory. When either destructs, the other has a dangling pointer.</p>
+
+  <h3>The rule of zero</h3>
+  <p>The better rule: don't define any of the five. Compose your class from types that already handle their own resources (smart pointers, std::vector, std::string). Then the compiler-generated defaults are all correct. The Rule of Five is for when you're writing the low-level resource wrapper — which should be rare.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — __del__, __copy__, __deepcopy__</h3>
+  <pre><code class="language-python">import copy
+
+class Resource:
+    def __init__(self, name: str):
+        self.name = name
+        self.data = list(range(1000))  # simulated resource
+        print(f"  acquired {name}")
+
+    def __del__(self):
+        print(f"  released {self.name}")
+        # Python: called when ref count drops to 0
+        # Not guaranteed to run (circular refs, interpreter shutdown)
+
+    def __copy__(self):
+        # Shallow copy — new object, same data reference
+        new = Resource.__new__(Resource)
+        new.name = self.name + "_copy"
+        new.data = self.data  # shared!
+        return new
+
+    def __deepcopy__(self, memo):
+        new = Resource.__new__(Resource)
+        new.name = self.name + "_deep"
+        new.data = copy.deepcopy(self.data, memo)
+        return new
+
+r1 = Resource("r1")
+r2 = copy.copy(r1)      # __copy__
+r3 = copy.deepcopy(r1)  # __deepcopy__</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — IDisposable and ICloneable</h3>
+  <pre><code class="language-csharp">// C# has GC — no destructor in the C++ sense
+// IDisposable is for deterministic cleanup
+public class Resource : IDisposable, ICloneable
+{
+    private readonly string _name;
+    private bool _disposed = false;
+
+    public Resource(string name) {
+        _name = name;
+        Console.WriteLine($"  acquired {name}");
+    }
+
+    // Finaliser (called by GC — not deterministic)
+    ~Resource() => Dispose(false);
+
+    public void Dispose() {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing) {
+        if (_disposed) return;
+        if (disposing) Console.WriteLine($"  released {_name}");
+        _disposed = true;
+    }
+
+    // Shallow clone
+    public object Clone() => MemberwiseClone();
+}
+
+// Always use using for IDisposable
+using var r = new Resource("r1");
+var r2 = (Resource)r.Clone();</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — all five special members</h3>
+
+  <h4>The problem: define destructor, get broken copies</h4>
+  <pre><code class="language-cpp">// BROKEN — defines destructor but not copy/move
+class Broken {
+public:
+    Broken() : data_(new double[1000]) {}
+    ~Broken() { delete[] data_; }  // defined — disables move, breaks copies
+    // Compiler generates: copy ctor that copies the pointer (shallow!)
+    // Two Broken objects now both think they own data_
+    // Double-free when either destructs
+private:
+    double* data_;
+};</code></pre>
+
+  <h4>The fix: Rule of Five (for raw resource wrappers)</h4>
+  <pre><code class="language-cpp">#include &lt;algorithm&gt;
+#include &lt;utility&gt;
+
+class PriceSeries {
+public:
+    // 1. Constructor
+    explicit PriceSeries(int n)
+        : data_(new double[n]), size_(n) {}
+
+    // 2. Destructor
+    ~PriceSeries() { delete[] data_; }
+
+    // 3. Copy constructor
+    PriceSeries(const PriceSeries& other)
+        : data_(new double[other.size_]), size_(other.size_)
+    {
+        std::copy(other.data_, other.data_ + size_, data_);
+    }
+
+    // 4. Copy assignment
+    PriceSeries& operator=(const PriceSeries& other) {
+        if (this == &other) return *this;  // self-assignment guard
+        delete[] data_;
+        data_ = new double[other.size_];
+        size_ = other.size_;
+        std::copy(other.data_, other.data_ + size_, data_);
+        return *this;
+    }
+
+    // 5. Move constructor
+    PriceSeries(PriceSeries&& other) noexcept
+        : data_(other.data_), size_(other.size_)
+    {
+        other.data_ = nullptr;
+        other.size_ = 0;
+    }
+
+    // 6. Move assignment
+    PriceSeries& operator=(PriceSeries&& other) noexcept {
+        if (this == &other) return *this;
+        delete[] data_;
+        data_ = other.data_;
+        size_ = other.size_;
+        other.data_ = nullptr;
+        other.size_ = 0;
+        return *this;
+    }
+
+private:
+    double* data_;
+    int     size_;
+};</code></pre>
+
+  <h4>Better: Rule of Zero — use std::vector instead</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+
+// All five special members generated correctly by the compiler
+class PriceSeriesZero {
+public:
+    explicit PriceSeriesZero(int n) : data_(n) {}
+
+    double operator[](int i) const { return data_[i]; }
+    int    size()            const { return data_.size(); }
+
+private:
+    std::vector&lt;double&gt; data_;  // handles its own memory
+    // No destructor needed — std::vector cleans itself up
+    // Copy: deep-copies the vector (correct)
+    // Move: moves the vector's buffer (correct, O(1))
+};</code></pre>
+
+  <div class="cpp-note">💡 Prefer the Rule of Zero over the Rule of Five. Compose from RAII types (<code>unique_ptr</code>, <code>vector</code>, <code>string</code>) and the compiler generates all five correctly. The Rule of Five is only for when you're implementing the RAII type itself.</div>
+</div>

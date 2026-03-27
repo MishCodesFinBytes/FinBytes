@@ -1,0 +1,246 @@
+---
+layout: cpp-post
+title: "Testing Numerical and Financial Code"
+description: "Float tolerances, property-based testing, put-call parity as a test oracle."
+date: 2025-06-04
+tags: [testing, numerical, quant]
+permalink: /cpp/testing-numerical/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why numerical testing is different</h3>
+  <p>You can't use <code>==</code> for floating-point. You need tolerances. But how tight? Too loose and real bugs slip through. Too tight and you're testing the implementation, not the behaviour.</p>
+
+  <h3>Three types of numerical test</h3>
+  <ul>
+    <li><strong>Absolute tolerance</strong> — <code>|result - expected| &lt; ε</code>. Use when the magnitude is known (e.g. a price in pence).</li>
+    <li><strong>Relative tolerance</strong> — <code>|result - expected| / |expected| &lt; ε</code>. Use when magnitude varies across test cases.</li>
+    <li><strong>ULP tolerance</strong> — within N units in the last place. Use for pure mathematical functions where you want bit-level precision.</li>
+  </ul>
+
+  <h3>Test oracles for finance</h3>
+  <p>The best financial tests don't hardcode expected values — they verify mathematical properties that must always hold:</p>
+  <ul>
+    <li>Put-call parity: <code>C - P = S - K·e^{-rT}</code></li>
+    <li>Delta bounds: call delta in [0,1], put delta in [-1,0]</li>
+    <li>Option price is monotone in vol (vega &gt; 0)</li>
+    <li>Deep ITM call approaches forward price as vol → 0</li>
+  </ul>
+
+  <h3>Property-based testing</h3>
+  <p>Generate thousands of random inputs. For each, check a property holds. Catches edge cases (zero vol, zero time, very deep ITM/OTM) you'd never write by hand.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — pytest + hypothesis</h3>
+
+  <pre><code class="language-python"># bs_pricer.py
+import numpy as np
+from scipy.stats import norm
+from dataclasses import dataclass
+
+@dataclass
+class BSResult:
+    price: float
+    delta: float
+    vega:  float
+
+def black_scholes(S, K, T, r, sigma, is_call=True) -> BSResult:
+    if T &lt;= 0 or sigma &lt;= 0:
+        intrinsic = max(S - K, 0) if is_call else max(K - S, 0)
+        return BSResult(intrinsic, 1.0 if is_call and S > K else 0.0, 0.0)
+    d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    if is_call:
+        price = S*norm.cdf(d1) - K*np.exp(-r*T)*norm.cdf(d2)
+        delta = norm.cdf(d1)
+    else:
+        price = K*np.exp(-r*T)*norm.cdf(-d2) - S*norm.cdf(-d1)
+        delta = norm.cdf(d1) - 1
+    vega = S * norm.pdf(d1) * np.sqrt(T)
+    return BSResult(price, delta, vega)</code></pre>
+
+  <pre><code class="language-python"># test_bs_pricer.py
+import pytest
+import numpy as np
+from hypothesis import given, settings, strategies as st
+from hypothesis import assume
+from bs_pricer import black_scholes
+
+# --- Specific tests with known values ---
+class TestBlackScholes:
+    def test_atm_call_positive(self):
+        r = black_scholes(100, 100, 1, 0.05, 0.2)
+        assert r.price > 0
+
+    def test_deep_itm_call_approaches_intrinsic(self):
+        r = black_scholes(200, 100, 1, 0.05, 0.001)  # tiny vol
+        assert r.price == pytest.approx(200 - 100*np.exp(-0.05), abs=0.01)
+
+    def test_call_delta_in_bounds(self):
+        r = black_scholes(100, 100, 1, 0.05, 0.2)
+        assert 0 <= r.delta <= 1
+
+# --- Property-based tests ---
+pos_float = st.floats(min_value=1.0,  max_value=500.0)
+pos_small = st.floats(min_value=0.01, max_value=5.0)
+rate      = st.floats(min_value=0.0,  max_value=0.2)
+vol       = st.floats(min_value=0.01, max_value=1.5)
+
+@given(S=pos_float, K=pos_float, T=pos_small, r=rate, sigma=vol)
+@settings(max_examples=500)
+def test_put_call_parity(S, K, T, r, sigma):
+    call = black_scholes(S, K, T, r, sigma, is_call=True).price
+    put  = black_scholes(S, K, T, r, sigma, is_call=False).price
+    pv_k = K * np.exp(-r * T)
+    assert abs(call - put - (S - pv_k)) &lt; 1e-8
+
+@given(S=pos_float, K=pos_float, T=pos_small, r=rate, sigma=vol)
+def test_call_price_increases_with_vol(S, K, T, r, sigma):
+    assume(sigma &lt; 1.4)
+    low  = black_scholes(S, K, T, r, sigma,       is_call=True).price
+    high = black_scholes(S, K, T, r, sigma + 0.05, is_call=True).price
+    assert high >= low - 1e-10  # monotone in vol
+
+@given(S=pos_float, K=pos_float, T=pos_small, r=rate, sigma=vol)
+def test_call_delta_in_0_1(S, K, T, r, sigma):
+    r_ = black_scholes(S, K, T, r, sigma, is_call=True)
+    assert -1e-9 &lt;= r_.delta &lt;= 1.0 + 1e-9</code></pre>
+
+  <div class="cpp-note">Hypothesis automatically shrinks failing examples to the minimal reproducing case. If a test fails for S=127.43, T=0.891, it will shrink to S=2.0, T=0.01 — whatever is the simplest failing input.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — xUnit + FsCheck</h3>
+
+  <pre><code class="language-csharp">// BSPricerTests.cs
+using Xunit;
+using FsCheck;
+using FsCheck.Xunit;
+
+public class BSPricerTests
+{
+    [Fact]
+    public void AtmCall_IsPositive()
+    {
+        var r = BlackScholes.Price(S:100, K:100, T:1, r:0.05, sigma:0.2);
+        Assert.True(r.Price > 0);
+    }
+
+    [Fact]
+    public void PutCallParity_AtmOption()
+    {
+        double S = 100, K = 100, T = 1, r = 0.05, sigma = 0.2;
+        var call = BlackScholes.Price(S, K, T, r, sigma, isCall: true);
+        var put  = BlackScholes.Price(S, K, T, r, sigma, isCall: false);
+        double pvK = K * Math.Exp(-r * T);
+        Assert.Equal(S - pvK, call.Price - put.Price, precision: 8);
+    }
+
+    // Property test with FsCheck
+    [Property]
+    public Property PutCallParity_HoldsForAllInputs()
+    {
+        return Prop.ForAll(
+            Arb.From(Gen.Choose(1, 500).Select(x => (double)x)),  // S
+            Arb.From(Gen.Choose(1, 500).Select(x => (double)x)),  // K
+            (S, K) => {
+                double T = 1.0, r = 0.05, sigma = 0.2;
+                var call = BlackScholes.Price(S, K, T, r, sigma, true);
+                var put  = BlackScholes.Price(S, K, T, r, sigma, false);
+                double pvK = K * Math.Exp(-r * T);
+                return Math.Abs(call.Price - put.Price - (S - pvK)) &lt; 1e-6;
+            });
+    }
+
+    [Theory]
+    [InlineData(100, 100, 1, 0.05, 0.2,  10.45)]  // ATM call ~10.45
+    [InlineData(100, 110, 1, 0.05, 0.2,   6.04)]  // OTM call
+    [InlineData(110, 100, 1, 0.05, 0.2,  17.19)]  // ITM call
+    public void Call_AgainstKnownValues(double S, double K, double T,
+        double r, double sigma, double expected)
+    {
+        var result = BlackScholes.Price(S, K, T, r, sigma, isCall: true);
+        Assert.Equal(expected, result.Price, precision: 2);
+    }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — Catch2 with generators</h3>
+
+  <pre><code class="language-cpp">// test_bs_pricer.cpp
+#include &lt;catch2/catch_test_macros.hpp&gt;
+#include &lt;catch2/matchers/catch_matchers_floating_point.hpp&gt;
+#include &lt;catch2/generators/catch_generators_random.hpp&gt;
+#include &lt;catch2/generators/catch_generators_adapters.hpp&gt;
+#include &lt;cmath&gt;
+#include "bs_pricer.h"
+
+using namespace Catch::Matchers;
+
+// --- Known-value tests ---
+TEST_CASE("Black-Scholes known values", "[pricer]") {
+    SECTION("ATM call is positive") {
+        auto r = bs_call(100, 100, 1, 0.05, 0.2);
+        REQUIRE(r.price > 0);
+    }
+
+    SECTION("deep ITM call approaches forward") {
+        auto r    = bs_call(200, 100, 1, 0.05, 0.001);
+        double fwd = 200 - 100 * std::exp(-0.05 * 1.0);
+        REQUIRE_THAT(r.price, WithinAbs(fwd, 0.01));
+    }
+
+    SECTION("call delta in [0, 1]") {
+        auto r = bs_call(100, 100, 1, 0.05, 0.2);
+        REQUIRE(r.delta >= 0.0);
+        REQUIRE(r.delta &lt;= 1.0);
+    }
+}
+
+// --- Put-call parity: parametrised over random inputs ---
+TEST_CASE("Put-call parity", "[pricer][property]") {
+    // GENERATE with random values — Catch2 runs the test N times
+    double S     = GENERATE(take(50, random(1.0, 300.0)));
+    double K     = GENERATE(take(50, random(1.0, 300.0)));
+    double T     = GENERATE(take(10, random(0.1, 5.0)));
+    double sigma = GENERATE(take(5,  random(0.05, 1.0)));
+    double r     = 0.05;
+
+    auto call = bs_call(S, K, T, r, sigma);
+    auto put  = bs_put(S, K, T, r, sigma);
+    double pv_k = K * std::exp(-r * T);
+
+    REQUIRE_THAT(call.price - put.price - (S - pv_k),
+                 WithinAbs(0.0, 1e-8));
+}
+
+// --- Monotonicity: price increases with vol ---
+TEST_CASE("Call price monotone in vol", "[pricer][property]") {
+    double S = GENERATE(take(20, random(50.0, 200.0)));
+    double K = 100.0, T = 1.0, r = 0.05;
+
+    double sigma_lo = 0.1, sigma_hi = 0.3;
+    auto lo = bs_call(S, K, T, r, sigma_lo);
+    auto hi = bs_call(S, K, T, r, sigma_hi);
+
+    REQUIRE(hi.price >= lo.price - 1e-10);
+}</code></pre>
+
+  <div class="cpp-note">💡 Catch2's <code>GENERATE(take(N, random(...)))</code> isn't true property-based testing — it doesn't shrink on failure. For full shrinking, use <a href="https://github.com/emil-e/rapidcheck">RapidCheck</a> which integrates with Catch2. For most quant testing, Catch2 generators are sufficient.</div>
+
+  <h4>Tolerance helper for financial assertions</h4>
+  <pre><code class="language-cpp">// In your test utilities header
+inline void require_price_approx(double actual, double expected,
+                                  double abs_tol = 0.01) {
+    // Use absolute tolerance for prices (known magnitude)
+    REQUIRE_THAT(actual, Catch::Matchers::WithinAbs(expected, abs_tol));
+}
+
+inline void require_rate_approx(double actual, double expected,
+                                 double rel_tol = 1e-6) {
+    // Use relative tolerance for rates and spreads (variable magnitude)
+    REQUIRE_THAT(actual, Catch::Matchers::WithinRel(expected, rel_tol));
+}</code></pre>
+</div>

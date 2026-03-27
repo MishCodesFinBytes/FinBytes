@@ -1,0 +1,169 @@
+---
+layout: cpp-post
+title: "Lock-Free Data Structures"
+description: "Lock-free SPSC queue, compare-and-swap, ABA problem"
+date: 2025-04-16
+tags: [concurrency, data-structures, performance]
+permalink: /cpp/lock-free/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why lock-free?</h3>
+  <p>Mutexes have overhead: kernel call on contention, thread scheduling, cache line bouncing. In latency-sensitive paths — market data ingestion, order routing — even microseconds matter. Lock-free structures use atomic compare-and-swap instead of blocking.</p>
+  <h3>SPSC queue</h3>
+  <p>Single Producer Single Consumer queue — the most important lock-free structure in low-latency finance. One thread produces (market data feed), one thread consumes (pricer or risk engine). With exactly one producer and one consumer, you don't need compare-and-swap at all — just two atomic indices.</p>
+  <h3>ABA problem</h3>
+  <p>A reads a value A. B changes it to B then back to A. A's CAS succeeds even though the value was modified. Doesn't affect SPSC queues but matters for more complex structures. Solved with tagged pointers or hazard pointers.</p>
+  <h3>When lock-free is worth it</h3>
+  <p>Only in the absolute hot path. Lock-free code is harder to write, harder to reason about, and harder to test. Use a mutex first. Profile. Only reach for lock-free when you have measured evidence that the mutex is the bottleneck.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — queue.Queue</h3>
+  <pre><code class="language-python">import queue
+import threading
+import time
+
+# Thread-safe queue — uses a mutex internally
+q: queue.Queue[float] = queue.Queue(maxsize=1024)
+
+def feed_handler():
+    """Simulates market data feed"""
+    for i in range(100):
+        price = 100.0 + i * 0.01
+        q.put(price)           # blocks if full
+        time.sleep(0.001)
+
+def pricer():
+    """Consumes prices"""
+    while True:
+        try:
+            price = q.get(timeout=1.0)
+            # price_option(price)  ...
+            q.task_done()
+        except queue.Empty:
+            break
+
+t1 = threading.Thread(target=feed_handler)
+t2 = threading.Thread(target=pricer)
+t1.start(); t2.start()
+t1.join();  t2.join()</code></pre>
+  <div class="cpp-note">Python's <code>queue.Queue</code> uses a mutex and condition variable — equivalent to the C++ thread-safe queue from the previous post. There's no lock-free option in the standard library.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — ConcurrentQueue</h3>
+  <pre><code class="language-csharp">using System.Collections.Concurrent;
+
+// Lock-free MPMC queue
+var q = new ConcurrentQueue&lt;double&gt;();
+
+// Producer
+var producer = Task.Run(() => {
+    for (int i = 0; i &lt; 100; i++)
+        q.Enqueue(100.0 + i * 0.01);
+});
+
+// Consumer
+var consumer = Task.Run(() => {
+    int received = 0;
+    while (received &lt; 100) {
+        if (q.TryDequeue(out double price)) {
+            // process price
+            received++;
+        } else {
+            Thread.SpinWait(1);  // brief spin before retry
+        }
+    }
+});
+
+await Task.WhenAll(producer, consumer);</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ SPSC lock-free queue</h3>
+
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;array&gt;
+#include &lt;optional&gt;
+#include &lt;cstddef&gt;
+
+// Single Producer Single Consumer queue
+// No mutex — safe because exactly one thread writes head, one writes tail
+template&lt;typename T, std::size_t N&gt;
+class SPSCQueue {
+    static_assert((N &amp; (N-1)) == 0, "N must be a power of 2");
+
+public:
+    // Called by producer thread only
+    bool push(const T&amp; item) {
+        const std::size_t head = head_.load(std::memory_order_relaxed);
+        const std::size_t next = (head + 1) &amp; mask_;
+
+        if (next == tail_.load(std::memory_order_acquire))
+            return false;  // full
+
+        buf_[head] = item;
+        head_.store(next, std::memory_order_release);
+        return true;
+    }
+
+    // Called by consumer thread only
+    std::optional&lt;T&gt; pop() {
+        const std::size_t tail = tail_.load(std::memory_order_relaxed);
+
+        if (tail == head_.load(std::memory_order_acquire))
+            return std::nullopt;  // empty
+
+        T item = buf_[tail];
+        tail_.store((tail + 1) &amp; mask_, std::memory_order_release);
+        return item;
+    }
+
+    bool empty() const {
+        return head_.load(std::memory_order_acquire)
+            == tail_.load(std::memory_order_acquire);
+    }
+
+private:
+    static constexpr std::size_t mask_ = N - 1;
+
+    // Pad to separate cache lines — prevents false sharing
+    alignas(64) std::atomic&lt;std::size_t&gt; head_{0};
+    alignas(64) std::atomic&lt;std::size_t&gt; tail_{0};
+    std::array&lt;T, N&gt; buf_;
+};
+
+// Usage: feed handler to pricer
+#include &lt;thread&gt;
+#include &lt;iostream&gt;
+
+int main() {
+    SPSCQueue&lt;double, 1024&gt; q;  // power-of-2 capacity
+
+    std::thread producer([&amp;] {
+        for (int i = 0; i &lt; 100; ++i) {
+            double price = 100.0 + i * 0.01;
+            while (!q.push(price))
+                ;  // spin if full — or yield
+        }
+    });
+
+    std::thread consumer([&amp;] {
+        int received = 0;
+        while (received &lt; 100) {
+            if (auto p = q.pop()) {
+                ++received;
+                // process *p
+            }
+        }
+        std::cout &lt;&lt; "consumed " &lt;&lt; received &lt;&lt; " prices\n";
+    });
+
+    producer.join();
+    consumer.join();
+    return 0;
+}</code></pre>
+
+  <div class="cpp-note">💡 <code>alignas(64)</code> on the head and tail atomics puts them on separate cache lines. Without this, both atomics would share one 64-byte cache line — every time the producer writes head, it invalidates the cache line containing tail for the consumer, and vice versa. This "false sharing" can be worse than a mutex.</div>
+</div>

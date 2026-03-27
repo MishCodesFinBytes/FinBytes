@@ -1,0 +1,196 @@
+---
+layout: cpp-post
+title: "Stack vs Heap — Where Your Data Actually Lives"
+description: "Memory layout, allocation costs, and cache locality"
+date: 2025-01-15
+tags: [memory, performance, foundations]
+permalink: /cpp/stack-vs-heap/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The thing Python and C# hide from you</h3>
+  <p>Every variable you've ever declared lives somewhere in memory. In Python and C#, the runtime decides where. In C++, you decide — and that decision affects performance dramatically.</p>
+
+  <p>There are two regions that matter: the <strong>stack</strong> and the <strong>heap</strong>.</p>
+
+  <h3>The stack</h3>
+  <p>Fast, automatic, limited. When you call a function, a stack frame is pushed — all local variables live there. When the function returns, the frame is popped and that memory is instantly reclaimed. No allocator, no GC, no overhead.</p>
+  <ul>
+    <li>Allocation: essentially free (just move the stack pointer)</li>
+    <li>Size: typically 1–8 MB per thread</li>
+    <li>Lifetime: tied to the enclosing scope</li>
+    <li>Cache: extremely cache-friendly — consecutive frames are contiguous</li>
+  </ul>
+
+  <h3>The heap</h3>
+  <p>Flexible, manual, slower. <code>new</code> asks the OS for memory at runtime. The allocator has to find a free block, track it, and eventually reclaim it. That costs time — and heap objects can end up scattered across memory, killing cache performance.</p>
+  <ul>
+    <li>Allocation: slow (allocator bookkeeping)</li>
+    <li>Size: limited only by available RAM</li>
+    <li>Lifetime: until you (or a smart pointer) release it</li>
+    <li>Cache: potentially poor — objects may be far apart in memory</li>
+  </ul>
+
+  <h3>Why this matters for quant code</h3>
+  <p>A tight pricing loop that allocates on the heap on every iteration will be orders of magnitude slower than one that works entirely on the stack or pre-allocated arrays. Understanding this is the foundation of performance-aware C++.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — everything is on the heap</h3>
+  <p>In CPython, every object — including integers and booleans — is heap-allocated. The garbage collector (reference counting + cyclic GC) manages their lifetimes. You have no control over this.</p>
+
+  <pre><code class="language-python">import sys
+
+# Even a small int is a heap object
+x = 42
+print(sys.getsizeof(x))   # 28 bytes — not 4!
+print(sys.getsizeof(3.14)) # 24 bytes
+
+# A list is a heap object containing pointers to more heap objects
+prices = [100.5, 101.0, 99.8]
+print(sys.getsizeof(prices))  # 120 bytes for the list shell alone
+                               # each float is another 24 bytes on the heap</code></pre>
+
+  <div class="cpp-note">Python's per-object overhead (reference count, type pointer, GC info) is ~16–28 bytes on top of the actual data. A Python float costs 6x more memory than a C++ double.</div>
+
+  <h3>NumPy — the escape hatch</h3>
+  <pre><code class="language-python">import numpy as np
+
+# NumPy arrays store raw doubles in a contiguous C block
+prices = np.array([100.5, 101.0, 99.8], dtype=np.float64)
+print(prices.itemsize)  # 8 bytes — same as C++ double
+print(prices.nbytes)    # 24 bytes total — no per-element overhead
+
+# This is why NumPy is fast: cache-friendly contiguous memory
+# Vectorised operations bypass Python's object overhead entirely</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — value types vs reference types</h3>
+  <p>C# is closer to C++ here. Value types (<code>struct</code>, <code>int</code>, <code>double</code>, <code>bool</code>) live on the stack when declared as local variables. Reference types (<code>class</code>) always live on the heap.</p>
+
+  <pre><code class="language-csharp">// Value type — lives on the stack
+int x = 42;
+double price = 100.5;
+
+// Struct — stack allocated when local
+struct Tick {
+    public double Price;
+    public long   Volume;
+}
+Tick t = new Tick { Price = 100.5, Volume = 1000 };  // stack, no GC
+
+// Reference type — always heap allocated
+class Order {
+    public double Price { get; set; }
+    public int    Qty   { get; set; }
+}
+var o = new Order { Price = 100.5, Qty = 100 };  // heap, GC managed</code></pre>
+
+  <div class="cpp-note">C#'s <code>Span&lt;T&gt;</code> and <code>stackalloc</code> allow stack allocation of arrays — a performance feature added specifically for low-latency scenarios like financial systems.</div>
+
+  <h3>stackalloc for hot paths</h3>
+  <pre><code class="language-csharp">// Stack-allocate a buffer — no GC pressure
+Span&lt;double&gt; buffer = stackalloc double[256];
+for (int i = 0; i &lt; buffer.Length; i++)
+    buffer[i] = i * 0.01;
+
+// buffer is freed automatically when the method returns</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — you choose where everything lives</h3>
+
+  <h4>Stack allocation</h4>
+  <pre><code class="language-cpp">#include &lt;array&gt;
+#include &lt;iostream&gt;
+
+void stack_demo() {
+    // All of these live on the stack
+    int    x      = 42;
+    double price  = 100.5;
+    char   buf[64] = {};  // 64-byte buffer, zero-initialised
+
+    // Fixed-size array — stack allocated, cache-friendly
+    std::array&lt;double, 256&gt; prices;
+    prices.fill(0.0);
+
+    // All freed automatically when function returns
+}  // &lt;-- stack frame popped here, no allocator involved</code></pre>
+
+  <h4>Heap allocation</h4>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+void heap_demo() {
+    // Raw new/delete — avoid in modern C++
+    double* raw = new double[1000];
+    delete[] raw;  // must remember this
+
+    // Smart pointer — heap but automatically managed
+    auto prices = std::make_unique&lt;double[]&gt;(1000);
+    // freed automatically when prices goes out of scope
+
+    // std::vector — heap, but RAII managed
+    std::vector&lt;double&gt; v(1000, 0.0);
+    // freed automatically
+}</code></pre>
+
+  <h4>Measuring the difference</h4>
+  <pre><code class="language-cpp">#include &lt;chrono&gt;
+#include &lt;array&gt;
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+#include &lt;iostream&gt;
+
+constexpr int N = 1'000'000;
+
+double sum_stack() {
+    std::array&lt;double, 256&gt; buf;
+    std::iota(buf.begin(), buf.end(), 0.0);
+    return std::accumulate(buf.begin(), buf.end(), 0.0);
+}
+
+double sum_heap() {
+    std::vector&lt;double&gt; buf(256);
+    std::iota(buf.begin(), buf.end(), 0.0);
+    return std::accumulate(buf.begin(), buf.end(), 0.0);
+}
+
+int main() {
+    auto t0 = std::chrono::high_resolution_clock::now();
+    volatile double s = 0;
+    for (int i = 0; i &lt; N; ++i) s += sum_stack();
+    auto t1 = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i &lt; N; ++i) s += sum_heap();
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    auto ms = [](auto d) {
+        return std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(d).count();
+    };
+    std::cout &lt;&lt; "Stack: " &lt;&lt; ms(t1-t0) &lt;&lt; "ms\n";
+    std::cout &lt;&lt; "Heap:  " &lt;&lt; ms(t2-t1) &lt;&lt; "ms\n";
+    return 0;
+}</code></pre>
+  <div class="cpp-note">💡 On a typical run the heap version is 3–10x slower for small buffers — not because memory access is slower, but because the allocator has to find and track free blocks on every iteration. Pre-allocate once and reuse wherever possible.</div>
+
+  <h4>The golden rule for quant code</h4>
+  <pre><code class="language-cpp">// Bad — allocates on every tick
+void price_tick_bad(double price) {
+    std::vector&lt;double&gt; buf;       // heap alloc
+    buf.push_back(price);
+    // ... process
+}  // heap dealloc
+
+// Good — allocate once, reuse
+class TickProcessor {
+    std::vector&lt;double&gt; buf_;      // allocated once in constructor
+public:
+    TickProcessor() { buf_.reserve(4096); }
+
+    void on_tick(double price) {
+        buf_.push_back(price);     // no alloc until capacity exceeded
+        // ... process
+    }
+};</code></pre>
+</div>
