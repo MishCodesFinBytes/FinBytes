@@ -1,0 +1,42 @@
+---
+layout: post
+title: "RabbitMQ — what it is and how it differs from Redis pub/sub"
+date: 2026-05-27
+tags: [rabbitmq, queues, message-queue, misc]
+section: queues
+permalink: /misc/rabbitmq-what-is-it/
+---
+
+<p>Redis pub/sub is fire-and-forget. If a subscriber isn't connected when you publish, the message is gone. RabbitMQ is different: it persists messages in queues, routes them by rules, and guarantees delivery even if the consumer is offline.</p>
+
+<h2>Core concepts</h2>
+<p><strong>Producer</strong> — sends messages to an exchange, not directly to a queue.</p>
+<p><strong>Exchange</strong> — routes messages to queues based on rules (bindings). Types: direct, fanout, topic, headers.</p>
+<p><strong>Queue</strong> — buffer that stores messages until a consumer processes them.</p>
+<p><strong>Consumer</strong> — receives and acknowledges messages. Until it acknowledges, the message stays in the queue and can be redelivered.</p>
+<p><strong>Binding</strong> — rule connecting an exchange to a queue, optionally with a routing key.</p>
+
+<h2>vs Redis pub/sub</h2>
+<table>
+  <thead><tr><th>Feature</th><th>Redis pub/sub</th><th>RabbitMQ</th></tr></thead>
+  <tbody>
+    <tr><td>Message persistence</td><td>No — fire and forget</td><td>Yes — durable queues survive restarts</td></tr>
+    <tr><td>Consumer offline</td><td>Message lost</td><td>Message held until consumer reconnects</td></tr>
+    <tr><td>Acknowledgement</td><td>None</td><td>Consumer acks; redelivered on failure</td></tr>
+    <tr><td>Routing</td><td>Channel name only</td><td>Exchange types, routing keys, bindings</td></tr>
+    <tr><td>Throughput</td><td>Very high (in-memory)</td><td>High, slightly lower (persistence overhead)</td></tr>
+    <tr><td>Setup</td><td>Zero — already using Redis</td><td>Separate broker to deploy</td></tr>
+  </tbody>
+</table>
+
+<h2>When to use which</h2>
+<p>Use <strong>Redis pub/sub</strong> when: you need very low latency, losing occasional messages is acceptable, and you're already using Redis. Good for: live market data ticks, UI notifications, cache invalidation signals.</p>
+<p>Use <strong>RabbitMQ</strong> when: you need guaranteed delivery, consumers may be offline, messages represent work that must not be lost. Good for: order execution, trade confirmations, EOD batch jobs.</p>
+
+<h2>Exchange types</h2>
+<ul>
+  <li><strong>Direct</strong> — routes to queues where routing key = binding key exactly. One-to-one.</li>
+  <li><strong>Fanout</strong> — broadcasts to all bound queues. Ignores routing key. Use for pub/sub.</li>
+  <li><strong>Topic</strong> — routing key patterns with <code>*</code> (one word) and <code>#</code> (zero or more words). <code>prices.*.equity</code> matches <code>prices.london.equity</code>.</li>
+  <li><strong>Headers</strong> — routes on message header attributes rather than routing key.</li>
+</ul>

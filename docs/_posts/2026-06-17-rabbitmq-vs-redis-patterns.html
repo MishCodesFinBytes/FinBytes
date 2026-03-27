@@ -1,0 +1,90 @@
+---
+layout: post
+title: "RabbitMQ vs Redis — choosing the right queue for the job"
+date: 2026-06-17
+tags: [rabbitmq, redis, queues, message-queue, misc]
+section: queues
+permalink: /misc/rabbitmq-vs-redis-patterns/
+---
+
+<p>Both Redis and RabbitMQ can act as message brokers. The question is which one to reach for, and when using both makes sense.</p>
+
+<h2>Decision framework</h2>
+
+<h3>Use Redis when</h3>
+<ul>
+  <li>You already have Redis in the stack — zero extra infrastructure</li>
+  <li>Latency matters more than guaranteed delivery — Redis pub/sub is faster</li>
+  <li>Messages have a short useful life — latest price tick, cache invalidation signal</li>
+  <li>You need a simple task queue — Redis Lists + BRPOP is sufficient</li>
+  <li>You want Celery — it works on Redis, no RabbitMQ needed</li>
+</ul>
+
+<h3>Use RabbitMQ when</h3>
+<ul>
+  <li>Messages represent work that must not be lost — order execution, trade confirmations</li>
+  <li>Consumers may be intermittently offline — RabbitMQ holds messages until they reconnect</li>
+  <li>You need complex routing — fanout to multiple consumers, topic-based routing</li>
+  <li>You need dead-letter queues — failed messages route to a DLQ automatically</li>
+  <li>You need per-message acknowledgement with visibility into unacked messages</li>
+</ul>
+
+<h2>Implementing a task queue in Redis (without Celery)</h2>
+<pre><code class="language-python">import redis
+import json
+import time
+
+r = redis.Redis(decode_responses=True)
+
+# Producer
+def enqueue(task: dict) -> None:
+    r.lpush('task_queue', json.dumps(task))
+
+# Consumer
+def worker() -> None:
+    while True:
+        # BRPOP blocks until a message arrives (0 = no timeout)
+        _, raw = r.brpop('task_queue', timeout=0)
+        task = json.loads(raw)
+        try:
+            process(task)
+        except Exception as e:
+            # Manual dead-letter: push to failed queue
+            r.lpush('task_queue:failed', raw)
+            print(f"Failed: {e}")</code></pre>
+
+<h2>Using both together</h2>
+<p>A common pattern in trading systems: RabbitMQ for durable order flow (must not lose a message), Redis for ephemeral market data (latest price only, latency critical).</p>
+<pre><code class="language-python">
+# Redis: ephemeral market data (pub/sub)
+# Publisher updates last price per symbol
+r.set(f'price:{symbol}', price, ex=60)  # expires in 60s
+
+# RabbitMQ: durable order queue
+channel.basic_publish(
+    exchange='orders',
+    routing_key='new_order',
+    body=json.dumps(order),
+    properties=pika.BasicProperties(delivery_mode=2)
+)</code></pre>
+
+<h2>Dead-letter queues in RabbitMQ</h2>
+<p>Configure a DLQ so failed messages don't vanish:</p>
+<pre><code class="language-python">channel.queue_declare(
+    queue='tasks',
+    durable=True,
+    arguments={
+        'x-dead-letter-exchange': 'dlx',
+        'x-message-ttl': 60000,   # expire after 60s if unprocessed
+    }
+)
+
+# Declare DLX and DLQ
+channel.exchange_declare(exchange='dlx', exchange_type='direct')
+channel.queue_declare(queue='tasks.failed', durable=True)
+channel.queue_bind(queue='tasks.failed', exchange='dlx', routing_key='tasks')
+
+# Now: nack with requeue=False -> routes to tasks.failed
+ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)</code></pre>
+
+<p>Dead-letter queues are one of RabbitMQ's strongest features — they make failure handling explicit and inspectable. You can replay, inspect, or alert on the DLQ without any custom logic in your consumer.</p>

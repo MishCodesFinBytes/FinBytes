@@ -1,0 +1,74 @@
+---
+layout: post
+title: "RabbitMQ with Python — pika basics, patterns, and gotchas"
+date: 2026-06-10
+tags: [rabbitmq, python, queues, message-queue, misc, pika]
+section: queues
+permalink: /misc/rabbitmq-python-pika/
+---
+
+<p><code>pika</code> is the standard Python client for RabbitMQ. It's low-level — you manage connections, channels, declarations, and acknowledgements yourself. That explicitness is useful for understanding what's happening.</p>
+
+<h2>Install</h2>
+<pre><code class="language-bash">pip install pika</code></pre>
+
+<h2>Minimal producer</h2>
+<pre><code class="language-python">import pika
+
+connection = pika.BlockingConnection(
+    pika.URLParameters('amqp://guest:guest@localhost/')
+)
+channel = connection.channel()
+
+# Declare queue (idempotent — safe to call every time)
+channel.queue_declare(queue='tasks', durable=True)
+
+channel.basic_publish(
+    exchange='',
+    routing_key='tasks',
+    body='hello world',
+    properties=pika.BasicProperties(delivery_mode=2)  # persistent
+)
+
+print("Sent")
+connection.close()</code></pre>
+
+<h2>Minimal consumer</h2>
+<pre><code class="language-python">import pika
+
+def callback(ch, method, properties, body):
+    print(f"Received: {body.decode()}")
+    ch.basic_ack(delivery_tag=method.delivery_tag)  # acknowledge
+
+connection = pika.BlockingConnection(
+    pika.URLParameters('amqp://guest:guest@localhost/')
+)
+channel = connection.channel()
+
+channel.queue_declare(queue='tasks', durable=True)
+channel.basic_qos(prefetch_count=1)  # one at a time
+channel.basic_consume(queue='tasks', on_message_callback=callback)
+
+print("Waiting for messages...")
+channel.start_consuming()  # blocks</code></pre>
+
+<h2>Important settings explained</h2>
+<p><strong><code>durable=True</code></strong> — the queue survives a RabbitMQ restart. Without this, queues disappear on restart and messages are lost.</p>
+<p><strong><code>delivery_mode=2</code></strong> — marks messages as persistent. Combined with <code>durable=True</code>, messages survive restarts.</p>
+<p><strong><code>basic_ack</code></strong> — tells RabbitMQ the message was processed. Without an ack, RabbitMQ redelivers the message when the consumer disconnects. Never forget to ack (or nack on failure).</p>
+<p><strong><code>prefetch_count=1</code></strong> — don't send more than 1 unacked message to this consumer. Prevents one slow consumer from hoarding messages.</p>
+
+<h2>Common gotchas</h2>
+<p><strong>Forgetting to ack:</strong> messages pile up in an "Unacked" state. The queue looks full but consumers aren't processing. Always ack in a try/except and nack with <code>requeue=True</code> on error.</p>
+<p><strong>Connection vs channel:</strong> one connection per process, one channel per thread. Never share channels across threads.</p>
+<p><strong>BlockingConnection in async code:</strong> pika's BlockingConnection blocks the event loop. Use <code>aio-pika</code> if you're in async Python.</p>
+
+<h2>Nack on failure (with requeue)</h2>
+<pre><code class="language-python">def callback(ch, method, properties, body):
+    try:
+        process(body)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+    except Exception as e:
+        print(f"Failed: {e}")
+        # requeue=False sends to dead-letter queue if configured
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)</code></pre>

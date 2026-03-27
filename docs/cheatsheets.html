@@ -1,0 +1,97 @@
+---
+layout: page
+title: Cheatsheets
+permalink: /cheatsheets/
+---
+<style>
+.cs-lede { color:#666; font-size:.95rem; margin-bottom:2.5rem; max-width:580px; line-height:1.7; }
+.cs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-bottom:2rem; }
+.cs-card { border:1px solid #e8e8e8; border-radius:8px; padding:16px 18px; text-decoration:none; color:#333; display:flex; flex-direction:column; gap:6px; transition:border-color .15s, box-shadow .15s; }
+.cs-card:hover { border-color:#2a7ae2; box-shadow:0 2px 8px rgba(42,122,226,.1); text-decoration:none; color:#333; }
+.cs-title { font-size:.95rem; font-weight:500; color:#111; }
+.cs-desc { font-size:.8rem; color:#888; line-height:1.4; }
+.cs-dl { font-size:.75rem; color:#2a7ae2; margin-top:auto; padding-top:6px; }
+.cs-hdr { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#999; margin-bottom:.8rem; padding-bottom:.5rem; border-bottom:1px solid #ebebeb; }
+</style>
+
+<p class="cs-lede">One-page reference sheets — download and keep. All PDFs, print-friendly.</p>
+
+<div class="cs-hdr">Languages</div>
+<div class="cs-grid">
+  <a class="cs-card" href="{{ "/assets/cheatsheets/python-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">Python</div>
+    <div class="cs-desc">Data types, comprehensions, decorators, common stdlib</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+  <a class="cs-card" href="{{ "/assets/cheatsheets/pandas-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">pandas</div>
+    <div class="cs-desc">DataFrame ops, groupby, merge, read/write</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+  <a class="cs-card" href="{{ "/assets/cheatsheets/csharp-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">C#</div>
+    <div class="cs-desc">Types, LINQ, async/await, collections, null handling</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+  <a class="cs-card" href="{{ "/assets/cheatsheets/cpp-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">C++</div>
+    <div class="cs-desc">Memory, RAII, move semantics, templates, STL, concurrency</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+</div>
+
+<div class="cs-hdr">Testing</div>
+<div class="cs-grid">
+  <a class="cs-card" href="{{ "/assets/cheatsheets/pytest-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">pytest</div>
+    <div class="cs-desc">Fixtures, parametrize, markers, conftest, assertions</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+  <a class="cs-card" href="{{ "/assets/cheatsheets/monkeypatch-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">monkeypatch</div>
+    <div class="cs-desc">Patch targets, setattr, mock.patch, call verification</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+</div>
+
+<div class="cs-hdr">Tools &amp; infrastructure</div>
+<div class="cs-grid">
+  <a class="cs-card" href="{{ "/assets/cheatsheets/git-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">Git</div>
+    <div class="cs-desc">Everyday commands, branching, rebase, reset, stash</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+  <a class="cs-card" href="{{ "/assets/cheatsheets/redis-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">Redis</div>
+    <div class="cs-desc">Data types, commands, expiry, pub/sub, common patterns</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+</div>
+
+<div class="cs-hdr">Design patterns</div>
+<div class="cs-grid">
+  <a class="cs-card" href="{{ "/assets/cheatsheets/design-patterns-python-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">Design patterns — Python</div>
+    <div class="cs-desc">SOLID, factory, builder, strategy, observer, decorator, repository, command</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+  <a class="cs-card" href="{{ "/assets/cheatsheets/design-patterns-csharp-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">Design patterns — C#</div>
+    <div class="cs-desc">SOLID, factory, builder, strategy, events, decorator, repository, command</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+  <a class="cs-card" href="{{ "/assets/cheatsheets/design-patterns-cpp-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">Design patterns — C++</div>
+    <div class="cs-desc">SOLID, factory, builder, strategy, observer, decorator, CRTP, command</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+</div>
+
+<div class="cs-hdr">Reliability</div>
+<div class="cs-grid">
+  <a class="cs-card" href="{{ "/assets/cheatsheets/queues-reliability-cheatsheet.pdf" | relative_url }}" target="_blank">
+    <div class="cs-title">Queues &amp; reliability</div>
+    <div class="cs-desc">Circuit breaker, backpressure, retry, health checks, idempotency</div>
+    <div class="cs-dl">Download PDF &darr;</div>
+  </a>
+</div>

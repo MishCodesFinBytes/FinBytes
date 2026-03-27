@@ -1,0 +1,53 @@
+---
+layout: page
+title: Notes
+permalink: /notes/
+---
+<style>
+.notes-lede { color:#666; font-size:.95rem; margin-bottom:2.5rem; max-width:580px; line-height:1.7; }
+.notes-section { margin-bottom:2.5rem; }
+.notes-hdr { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#999; margin-bottom:.6rem; padding-bottom:.5rem; border-bottom:1px solid #ebebeb; display:flex; align-items:baseline; gap:.75rem; }
+.notes-hdr .sub { font-weight:400; font-size:.7rem; color:#bbb; letter-spacing:0; text-transform:none; }
+.notes-list { list-style:none; margin:0; padding:0; }
+.notes-list li { display:flex; align-items:baseline; gap:1rem; padding:.4rem 0; border-bottom:1px solid #f4f4f4; }
+.notes-list li:last-child { border-bottom:none; }
+.notes-date { font-size:.78rem; color:#ccc; white-space:nowrap; min-width:72px; }
+.notes-list a { font-size:.93rem; color:#333; text-decoration:none; line-height:1.4; }
+.notes-list a:hover { color:#2a7ae2; text-decoration:underline; }
+</style>
+
+<p class="notes-lede">Raw notes, debugging sessions, and things I worked through out loud. Less polished than the tutorial posts — closer to a dev diary.</p>
+
+<div class="notes-section" id="sessions">
+  <div class="notes-hdr">Live sessions &amp; debugging <span class="sub">working through problems in real time</span></div>
+  <ul class="notes-list">
+    {% for p in site.posts %}
+      {% assign pd = p.date | date: "%Y-%m-%d" %}
+      {% assign show = false %}
+      {% if p.tags contains "notes" or p.tags contains "journal" or p.section == "notes" %}{% assign show = true %}{% endif %}
+      {% assign sl = p.slug %}
+      {% if sl contains "demo-chat-app" or sl contains "live-session" or sl contains "troubleshooting" or sl contains "follow-up" or sl contains "blog-ready" %}{% assign show = true %}{% endif %}
+      {% if show %}
+        <li>
+          <span class="notes-date">{{ p.date | date: "%-d %b %Y" }}</span>
+          <a href="{{ p.url | relative_url }}">{{ p.title }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="notes-section" id="til">
+  <div class="notes-hdr">Today I learned <span class="sub">short observations — tag posts with: notes</span></div>
+  <ul class="notes-list">
+    {% for p in site.posts %}
+      {% if p.tags contains "til" or p.tags contains "today-i-learned" %}
+        <li>
+          <span class="notes-date">{{ p.date | date: "%-d %b %Y" }}</span>
+          <a href="{{ p.url | relative_url }}">{{ p.title }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    <li><span class="notes-date"></span><span style="color:#bbb;font-size:.88rem;font-style:italic;">Tag any post with <code>til</code> to surface it here.</span></li>
+  </ul>
+</div>
