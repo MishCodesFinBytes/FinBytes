@@ -1,0 +1,387 @@
+---
+layout: post
+title: "Docker, Kubernetes, and CI/CD — just enough for a developer"
+date: 2026-03-27
+tags: [docker, kubernetes, ci-cd, devops, misc, tools]
+section: tools
+permalink: /misc/docker-kubernetes-cicd/
+---
+
+<style>
+.devops-note { border-left:3px solid #2a7ae2; background:#f0f6ff; padding:8px 14px; font-size:.88rem; color:#444; margin:12px 0; border-radius:0 4px 4px 0; }
+.devops-warn { border-left:3px solid #e67e22; background:#fdf6e3; padding:8px 14px; font-size:.88rem; color:#555; margin:12px 0; border-radius:0 4px 4px 0; }
+.devops-cmd { display:inline-block; background:#1e1e1e; color:#a8d8a8; font-family:monospace; font-size:.85rem; padding:2px 8px; border-radius:3px; }
+.section-intro { font-size:1rem; color:#555; margin-bottom:1.2rem; line-height:1.7; max-width:680px; }
+.cmd-table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:.88rem; }
+.cmd-table th { background:#f5f5f5; padding:8px 12px; text-align:left; font-weight:600; border-bottom:2px solid #e8e8e8; }
+.cmd-table td { padding:7px 12px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+.cmd-table td:first-child { font-family:monospace; font-size:.82rem; white-space:nowrap; color:#c0392b; }
+.cmd-table tr:last-child td { border-bottom:none; }
+</style>
+
+<p class="section-intro">Three tools that show up in almost every production engineering job description. You don't need to be a DevOps engineer — but you do need to know what they are, why they exist, and how to work with them when your code runs in a container, gets tested in a pipeline, and deploys to a cluster.</p>
+
+<hr>
+
+<h2>Part 1 — Docker</h2>
+
+<h3>The problem it solves</h3>
+<p>"It works on my machine" is a real, career-affecting problem. Your Python service runs on 3.11 with specific packages. The production server runs 3.9 with slightly different versions. A dependency installs differently on macOS vs Linux. These aren't hypotheticals — they cause production incidents.</p>
+<p>Docker solves this by packaging your application together with its entire environment: the OS base, the runtime, the libraries, the config. That package (an <strong>image</strong>) runs identically everywhere — your laptop, a CI server, a production cluster.</p>
+
+<h3>Container vs virtual machine</h3>
+<p>A VM emulates an entire computer, including its own OS kernel. Heavy, slow to start, large on disk. A container shares the host OS kernel but isolates the filesystem, processes, and network. Lightweight, starts in milliseconds, small on disk. For most application workloads, containers are the right tool.</p>
+
+<h3>Image vs container</h3>
+<p>An <strong>image</strong> is the blueprint — a read-only snapshot of your application and its environment. A <strong>container</strong> is a running instance of an image. One image can run as many containers as you like. Think of an image as a class definition and a container as an instance of that class.</p>
+
+<h3>The Dockerfile</h3>
+<p>A Dockerfile is a recipe for building an image. Each instruction adds a layer. Layers are cached — if a layer hasn't changed, Docker reuses it. This makes rebuilds fast.</p>
+
+<pre><code class="language-dockerfile"># Start from an official Python base image
+FROM python:3.11-slim
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Copy requirements first (cached separately — only reruns when requirements change)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application
+COPY . .
+
+# Expose the port the app listens on
+EXPOSE 8000
+
+# Command to run when the container starts
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+
+<div class="devops-note">Copy <code>requirements.txt</code> and install dependencies <em>before</em> copying your source code. Docker caches each layer — if you copy everything first, any code change invalidates the pip install cache and reinstalls all packages every build. Order matters.</div>
+
+<h3>Commands you'll actually use</h3>
+<table class="cmd-table">
+  <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td>docker build -t myapp:latest .</td><td>Build an image from the Dockerfile in the current directory, tag it <code>myapp:latest</code></td></tr>
+    <tr><td>docker run -p 8000:8000 myapp:latest</td><td>Run a container, mapping port 8000 on host to port 8000 in container</td></tr>
+    <tr><td>docker run -d myapp:latest</td><td>Run detached (in background)</td></tr>
+    <tr><td>docker ps</td><td>List running containers</td></tr>
+    <tr><td>docker ps -a</td><td>List all containers including stopped ones</td></tr>
+    <tr><td>docker logs &lt;container_id&gt;</td><td>View container stdout/stderr</td></tr>
+    <tr><td>docker logs -f &lt;container_id&gt;</td><td>Follow logs in real time</td></tr>
+    <tr><td>docker exec -it &lt;id&gt; bash</td><td>Open a shell inside a running container</td></tr>
+    <tr><td>docker stop &lt;id&gt;</td><td>Gracefully stop a container</td></tr>
+    <tr><td>docker rm &lt;id&gt;</td><td>Remove a stopped container</td></tr>
+    <tr><td>docker images</td><td>List local images</td></tr>
+    <tr><td>docker rmi myapp:latest</td><td>Remove an image</td></tr>
+    <tr><td>docker pull python:3.11-slim</td><td>Pull an image from Docker Hub</td></tr>
+    <tr><td>docker push myrepo/myapp:latest</td><td>Push an image to a registry</td></tr>
+  </tbody>
+</table>
+
+<h3>Volumes — persisting data</h3>
+<p>Containers are ephemeral — when they stop, any data written inside them is lost. Volumes solve this by mounting a directory from the host (or a managed volume) into the container.</p>
+<pre><code class="language-bash"># Mount current directory into /app inside the container
+docker run -v $(pwd):/app myapp:latest
+
+# Named volume (Docker manages the location)
+docker run -v mydata:/var/lib/postgresql/data postgres:15</code></pre>
+
+<h3>docker-compose — running multiple containers</h3>
+<p>Most real applications aren't a single container. A typical setup: your app, a database, a cache. <code>docker-compose</code> defines and runs multi-container applications from a single YAML file.</p>
+
+<pre><code class="language-yaml"># docker-compose.yml
+version: "3.9"
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://user:pass@db:5432/mydb
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - .:/app   # mount source for live reload in development
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+
+<pre><code class="language-bash">docker-compose up          # start everything
+docker-compose up -d       # start in background
+docker-compose down        # stop and remove containers
+docker-compose logs -f app # follow logs for the app service
+docker-compose exec app bash  # shell into the app container</code></pre>
+
+<div class="devops-note">In the compose file, services refer to each other by service name. Your app connects to Redis at <code>redis:6379</code> not <code>localhost:6379</code> — because inside the Docker network, <code>redis</code> is the hostname. This trips people up the first time.</div>
+
+<hr>
+
+<h2>Part 2 — Kubernetes</h2>
+
+<h3>What problem k8s solves that Docker alone doesn't</h3>
+<p>Docker runs containers on one machine. When you need to run containers across many machines — for scale, redundancy, or rolling deployments — you need an orchestrator. Kubernetes (k8s) is that orchestrator. It handles: scheduling containers onto nodes, restarting crashed containers, scaling up/down, rolling deployments with zero downtime, service discovery, and secrets management.</p>
+
+<p>As a developer you won't manage the cluster itself — that's platform/ops territory. But you will write or edit the YAML files that describe how your application runs, and you'll use <code>kubectl</code> to inspect and debug your running services.</p>
+
+<h3>Core concepts</h3>
+
+<p><strong>Pod</strong> — the smallest deployable unit. Usually one container, sometimes a main container plus a sidecar (e.g. a logging agent). Pods are ephemeral — they come and go. You never interact with pods directly in normal operation.</p>
+
+<p><strong>Deployment</strong> — declares how many replicas of your pod should run, which image to use, and how to roll out updates. If a pod crashes, the Deployment restarts it. If you update the image, the Deployment does a rolling update.</p>
+
+<p><strong>Service</strong> — a stable network endpoint in front of your pods. Since pods come and go (and their IP addresses change), a Service provides a fixed address. Types: <code>ClusterIP</code> (internal only), <code>LoadBalancer</code> (exposes externally), <code>NodePort</code> (exposes on a port on each node).</p>
+
+<p><strong>ConfigMap</strong> — key/value config injected into pods as environment variables or mounted files. Non-sensitive config: feature flags, URLs, timeouts.</p>
+
+<p><strong>Secret</strong> — like ConfigMap but base64-encoded and access-controlled. Database passwords, API keys, TLS certificates.</p>
+
+<p><strong>Namespace</strong> — logical grouping of resources. Common pattern: <code>dev</code>, <code>staging</code>, <code>prod</code> namespaces in one cluster.</p>
+
+<h3>A real Deployment YAML</h3>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricer
+  namespace: trading
+  labels:
+    app: pricer
+spec:
+  replicas: 3                    # run 3 copies
+  selector:
+    matchLabels:
+      app: pricer
+  template:
+    metadata:
+      labels:
+        app: pricer
+    spec:
+      containers:
+        - name: pricer
+          image: myrepo/pricer:v1.4.2    # always use a specific tag, not :latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: REDIS_URL
+              value: "redis://redis-service:6379"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pricer-secrets   # Secret object name
+                  key: db-password       # key inside the Secret
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10</code></pre>
+
+<h3>A Service YAML</h3>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: pricer-service
+  namespace: trading
+spec:
+  selector:
+    app: pricer           # routes to pods with this label
+  ports:
+    - protocol: TCP
+      port: 80            # port the Service listens on
+      targetPort: 8000    # port on the pod
+  type: ClusterIP         # internal only — use LoadBalancer to expose externally</code></pre>
+
+<h3>kubectl commands you'll actually use</h3>
+<table class="cmd-table">
+  <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td>kubectl get pods -n trading</td><td>List pods in the trading namespace</td></tr>
+    <tr><td>kubectl get pods -A</td><td>List pods in all namespaces</td></tr>
+    <tr><td>kubectl describe pod &lt;name&gt; -n trading</td><td>Full detail on a pod — events, status, image, restarts</td></tr>
+    <tr><td>kubectl logs &lt;pod&gt; -n trading</td><td>View pod logs</td></tr>
+    <tr><td>kubectl logs -f &lt;pod&gt; -n trading</td><td>Follow pod logs</td></tr>
+    <tr><td>kubectl logs &lt;pod&gt; --previous</td><td>Logs from the previous (crashed) container</td></tr>
+    <tr><td>kubectl exec -it &lt;pod&gt; -- bash</td><td>Shell into a running pod</td></tr>
+    <tr><td>kubectl apply -f deployment.yaml</td><td>Apply a YAML file (create or update)</td></tr>
+    <tr><td>kubectl delete -f deployment.yaml</td><td>Delete resources defined in a YAML</td></tr>
+    <tr><td>kubectl get deployments -n trading</td><td>List deployments and their replica status</td></tr>
+    <tr><td>kubectl rollout status deployment/pricer</td><td>Watch a rolling update progress</td></tr>
+    <tr><td>kubectl rollout undo deployment/pricer</td><td>Roll back to the previous deployment</td></tr>
+    <tr><td>kubectl get services -n trading</td><td>List services and their endpoints</td></tr>
+    <tr><td>kubectl get secrets -n trading</td><td>List secrets (not their values)</td></tr>
+    <tr><td>kubectl top pods -n trading</td><td>CPU and memory usage per pod</td></tr>
+  </tbody>
+</table>
+
+<div class="devops-note">Never use <code>:latest</code> as the image tag in a Deployment. It makes rollbacks impossible and creates non-deterministic deployments. Always use a specific version tag — a semantic version, a git SHA, or a build number.</div>
+
+<div class="devops-warn">Things you don't need to know yet: Ingress controllers, StatefulSets, DaemonSets, Operators, Helm chart authoring, cluster provisioning, RBAC configuration. If someone asks you about these before you've shipped anything to k8s, they're interviewing for an SRE role, not a developer role.</div>
+
+<hr>
+
+<h2>Part 3 — CI/CD with GitHub Actions</h2>
+
+<h3>What CI/CD actually means</h3>
+<p><strong>Continuous Integration (CI):</strong> every code push automatically runs tests, linting, and builds. You find out immediately if you broke something, before it reaches anyone else.</p>
+<p><strong>Continuous Deployment (CD):</strong> after CI passes, the code is automatically deployed to an environment. Fully automated = continuous deployment. Requires human approval = continuous delivery.</p>
+
+<p>The pipeline stages for a typical Python service:</p>
+<pre><code>push code
+    → lint (ruff, flake8)
+    → type check (mypy)
+    → unit tests (pytest)
+    → integration tests
+    → build Docker image
+    → push image to registry
+    → deploy to staging
+    → (manual approval)
+    → deploy to production</code></pre>
+
+<h3>GitHub Actions anatomy</h3>
+<p>A <strong>workflow</strong> is a YAML file in <code>.github/workflows/</code>. It contains one or more <strong>jobs</strong>. Each job runs on a <strong>runner</strong> (a fresh VM) and contains a sequence of <strong>steps</strong>. Steps run shell commands or call pre-built <strong>actions</strong> from the marketplace.</p>
+
+<pre><code class="language-yaml"># .github/workflows/ci.yml
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Type check
+        run: mypy src/
+
+      - name: Run tests
+        run: pytest --tb=short -q</code></pre>
+
+<h3>Building and pushing a Docker image in CI</h3>
+<pre><code class="language-yaml">  build-and-push:
+    runs-on: ubuntu-latest
+    needs: test              # only runs if test job passes
+    if: github.ref == 'refs/heads/main'   # only on main branch
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            myrepo/pricer:latest
+            myrepo/pricer:${{ github.sha }}</code></pre>
+
+<h3>Secrets in CI — never hardcode</h3>
+<p>Add secrets in your GitHub repo under Settings → Secrets and variables → Actions. Reference them in workflows as <code>${{ secrets.MY_SECRET }}</code>. They're masked in logs — you'll see <code>***</code> if they're accidentally printed.</p>
+
+<div class="devops-warn">Never put passwords, API keys, or tokens in your workflow YAML file or your source code. GitHub will actually scan for common secret patterns and alert you, but don't rely on that. Environment variables from secrets is the only acceptable approach.</div>
+
+<h3>Other CI platforms — same ideas, different syntax</h3>
+<p>If you work somewhere that uses Jenkins, GitLab CI, Azure DevOps, or CircleCI — the concepts are identical. You have triggers, stages, steps, and artifact outputs. The YAML syntax differs but everything you just learned transfers directly. GitHub Actions is the easiest to start with because the runner infrastructure is fully managed and the marketplace has actions for almost everything.</p>
+
+<hr>
+
+<h2>How it all connects</h2>
+
+<p>Here's the end-to-end flow for a containerised service:</p>
+
+<pre><code>1. You push code to main
+       ↓
+2. GitHub Actions triggers
+   - runs pytest
+   - runs mypy
+   - if all pass: builds Docker image tagged with git SHA
+   - pushes image to Docker Hub / ECR / GCR
+       ↓
+3. CD step updates the Deployment YAML with the new image tag
+   kubectl set image deployment/pricer pricer=myrepo/pricer:abc1234
+       ↓
+4. Kubernetes does a rolling update
+   - starts new pods with the new image
+   - waits for readiness probe to pass
+   - terminates old pods
+   - if new pods fail readiness: automatic rollback
+       ↓
+5. Your change is live with zero downtime</code></pre>
+
+<h3>What you own as a developer</h3>
+<ul>
+  <li><code>Dockerfile</code> — how your app is packaged</li>
+  <li><code>docker-compose.yml</code> — local development environment</li>
+  <li><code>.github/workflows/ci.yml</code> — the CI pipeline</li>
+  <li><code>k8s/deployment.yaml</code> — how your app runs in the cluster</li>
+  <li>The health check endpoints (<code>/healthz</code>, <code>/readyz</code>) your liveness and readiness probes call</li>
+</ul>
+
+<h3>What ops / platform owns</h3>
+<ul>
+  <li>The cluster itself — nodes, networking, storage</li>
+  <li>Ingress controllers, TLS termination</li>
+  <li>Cluster-level RBAC and security policies</li>
+  <li>The container registry</li>
+  <li>Monitoring infrastructure (Prometheus, Grafana, alerting)</li>
+</ul>
+
+<div class="devops-note">The single most valuable thing you can do before your first k8s deployment: implement proper health check endpoints. A <code>/healthz</code> that returns 200 when the app is alive, and a <code>/readyz</code> that returns 200 only when the app is ready to serve traffic (feed connected, cache warm, etc.). Without these, k8s can't do rolling deployments safely. With them, it handles failures automatically.</div>
