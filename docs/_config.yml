@@ -2,6 +2,7 @@
 #
 # Site settings
 email: me@finbytes.anonaddy.com
+future: true
 description: >-
   Just a documentary learning blog.
 baseurl: "/FinBytes"
