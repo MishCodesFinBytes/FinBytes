@@ -1,0 +1,155 @@
+---
+layout: cpp-post
+title: "Command-Line Arguments and Config"
+description: "argparse vs System.CommandLine vs CLI11. Loading a pricer from config."
+date: 2025-07-30
+tags: [practical, cli, config]
+permalink: /cpp/cli-args/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>CLI tools in quant</h3>
+  <p>Batch pricers, risk calculators, data transformers — quant tools are often run from the command line with parameters. A good CLI experience: sensible defaults, clear help text, config file support.</p>
+  <h3>The task</h3>
+  <p>A bond pricer CLI: accepts symbol, maturity, coupon, and discount rate as arguments. Also reads defaults from a JSON config file. Outputs to stdout or a specified file.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — argparse</h3>
+  <pre><code class="language-python">import argparse
+import json
+import sys
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        description="Bond pricer",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    p.add_argument("symbol",            help="Bond symbol")
+    p.add_argument("--maturity", "-m",  type=float, default=5.0,  help="Years to maturity")
+    p.add_argument("--coupon",   "-c",  type=float, default=0.05, help="Annual coupon rate")
+    p.add_argument("--rate",     "-r",  type=float, default=0.04, help="Discount rate")
+    p.add_argument("--config",          type=str,   default=None, help="Config file path")
+    p.add_argument("--output",   "-o",  type=str,   default=None, help="Output file (stdout if omitted)")
+    return p
+
+def price_bond(maturity: float, coupon: float, rate: float) -> float:
+    pv = sum(coupon / (1 + rate)**t for t in range(1, int(maturity) + 1))
+    pv += 1.0 / (1 + rate)**maturity  # principal
+    return pv
+
+def main():
+    args = build_parser().parse_args()
+
+    # Load config defaults
+    defaults = {}
+    if args.config:
+        with open(args.config) as f:
+            defaults = json.load(f)
+
+    maturity = args.maturity or defaults.get("maturity", 5.0)
+    coupon   = args.coupon   or defaults.get("coupon",   0.05)
+    rate     = args.rate     or defaults.get("rate",     0.04)
+
+    price = price_bond(maturity, coupon, rate)
+    result = f"{args.symbol}: {price:.4f}"
+
+    if args.output:
+        with open(args.output, "w") as f:
+            f.write(result + "\n")
+    else:
+        print(result)
+
+if __name__ == "__main__":
+    main()
+
+# Usage: python pricer.py GILT2029 --maturity 5 --coupon 0.045 --rate 0.04</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — System.CommandLine</h3>
+  <pre><code class="language-csharp">// Install: dotnet add package System.CommandLine
+using System.CommandLine;
+
+var symbolArg  = new Argument&lt;string&gt;("symbol", "Bond symbol");
+var maturityOpt = new Option&lt;double&gt;("--maturity", () =&gt; 5.0,  "Years to maturity");
+var couponOpt   = new Option&lt;double&gt;("--coupon",   () =&gt; 0.05, "Annual coupon rate");
+var rateOpt     = new Option&lt;double&gt;("--rate",     () =&gt; 0.04, "Discount rate");
+var outputOpt   = new Option&lt;string?&gt;("--output", "Output file");
+
+var cmd = new RootCommand("Bond pricer") {
+    symbolArg, maturityOpt, couponOpt, rateOpt, outputOpt
+};
+
+cmd.SetHandler((symbol, maturity, coupon, rate, output) => {
+    double price = Enumerable.Range(1, (int)maturity)
+        .Sum(t => coupon / Math.Pow(1 + rate, t))
+        + 1.0 / Math.Pow(1 + rate, maturity);
+
+    string result = $"{symbol}: {price:F4}";
+    if (output != null) File.WriteAllText(output, result);
+    else Console.WriteLine(result);
+}, symbolArg, maturityOpt, couponOpt, rateOpt, outputOpt);
+
+return await cmd.InvokeAsync(args);</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — CLI11</h3>
+  <pre><code class="language-cpp">// vcpkg install cli11
+#include &lt;CLI/CLI.hpp&gt;
+#include &lt;nlohmann/json.hpp&gt;
+#include &lt;fstream&gt;
+#include &lt;iostream&gt;
+#include &lt;cmath&gt;
+#include &lt;format&gt;
+
+double price_bond(double maturity, double coupon, double rate) {
+    double pv = 0;
+    for (int t = 1; t &lt;= (int)maturity; ++t)
+        pv += coupon / std::pow(1 + rate, t);
+    pv += 1.0 / std::pow(1 + rate, maturity);
+    return pv;
+}
+
+int main(int argc, char** argv) {
+    CLI::App app{"Bond pricer"};
+
+    std::string symbol, config_path, output_path;
+    double maturity = 5.0, coupon = 0.05, rate = 0.04;
+
+    app.add_option("symbol",     symbol,      "Bond symbol")->required();
+    app.add_option("--maturity", maturity,    "Years to maturity");
+    app.add_option("--coupon",   coupon,      "Annual coupon rate");
+    app.add_option("--rate",     rate,        "Discount rate");
+    app.add_option("--config",   config_path, "Config file (JSON)");
+    app.add_option("--output",   output_path, "Output file");
+
+    CLI11_PARSE(app, argc, argv);
+
+    // Override with config file if provided
+    if (!config_path.empty()) {
+        std::ifstream f(config_path);
+        if (f.is_open()) {
+            auto j = nlohmann::json::parse(f);
+            if (j.contains("maturity")) maturity = j["maturity"];
+            if (j.contains("coupon"))   coupon   = j["coupon"];
+            if (j.contains("rate"))     rate     = j["rate"];
+        }
+    }
+
+    double px     = price_bond(maturity, coupon, rate);
+    std::string result = std::format("{}: {:.4f}\n", symbol, px);
+
+    if (!output_path.empty()) {
+        std::ofstream out(output_path);
+        out &lt;&lt; result;
+    } else {
+        std::cout &lt;&lt; result;
+    }
+    return 0;
+}
+
+// Usage: ./pricer GILT2029 --maturity 5 --coupon 0.045 --rate 0.04</code></pre>
+  <div class="cpp-note">💡 CLI11 generates help text, handles type conversion, and provides good error messages for free. <code>CLI11_PARSE(app, argc, argv)</code> handles both <code>--help</code> and parse errors — it calls <code>exit()</code> on failure so you don't need manual error handling.</div>
+</div>

@@ -1,0 +1,128 @@
+---
+layout: cpp-post
+title: "Strategy Pattern - Swappable Algorithms"
+description: "Pluggable pricing models. Runtime vs compile-time polymorphism in C++."
+date: 2025-12-03
+tags: [design-patterns, strategy]
+permalink: /cpp/strategy-pattern/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Swapping behaviour at runtime</h3>
+  <p>The Strategy pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable. The caller uses an interface and does not know which concrete implementation it talks to.</p>
+  <p>In finance: a pricing engine supports Black-Scholes for vanilla options, Monte Carlo for exotics, and a binomial tree for American options. The caller calls <code>pricer.price(trade)</code> - which algorithm runs is determined by config or trade type.</p>
+  <p>C++ offers two approaches. Virtual dispatch (runtime) has a small overhead per call but lets you change strategy at runtime. Templates (compile-time) have zero overhead but the strategy must be fixed at compile time. For a hot pricing loop, the template approach is worth benchmarking.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python strategy pattern</h3>
+  <pre><code class="language-python">from abc import ABC, abstractmethod
+from dataclasses import dataclass
+import math
+from scipy.stats import norm
+
+@dataclass
+class OptionTrade:
+    S: float; K: float; T: float; r: float; sigma: float; is_call: bool = True
+
+class PricingStrategy(ABC):
+    @abstractmethod
+    def price(self, trade: OptionTrade) -> float: ...
+
+class BlackScholesStrategy(PricingStrategy):
+    def price(self, t: OptionTrade) -> float:
+        d1 = (math.log(t.S/t.K) + (t.r + 0.5*t.sigma**2)*t.T) / (t.sigma*math.sqrt(t.T))
+        d2 = d1 - t.sigma * math.sqrt(t.T)
+        if t.is_call:
+            return t.S*norm.cdf(d1) - t.K*math.exp(-t.r*t.T)*norm.cdf(d2)
+        return t.K*math.exp(-t.r*t.T)*norm.cdf(-d2) - t.S*norm.cdf(-d1)
+
+class IntrinsicValueStrategy(PricingStrategy):
+    def price(self, t: OptionTrade) -> float:
+        return max(t.S - t.K, 0) if t.is_call else max(t.K - t.S, 0)
+
+class OptionPricer:
+    def __init__(self, strategy: PricingStrategy): self._strategy = strategy
+    def set_strategy(self, s: PricingStrategy) -> None: self._strategy = s
+    def price(self, trade: OptionTrade) -> float: return self._strategy.price(trade)
+
+trade  = OptionTrade(S=100, K=100, T=1, r=0.05, sigma=0.2)
+pricer = OptionPricer(BlackScholesStrategy())
+print(f"BS:       {pricer.price(trade):.4f}")
+pricer.set_strategy(IntrinsicValueStrategy())
+print(f"Intrinsic:{pricer.price(trade):.4f}")</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# strategy pattern</h3>
+  <pre><code class="language-csharp">public record OptionTrade(double S, double K, double T, double r, double Sigma, bool IsCall = true);
+
+public interface IPricingStrategy { double Price(OptionTrade trade); }
+
+public class BlackScholesStrategy : IPricingStrategy {
+    public double Price(OptionTrade t) {
+        double d1 = (Math.Log(t.S/t.K) + (t.r + 0.5*t.Sigma*t.Sigma)*t.T) / (t.Sigma*Math.Sqrt(t.T));
+        double d2 = d1 - t.Sigma * Math.Sqrt(t.T);
+        return t.IsCall
+            ? t.S * N(d1) - t.K * Math.Exp(-t.r*t.T) * N(d2)
+            : t.K * Math.Exp(-t.r*t.T) * N(-d2) - t.S * N(-d1);
+    }
+    static double N(double x) => 0.5 * (1 + Math.Erf(x / Math.Sqrt(2)));
+}
+
+public class OptionPricer {
+    private IPricingStrategy _strategy;
+    public OptionPricer(IPricingStrategy s) => _strategy = s;
+    public void SetStrategy(IPricingStrategy s) => _strategy = s;
+    public double Price(OptionTrade t) => _strategy.Price(t);
+}
+
+// C# also supports Func as a lightweight strategy
+Func&lt;OptionTrade, double&gt; flatStrategy = t => 5.0;</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ strategy - runtime and compile-time</h3>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;cmath&gt;
+#include &lt;functional&gt;
+
+struct OptionTrade { double S, K, T, r, sigma; bool is_call = true; };
+
+// Runtime strategy (virtual dispatch)
+struct IPricingStrategy {
+    virtual ~IPricingStrategy() = default;
+    virtual double price(const OptionTrade& t) const = 0;
+};
+
+struct BlackScholesStrategy : IPricingStrategy {
+    static double ncdf(double x) { return 0.5 * std::erfc(-x / std::sqrt(2.0)); }
+    double price(const OptionTrade& t) const override {
+        double d1 = (std::log(t.S/t.K) + (t.r + 0.5*t.sigma*t.sigma)*t.T)
+                    / (t.sigma * std::sqrt(t.T));
+        double d2 = d1 - t.sigma * std::sqrt(t.T);
+        return t.is_call
+            ? t.S * ncdf(d1) - t.K * std::exp(-t.r*t.T) * ncdf(d2)
+            : t.K * std::exp(-t.r*t.T) * ncdf(-d2) - t.S * ncdf(-d1);
+    }
+};
+
+class DynamicPricer {
+    std::unique_ptr&lt;IPricingStrategy&gt; strategy_;
+public:
+    explicit DynamicPricer(std::unique_ptr&lt;IPricingStrategy&gt; s) : strategy_(std::move(s)) {}
+    void set_strategy(std::unique_ptr&lt;IPricingStrategy&gt; s) { strategy_ = std::move(s); }
+    double price(const OptionTrade& t) const { return strategy_->price(t); }
+};
+
+// Compile-time strategy (zero-overhead template)
+template&lt;typename Strategy&gt;
+class StaticPricer {
+    Strategy strategy_;
+public:
+    double price(const OptionTrade& t) const { return strategy_.price(t); }
+};
+
+StaticPricer&lt;BlackScholesStrategy&gt; fast_pricer;</code></pre>
+  <div class="cpp-note">For batch pricing millions of options, the template strategy avoids a virtual dispatch per call - typically a 5-15ns saving that adds up. For one-at-a-time requests, virtual dispatch is fine and the flexibility is worth more than the nanoseconds.</div>
+</div>

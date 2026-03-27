@@ -1,0 +1,121 @@
+---
+layout: cpp-post
+title: "Exception Safety - Strong, Basic, and No-Throw Guarantees"
+description: "What happens when a pricer throws mid-update. Copy-and-swap idiom."
+date: 2026-03-04
+tags: [defensive, exceptions, cpp]
+permalink: /cpp/exception-safety/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Three levels of exception safety</h3>
+  <ul>
+    <li><strong>No-throw:</strong> the function never throws. Destructors, swap, moves. Mark with <code>noexcept</code>.</li>
+    <li><strong>Strong:</strong> if an exception escapes, program state is unchanged - like a database transaction. Commit or roll back, nothing in between.</li>
+    <li><strong>Basic:</strong> if an exception escapes, the program is in a valid but unspecified state. No resources are leaked, no invariants violated.</li>
+  </ul>
+  <p>A portfolio update that partially modifies positions before throwing leaves the book inconsistent. The risk engine sees half-updated positions and computes wrong Greeks. Strong exception safety prevents this: either the entire update succeeds, or nothing changes.</p>
+  <p><strong>Copy-and-swap:</strong> work on a copy, then swap atomically. Since swap is no-throw, the commit is guaranteed to succeed once the risky work (copying) is done.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python exception safety</h3>
+  <pre><code class="language-python"># Strong safety: all-or-nothing via copy-then-replace
+class Portfolio:
+    def __init__(self): self._positions: dict[str, float] = {}
+
+    # Basic safety - partial update possible on failure
+    def update_basic(self, updates: dict[str, float]) -> None:
+        for sym, qty in updates.items():
+            validate(sym, qty)           # may raise
+            self._positions[sym] = qty   # partial update if later raises
+
+    # Strong safety - all-or-nothing
+    def update_strong(self, updates: dict[str, float]) -> None:
+        new_positions = dict(self._positions)  # copy
+        for sym, qty in updates.items():
+            validate(sym, qty)           # may raise - original unchanged
+            new_positions[sym] = qty
+        self._positions = new_positions  # atomic replace - does not raise
+
+def validate(sym: str, qty: float) -> None:
+    if not sym:  raise ValueError("empty symbol")
+    if qty &lt; 0:  raise ValueError(f"negative quantity: {qty}")</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# exception safety</h3>
+  <pre><code class="language-csharp">public class Portfolio {
+    private Dictionary&lt;string, double&gt; _positions = new();
+
+    // Strong safety via copy-then-replace
+    public void UpdateStrong(Dictionary&lt;string, double&gt; updates) {
+        var copy = new Dictionary&lt;string, double&gt;(_positions);
+        foreach (var (sym, qty) in updates) {
+            Validate(sym, qty);           // may throw - original untouched
+            copy[sym] = qty;
+        }
+        _positions = copy;                // atomic replace - does not throw
+    }
+
+    // No-throw swap
+    public void SwapWith(Portfolio other) {
+        (_positions, other._positions) = (other._positions, _positions);
+    }
+
+    static void Validate(string sym, double qty) {
+        if (string.IsNullOrEmpty(sym)) throw new ArgumentException("empty symbol");
+        if (qty &lt; 0) throw new ArgumentException($"negative quantity: {qty}");
+    }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ copy-and-swap for strong guarantee</h3>
+  <pre><code class="language-cpp">#include &lt;unordered_map&gt;
+#include &lt;string&gt;
+#include &lt;stdexcept&gt;
+#include &lt;utility&gt;
+
+class Portfolio {
+    std::unordered_map&lt;std::string, double&gt; positions_;
+
+    static void validate(const std::string& sym, double qty) {
+        if (sym.empty()) throw std::invalid_argument("empty symbol");
+        if (qty &lt; 0)     throw std::invalid_argument("negative quantity");
+    }
+
+public:
+    // Basic guarantee
+    void update_basic(const std::unordered_map&lt;std::string, double&gt;& updates) {
+        for (const auto& [sym, qty] : updates) {
+            validate(sym, qty);         // may throw - partial update possible
+            positions_[sym] = qty;
+        }
+    }
+
+    // Strong guarantee via copy-and-swap
+    void update_strong(const std::unordered_map&lt;std::string, double&gt;& updates) {
+        auto copy = positions_;         // copy - risky part
+        for (const auto& [sym, qty] : updates) {
+            validate(sym, qty);         // may throw - original untouched
+            copy[sym] = qty;
+        }
+        using std::swap;
+        swap(positions_, copy);         // noexcept commit
+    }
+
+    // No-throw swap
+    friend void swap(Portfolio& a, Portfolio& b) noexcept {
+        using std::swap;
+        swap(a.positions_, b.positions_);
+    }
+
+    // Copy-and-swap assignment operator
+    Portfolio& operator=(Portfolio other) noexcept {
+        swap(*this, other);
+        return *this;
+    }
+};</code></pre>
+  <div class="cpp-note">Mark destructors, swap, and move operations <code>noexcept</code>. These are the building blocks of exception safety. <code>std::vector</code> uses move during reallocation only if the move constructor is noexcept - without it, it falls back to copying, which is slower.</div>
+</div>

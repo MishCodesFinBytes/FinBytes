@@ -1,0 +1,171 @@
+---
+layout: cpp-post
+title: "Creational Patterns - Factory, Builder, Singleton"
+description: "When to use each. Pricer factory, trade builder, connection pool singleton."
+date: 2025-11-26
+tags: [design-patterns, creational]
+permalink: /cpp/creational-patterns/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Three ways to create objects</h3>
+  <p>Creational patterns address who creates objects and how. The wrong construction strategy leads to tight coupling, untestable code, and hidden dependencies.</p>
+  <ul>
+    <li><strong>Factory:</strong> create objects without specifying exact class. A <code>PricerFactory</code> reads config and returns the right pricer.</li>
+    <li><strong>Builder:</strong> construct complex objects step by step. A <code>TradeBuilder</code> enforces required fields and makes construction readable with many optional fields.</li>
+    <li><strong>Singleton:</strong> ensure only one instance exists. Legitimate uses are rare - shared resources like connection pools. In C++ the singleton has specific thread-safety concerns.</li>
+  </ul>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python creational patterns</h3>
+  <pre><code class="language-python">from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Optional
+import threading
+
+# Factory
+class PricingModel(ABC):
+    @abstractmethod
+    def price(self, S: float, K: float, T: float) -> float: ...
+
+class BlackScholes(PricingModel):
+    def price(self, S, K, T) -> float: return max(S - K, 0)
+
+class MonteCarlo(PricingModel):
+    def __init__(self, n_paths: int = 10_000): self.n_paths = n_paths
+    def price(self, S, K, T) -> float: return max(S - K, 0) * 0.99
+
+def pricer_factory(model_type: str, **kwargs) -> PricingModel:
+    models = {"black_scholes": BlackScholes, "monte_carlo": MonteCarlo}
+    if model_type not in models:
+        raise ValueError(f"Unknown model: {model_type}")
+    return models[model_type](**kwargs)
+
+# Builder
+@dataclass
+class Trade:
+    symbol:   str
+    notional: float
+    maturity: float
+    coupon:   float = 0.0
+    currency: str   = "GBP"
+
+class TradeBuilder:
+    def __init__(self): self._t = {}
+    def symbol(self, s):   self._t["symbol"]   = s;   return self
+    def notional(self, n): self._t["notional"] = n;   return self
+    def maturity(self, m): self._t["maturity"] = m;   return self
+    def coupon(self, c):   self._t["coupon"]   = c;   return self
+    def build(self) -> Trade:
+        for req in ("symbol", "notional", "maturity"):
+            if req not in self._t: raise ValueError(f"Missing: {req}")
+        return Trade(**self._t)
+
+trade = TradeBuilder().symbol("GILT2030").notional(1_000_000).maturity(5.0).build()
+
+# Singleton (thread-safe)
+class ConnectionPool:
+    _instance: Optional["ConnectionPool"] = None
+    _lock = threading.Lock()
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+        return cls._instance</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# creational patterns</h3>
+  <pre><code class="language-csharp">// Factory
+interface IPricingModel { double Price(double S, double K, double T); }
+record BlackScholes : IPricingModel { public double Price(double S, double K, double T) => Math.Max(S-K, 0); }
+record MonteCarlo(int NPaths) : IPricingModel { public double Price(double S, double K, double T) => Math.Max(S-K,0)*0.99; }
+
+static IPricingModel PricerFactory(string type, int nPaths = 10_000) => type switch {
+    "black_scholes" => new BlackScholes(),
+    "monte_carlo"   => new MonteCarlo(nPaths),
+    _               => throw new ArgumentException($"Unknown: {type}")
+};
+
+// Builder
+class TradeBuilder {
+    private string? _symbol; private double? _notional; private double? _maturity;
+    public TradeBuilder Symbol(string s)   { _symbol   = s; return this; }
+    public TradeBuilder Notional(double n) { _notional = n; return this; }
+    public TradeBuilder Maturity(double m) { _maturity = m; return this; }
+    public Trade Build() {
+        if (_symbol is null || _notional is null || _maturity is null)
+            throw new InvalidOperationException("Required fields missing");
+        return new Trade(_symbol, _notional.Value, _maturity.Value);
+    }
+}
+
+var trade = new TradeBuilder().Symbol("GILT2030").Notional(1_000_000).Maturity(5.0).Build();
+
+// Singleton via Lazy&lt;T&gt;
+public sealed class ConnectionPool {
+    private static readonly Lazy&lt;ConnectionPool&gt; _instance = new(() => new ConnectionPool());
+    public static ConnectionPool Instance => _instance.Value;
+    private ConnectionPool() { }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ creational patterns</h3>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;string&gt;
+#include &lt;stdexcept&gt;
+
+// Factory
+struct IPricingModel {
+    virtual ~IPricingModel() = default;
+    virtual double price(double S, double K, double T) const = 0;
+};
+struct BlackScholes : IPricingModel {
+    double price(double S, double K, double T) const override { return std::max(S-K, 0.0); }
+};
+struct MonteCarlo : IPricingModel {
+    int n_paths;
+    explicit MonteCarlo(int n = 10'000) : n_paths(n) {}
+    double price(double S, double K, double T) const override { return std::max(S-K,0.0)*0.99; }
+};
+
+std::unique_ptr&lt;IPricingModel&gt; pricer_factory(const std::string& type, int n = 10'000) {
+    if (type == "black_scholes") return std::make_unique&lt;BlackScholes&gt;();
+    if (type == "monte_carlo")   return std::make_unique&lt;MonteCarlo&gt;(n);
+    throw std::invalid_argument("Unknown model: " + type);
+}
+
+// Builder
+struct Trade { std::string symbol; double notional; double maturity; double coupon = 0.0; };
+
+class TradeBuilder {
+    Trade t_; bool hs_=false, hn_=false, hm_=false;
+public:
+    TradeBuilder& symbol(std::string s)  { t_.symbol   = std::move(s); hs_=true; return *this; }
+    TradeBuilder& notional(double n)     { t_.notional = n;            hn_=true; return *this; }
+    TradeBuilder& maturity(double m)     { t_.maturity = m;            hm_=true; return *this; }
+    TradeBuilder& coupon(double c)       { t_.coupon   = c;                      return *this; }
+    Trade build() {
+        if (!hs_ || !hn_ || !hm_) throw std::logic_error("Required fields missing");
+        return t_;
+    }
+};
+
+auto trade = TradeBuilder().symbol("GILT2030").notional(1'000'000).maturity(5.0).build();
+
+// Singleton - Meyers singleton (C++11 thread-safe)
+class ConnectionPool {
+public:
+    static ConnectionPool& instance() {
+        static ConnectionPool inst;  // guaranteed thread-safe since C++11
+        return inst;
+    }
+    ConnectionPool(const ConnectionPool&)            = delete;
+    ConnectionPool& operator=(const ConnectionPool&) = delete;
+private:
+    ConnectionPool() {}
+};</code></pre>
+  <div class="cpp-note">The <code>static</code> local variable singleton is the Meyers Singleton, guaranteed thread-safe since C++11. The double-checked locking pattern seen in older code is unnecessary. Use this instead.</div>
+</div>

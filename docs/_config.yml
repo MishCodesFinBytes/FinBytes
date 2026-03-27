@@ -1,30 +1,12 @@
 # Welcome to Jekyll!
 #
-# This config file is meant for settings that affect your whole blog, values
-# which you are expected to set up once and rarely edit after that. If you find
-# yourself editing this file very often, consider using Jekyll's data files
-# feature for the data you need to update frequently.
-#
-# For technical reasons, this file is *NOT* reloaded automatically when you use
-# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
-#
-# If you need help with YAML syntax, here are some quick references for you:
-# https://learn-the-web.algonquindesign.ca/topics/markdown-yaml-cheat-sheet/#yaml
-# https://learnxinyminutes.com/docs/yaml/
-#
 # Site settings
-# These are used to personalize your new site. If you look in the HTML files,
-# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
-# You can create any custom variable you would like, and they will be accessible
-# in the templates via {{ site.myvariable }}.
-
-# title: FinBytes
 email: me@finbytes.anonaddy.com
-description: >- # this means to ignore newlines until "baseurl:"
- Just a documentary learning blog.
-baseurl: "/FinBytes" # the subpath of your site, e.g. /blog
-url: "https://mishcodesfinbytes.github.io" # the base hostname & protocol for your site, e.g. http://example.com
-github_username:  MishCodesFinBytes
+description: >-
+  Just a documentary learning blog.
+baseurl: "/FinBytes"
+url: "https://mishcodesfinbytes.github.io"
+github_username: MishCodesFinBytes
 
 # Build settings
 theme: minima
@@ -37,45 +19,30 @@ minima:
 plugins:
   - jekyll-feed
   - jekyll-sitemap
+
 include:
   - _pages
-  
+
+# ── Navigation ──────────────────────────────────────────────────────────────
+# header_pages is now only used for the simple flat links (About, Private).
+# The multi-level dropdown nav is hardcoded in _includes/header.html.
+# Quant Lab and Python index pages are included via their own collection/page
+# entries and linked directly in header.html.
 header_pages:
   - _pages/2024-10-30-about.html
-  - _pages/privacy-policy.html
-  - sitemap-page.html
-  - cpp.html
   - private.html
-  - quant-lab.html
 
-# Exclude from processing.
-# The following items will not be processed, by default.
-# Any item listed under the `exclude:` key here will be automatically added to
-# the internal "default list".
-#
-# Excluded items can be processed by explicitly listing the directories or
-# their entries' file path in the `include:` list.
-#
-# exclude:
-#   - .sass-cache/
-#   - .jekyll-cache/
-#   - gemfiles/
-#   - Gemfile
-#   - Gemfile.lock
-#   - node_modules/
-#   - vendor/bundle/
-#   - vendor/cache/
-#   - vendor/gems/
-#   - vendor/ruby/
-
-
+# ── Collections ─────────────────────────────────────────────────────────────
 collections:
-  cpp:
-    output: true
-    permalink: /cpp/:name/
   private:
     output: true
     permalink: /private/:name/
   quant_lab:
     output: true
     permalink: /quant-lab/:name/
+  cpp:
+    output: true
+    permalink: /cpp/:name/
+    # Posts in _cpp/series/A_testing/ etc. are picked up automatically.
+    # Each post must have an explicit 'permalink' in its front matter
+    # so the series subfolder path doesn't appear in the URL.

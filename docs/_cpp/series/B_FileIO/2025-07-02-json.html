@@ -1,0 +1,140 @@
+---
+layout: cpp-post
+title: "JSON — Config Files and API Responses"
+description: "json module vs System.Text.Json vs nlohmann/json. Parse a trade blotter."
+date: 2025-07-02
+tags: [practical, file-io, json]
+permalink: /cpp/json/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>JSON everywhere in finance</h3>
+  <p>REST APIs, FIX gateways, config files, trade confirmations — JSON is the lingua franca. All three languages handle it well, but with very different ergonomics.</p>
+  <h3>The task</h3>
+  <p>Parse a trade blotter JSON response from a risk API, validate fields, compute portfolio Greeks, write back a summary JSON.</p>
+  <h3>nlohmann/json</h3>
+  <p>The de facto standard C++ JSON library. Header-only, expressive API, good error messages. The closest thing C++ has to Python's <code>json</code> module.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — json module</h3>
+  <pre><code class="language-python">import json
+from dataclasses import dataclass
+from pathlib import Path
+
+@dataclass
+class Trade:
+    symbol: str
+    qty:    float
+    delta:  float
+    gamma:  float
+
+def load_blotter(path: str) -> list[Trade]:
+    with open(path) as f:
+        data = json.load(f)
+    trades = []
+    for t in data["trades"]:
+        trades.append(Trade(
+            symbol = t["symbol"],
+            qty    = float(t["quantity"]),
+            delta  = float(t["greeks"]["delta"]),
+            gamma  = float(t["greeks"]["gamma"]),
+        ))
+    return trades
+
+def portfolio_greeks(trades: list[Trade]) -> dict:
+    total_delta = sum(t.qty * t.delta for t in trades)
+    total_gamma = sum(t.qty * t.gamma for t in trades)
+    return {"total_delta": total_delta, "total_gamma": total_gamma}
+
+def write_summary(summary: dict, path: str) -> None:
+    with open(path, "w") as f:
+        json.dump(summary, f, indent=2)
+
+# Example JSON structure:
+# {"trades": [{"symbol":"AAPL","quantity":100,"greeks":{"delta":0.6,"gamma":0.02}}]}</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — System.Text.Json</h3>
+  <pre><code class="language-csharp">using System.Text.Json;
+using System.Text.Json.Serialization;
+
+record Greeks(double Delta, double Gamma);
+record Trade(string Symbol, double Quantity, Greeks Greeks);
+record Blotter(List&lt;Trade&gt; Trades);
+
+Blotter LoadBlotter(string path) {
+    var json = File.ReadAllText(path);
+    var opts = new JsonSerializerOptions {
+        PropertyNameCaseInsensitive = true,
+    };
+    return JsonSerializer.Deserialize&lt;Blotter&gt;(json, opts)
+        ?? throw new InvalidOperationException("Failed to deserialize blotter");
+}
+
+record GreekSummary(double TotalDelta, double TotalGamma);
+
+GreekSummary ComputeGreeks(Blotter blotter) => new(
+    TotalDelta: blotter.Trades.Sum(t => t.Quantity * t.Greeks.Delta),
+    TotalGamma: blotter.Trades.Sum(t => t.Quantity * t.Greeks.Gamma)
+);
+
+void WriteSummary(GreekSummary summary, string path) {
+    var json = JsonSerializer.Serialize(summary,
+        new JsonSerializerOptions { WriteIndented = true });
+    File.WriteAllText(path, json);
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — nlohmann/json</h3>
+  <pre><code class="language-cpp">// vcpkg install nlohmann-json  (or header-only: #include "json.hpp")
+#include &lt;nlohmann/json.hpp&gt;
+#include &lt;fstream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;stdexcept&gt;
+
+using json = nlohmann::json;
+
+struct Greeks { double delta, gamma; };
+struct Trade  { std::string symbol; double qty; Greeks greeks; };
+
+// Automatic serialisation via NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Greeks, delta, gamma)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Trade,  symbol, qty, greeks)
+
+std::vector&lt;Trade&gt; load_blotter(const std::string& path) {
+    std::ifstream f(path);
+    if (!f.is_open()) throw std::runtime_error("Cannot open: " + path);
+    json j = json::parse(f);
+    return j.at("trades").get&lt;std::vector&lt;Trade&gt;&gt;();
+}
+
+struct GreekSummary { double total_delta, total_gamma; };
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GreekSummary, total_delta, total_gamma)
+
+GreekSummary compute_greeks(const std::vector&lt;Trade&gt;& trades) {
+    double d = 0, g = 0;
+    for (const auto& t : trades) {
+        d += t.qty * t.greeks.delta;
+        g += t.qty * t.greeks.gamma;
+    }
+    return {d, g};
+}
+
+void write_summary(const GreekSummary& s, const std::string& path) {
+    std::ofstream f(path);
+    json j = s;
+    f &lt;&lt; j.dump(2);  // pretty-print with 2-space indent
+}
+
+int main() {
+    auto trades  = load_blotter("blotter.json");
+    auto summary = compute_greeks(trades);
+    write_summary(summary, "greeks_summary.json");
+    return 0;
+}</code></pre>
+  <div class="cpp-note">💡 <code>NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE</code> generates <code>to_json</code>/<code>from_json</code> functions for your struct automatically — as long as the JSON field names match the struct member names. For mismatched names, define the functions manually.</div>
+</div>

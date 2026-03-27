@@ -1,0 +1,145 @@
+---
+layout: cpp-post
+title: "Dates, Times, and Durations"
+description: "datetime vs DateTime vs std::chrono. Market hours, settlement dates."
+date: 2025-07-16
+tags: [practical, dates, chrono]
+permalink: /cpp/dates-times/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Time is hard everywhere</h3>
+  <p>Timezones, daylight saving, business day conventions, settlement lags — financial time handling is a domain unto itself. All three languages handle basic datetime operations but differ significantly in ergonomics.</p>
+  <h3>std::chrono</h3>
+  <p>C++11's time library. Strongly typed — you can't accidentally add seconds to a duration measured in hours without a cast. High-resolution clock for benchmarking. Calendar and timezone support arrived in C++20.</p>
+  <h3>For quant work</h3>
+  <p>You'll often store timestamps as nanoseconds-since-epoch (int64) in performance-critical code, converting to calendar types only for display. <code>std::chrono::nanoseconds</code> wraps this safely.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — datetime and dateutil</h3>
+  <pre><code class="language-python">from datetime import datetime, date, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+# Current time
+now_utc    = datetime.now(timezone.utc)
+now_london = datetime.now(ZoneInfo("Europe/London"))
+
+# Parse
+ts = datetime.fromisoformat("2024-01-15T09:30:00+00:00")
+d  = date.fromisoformat("2024-01-15")
+
+# Arithmetic
+tomorrow  = d + timedelta(days=1)
+in_one_hr = now_utc + timedelta(hours=1)
+diff      = in_one_hr - now_utc  # timedelta
+
+# Market hours check (London)
+def is_market_hours(dt: datetime) -> bool:
+    london = dt.astimezone(ZoneInfo("Europe/London"))
+    return (london.weekday() &lt; 5 and
+            datetime.time(london.replace(hour=8,  minute=0)) &lt;=
+            london.time() &lt;=
+            datetime.time(london.replace(hour=16, minute=30)))
+
+# Settlement date (T+2 business days, simplified)
+def settlement_date(trade_date: date) -> date:
+    d = trade_date
+    count = 0
+    while count &lt; 2:
+        d += timedelta(days=1)
+        if d.weekday() &lt; 5:  # Mon-Fri
+            count += 1
+    return d
+
+print(settlement_date(date(2024, 1, 15)))  # 2024-01-17</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — DateTime and DateTimeOffset</h3>
+  <pre><code class="language-csharp">using System;
+
+// Current time
+var nowUtc    = DateTimeOffset.UtcNow;
+var nowLondon = TimeZoneInfo.ConvertTime(nowUtc,
+    TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time"));
+
+// Parse
+var ts = DateTimeOffset.Parse("2024-01-15T09:30:00+00:00");
+var d  = DateOnly.Parse("2024-01-15");
+
+// Arithmetic
+var tomorrow = d.AddDays(1);
+var inOneHr  = nowUtc.AddHours(1);
+var diff     = inOneHr - nowUtc;  // TimeSpan
+
+// Settlement date (T+2 business days)
+DateOnly SettlementDate(DateOnly tradeDate) {
+    var d = tradeDate;
+    int count = 0;
+    while (count &lt; 2) {
+        d = d.AddDays(1);
+        if (d.DayOfWeek != DayOfWeek.Saturday &&
+            d.DayOfWeek != DayOfWeek.Sunday)
+            count++;
+    }
+    return d;
+}
+
+// Duration
+var duration = TimeSpan.FromHours(1.5);
+Console.WriteLine(duration.TotalMinutes);  // 90</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — std::chrono</h3>
+  <pre><code class="language-cpp">#include &lt;chrono&gt;
+#include &lt;iostream&gt;
+#include &lt;format&gt;   // C++20
+
+using namespace std::chrono;
+using namespace std::chrono_literals;
+
+// Current time
+auto now = system_clock::now();
+auto ts  = time_point_cast&lt;seconds&gt;(now).time_since_epoch().count();
+
+// Durations — strongly typed
+auto one_hour = 1h;
+auto thirty_min = 30min;
+auto total = one_hour + thirty_min;  // 90min
+std::cout &lt;&lt; total.count() &lt;&lt; " minutes\n";  // 90
+
+// High-resolution timing (for benchmarks)
+auto t0 = high_resolution_clock::now();
+// ... work ...
+auto t1 = high_resolution_clock::now();
+auto us = duration_cast&lt;microseconds&gt;(t1 - t0).count();
+std::cout &lt;&lt; us &lt;&lt; " us\n";
+
+// C++20 calendar types
+auto today = year_month_day{floor&lt;days&gt;(system_clock::now())};
+auto next  = sys_days{today} + days{1};
+auto ymd   = year_month_day{next};
+std::cout &lt;&lt; std::format("{}", ymd) &lt;&lt; "\n";
+
+// Nanosecond timestamp (common in HFT)
+int64_t nanos_since_epoch() {
+    return duration_cast&lt;nanoseconds&gt;(
+        system_clock::now().time_since_epoch()).count();
+}
+
+// Settlement date (T+2 business days)
+sys_days settlement_date(sys_days trade_date) {
+    auto d = trade_date;
+    int count = 0;
+    while (count &lt; 2) {
+        d += days{1};
+        auto wday = weekday{d};
+        if (wday != Saturday && wday != Sunday)
+            ++count;
+    }
+    return d;
+}</code></pre>
+  <div class="cpp-note">💡 std::chrono's strong typing prevents a whole class of bugs: you can't accidentally pass seconds where milliseconds are expected. The compiler catches unit mismatches at compile time — something neither Python nor C# do.</div>
+</div>

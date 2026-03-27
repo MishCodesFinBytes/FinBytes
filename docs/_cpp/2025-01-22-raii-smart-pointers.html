@@ -1,0 +1,193 @@
+---
+layout: cpp-post
+title: "RAII and Smart Pointers — Ownership Without GC"
+description: "unique_ptr, shared_ptr, destructors as resource managers"
+date: 2025-01-22
+tags: [memory, ownership, modern-cpp]
+permalink: /cpp/raii-smart-pointers/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The problem with manual memory</h3>
+  <p>Raw <code>new</code> and <code>delete</code> are error-prone. Forget to delete and you leak. Delete twice and you crash. Delete while someone else holds a pointer and you corrupt memory. C++ solved this — elegantly — with RAII.</p>
+
+  <h3>RAII — Resource Acquisition Is Initialisation</h3>
+  <p>The core idea: tie a resource's lifetime to an object's lifetime. When the object is constructed, acquire the resource. When the object is destroyed (goes out of scope), release it. The destructor is the guarantee.</p>
+  <p>This is the C++ equivalent of Python's context managers (<code>with</code>) or C#'s <code>IDisposable</code> / <code>using</code> — but automatic, not manual.</p>
+
+  <h3>Smart pointers</h3>
+  <p>The standard library ships three smart pointer types that implement RAII for heap memory:</p>
+  <ul>
+    <li><code>unique_ptr</code> — sole ownership. One owner, auto-deleted when it goes out of scope.</li>
+    <li><code>shared_ptr</code> — shared ownership. Reference-counted, deleted when the last owner goes away.</li>
+    <li><code>weak_ptr</code> — non-owning observer of a <code>shared_ptr</code>. Breaks circular references.</li>
+  </ul>
+
+  <h3>The rule of thumb</h3>
+  <p>Prefer <code>unique_ptr</code> by default. Use <code>shared_ptr</code> only when you genuinely need shared ownership. Never use raw <code>new</code>/<code>delete</code> in modern C++ — use <code>make_unique</code> and <code>make_shared</code> instead.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — reference counting + GC</h3>
+  <p>Python uses reference counting as its primary memory management. When an object's reference count drops to zero, it's immediately deallocated. A cyclic GC handles circular references that reference counting can't catch.</p>
+
+  <pre><code class="language-python">import sys
+
+x = [1, 2, 3]
+print(sys.getrefcount(x))  # 2 (x + the getrefcount arg)
+
+y = x                       # ref count -> 3
+del x                       # ref count -> 2
+del y                       # ref count -> 0 -> deallocated</code></pre>
+
+  <h3>Context managers — Python's RAII equivalent</h3>
+  <pre><code class="language-python"># with statement guarantees __exit__ is called
+with open("data.csv") as f:
+    data = f.read()
+# file closed here — even if an exception was raised
+
+# Custom context manager
+from contextlib import contextmanager
+
+@contextmanager
+def timed_block(label: str):
+    import time
+    t0 = time.perf_counter()
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - t0
+        print(f"{label}: {elapsed*1000:.2f}ms")
+
+with timed_block("pricing"):
+    result = price_option(S=100, K=100, T=1, r=0.05, sigma=0.2)</code></pre>
+
+  <div class="cpp-note">Python's <code>with</code> is explicit — you have to remember to use it. C++ RAII is implicit — destruction happens automatically when the object leaves scope, no matter how (normal return, exception, early return).</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — IDisposable and using</h3>
+  <p>C# uses a GC but provides <code>IDisposable</code> for deterministic resource cleanup. The <code>using</code> statement calls <code>Dispose()</code> at the end of the block — equivalent to Python's <code>with</code>.</p>
+
+  <pre><code class="language-csharp">// IDisposable pattern
+public class PriceStream : IDisposable
+{
+    private readonly StreamReader _reader;
+
+    public PriceStream(string path)
+    {
+        _reader = new StreamReader(path);
+    }
+
+    public string? ReadNext() => _reader.ReadLine();
+
+    public void Dispose()
+    {
+        _reader.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}
+
+// using guarantees Dispose() is called
+using var stream = new PriceStream("prices.csv");
+var line = stream.ReadNext();</code></pre>
+
+  <div class="cpp-note">C#'s <code>using</code> is syntactic sugar for a try/finally block. C++ destructors are guaranteed to run — no try/finally needed, no forgetting to add <code>using</code>.</div>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — RAII and smart pointers</h3>
+
+  <h4>RAII with a custom class</h4>
+  <pre><code class="language-cpp">#include &lt;fstream&gt;
+#include &lt;stdexcept&gt;
+#include &lt;string&gt;
+
+class PriceStream {
+public:
+    explicit PriceStream(const std::string&amp; path)
+        : file_(path)
+    {
+        if (!file_.is_open())
+            throw std::runtime_error("Cannot open: " + path);
+    }
+
+    ~PriceStream() {
+        // destructor — called automatically when object goes out of scope
+        // ifstream closes itself, but showing the pattern
+        file_.close();
+    }
+
+    std::string read_next() {
+        std::string line;
+        std::getline(file_, line);
+        return line;
+    }
+
+private:
+    std::ifstream file_;
+};
+
+void process() {
+    PriceStream ps("prices.csv");
+    auto line = ps.read_next();
+    // ps destroyed here — file closed automatically
+    // even if an exception is thrown above
+}</code></pre>
+
+  <h4>unique_ptr — sole ownership</h4>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;iostream&gt;
+
+struct OrderBook {
+    explicit OrderBook(int id) : id_(id) {
+        std::cout &lt;&lt; "OrderBook " &lt;&lt; id_ &lt;&lt; " created\n";
+    }
+    ~OrderBook() {
+        std::cout &lt;&lt; "OrderBook " &lt;&lt; id_ &lt;&lt; " destroyed\n";
+    }
+    int id_;
+};
+
+void demo_unique() {
+    auto book = std::make_unique&lt;OrderBook&gt;(42);
+    // auto book2 = book;  // ERROR — can't copy a unique_ptr
+    auto book2 = std::move(book);  // OK — ownership transferred
+    // book is now null; book2 owns the object
+}  // book2 destroyed here -> "OrderBook 42 destroyed"</code></pre>
+
+  <h4>shared_ptr — shared ownership</h4>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;iostream&gt;
+
+void demo_shared() {
+    auto book = std::make_shared&lt;OrderBook&gt;(1);
+    std::cout &lt;&lt; "count: " &lt;&lt; book.use_count() &lt;&lt; "\n";  // 1
+
+    {
+        auto book2 = book;  // shared — ref count -> 2
+        std::cout &lt;&lt; "count: " &lt;&lt; book.use_count() &lt;&lt; "\n";  // 2
+    }  // book2 destroyed — ref count -> 1
+
+    std::cout &lt;&lt; "count: " &lt;&lt; book.use_count() &lt;&lt; "\n";  // 1
+}  // book destroyed — ref count -> 0 -> "OrderBook 1 destroyed"</code></pre>
+
+  <h4>weak_ptr — breaking cycles</h4>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+
+struct Node {
+    std::shared_ptr&lt;Node&gt; next;
+    std::weak_ptr&lt;Node&gt;   prev;  // weak to avoid cycle
+    int value;
+};
+
+void demo_weak() {
+    auto a = std::make_shared&lt;Node&gt;();
+    auto b = std::make_shared&lt;Node&gt;();
+    a-&gt;next = b;
+    b-&gt;prev = a;  // weak_ptr — doesn't increment ref count
+    // If prev were shared_ptr, a and b would never be freed
+}</code></pre>
+
+  <div class="cpp-note">💡 Use <code>make_unique</code> and <code>make_shared</code> — never bare <code>new</code>. <code>make_shared</code> allocates the object and control block in one allocation, which is faster and more cache-friendly than <code>shared_ptr&lt;T&gt;(new T)</code>.</div>
+</div>

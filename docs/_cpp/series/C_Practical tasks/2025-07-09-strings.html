@@ -1,0 +1,138 @@
+---
+layout: cpp-post
+title: "String Handling and Manipulation"
+description: "f-strings vs interpolation vs std::format. Split, trim, regex, string_view."
+date: 2025-07-09
+tags: [practical, strings]
+permalink: /cpp/strings/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Strings are harder in C++</h3>
+  <p>Python and C# treat string manipulation as a first-class operation. C++ <code>std::string</code> is fine for most tasks but lacks many conveniences. C++20 added <code>std::format</code> and <code>std::string_view</code> dramatically improved performance for read-only string operations.</p>
+  <h3>string_view</h3>
+  <p>A non-owning view into a string — just a pointer and a length. No allocation. Pass string literals, substrings, or existing strings without copying. The first C++ string feature that made me smile.</p>
+  <h3>std::format (C++20)</h3>
+  <p>Finally, Python-style format strings in C++. <code>std::format("Price: {:.2f}", price)</code> instead of <code>std::ostringstream</code> gymnastics.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python string operations</h3>
+  <pre><code class="language-python"># Formatting
+price  = 100.25
+symbol = "AAPL"
+msg = f"Price of {symbol}: £{price:.2f}"  # f-string
+
+# Split and strip
+line   = "  AAPL,100,150.25,BUY  "
+parts  = line.strip().split(",")  # ['AAPL', '100', '150.25', 'BUY']
+
+# Join
+fields = ["AAPL", "100", "150.25"]
+csv    = ",".join(fields)          # "AAPL,100,150.25"
+
+# Replace and contains
+fixed = line.replace("BUY", "SELL")
+if "AAPL" in line:
+    print("Found AAPL")
+
+# Regex
+import re
+pattern = re.compile(r"(\w+),(\d+),([\d.]+)")
+if m := pattern.match(line.strip()):
+    sym, qty, px = m.group(1), m.group(2), m.group(3)
+
+# Upper/lower/starts/ends
+print(symbol.upper(), symbol.lower())
+print(symbol.startswith("AA"), symbol.endswith("PL"))</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# string operations</h3>
+  <pre><code class="language-csharp">double price  = 100.25;
+string symbol = "AAPL";
+
+// Interpolation
+string msg = $"Price of {symbol}: £{price:F2}";
+
+// Split and trim
+string line   = "  AAPL,100,150.25,BUY  ";
+string[] parts = line.Trim().Split(',');
+
+// Join
+string csv = string.Join(",", new[] {"AAPL", "100", "150.25"});
+
+// Contains, replace
+bool found  = line.Contains("AAPL");
+string fixed_ = line.Replace("BUY", "SELL");
+
+// Regex
+using System.Text.RegularExpressions;
+var m = Regex.Match(line.Trim(), @"(\w+),(\d+),([\d.]+)");
+if (m.Success) {
+    var (sym, qty, px) = (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value);
+}
+
+// Span&lt;char&gt; for zero-allocation parsing
+ReadOnlySpan&lt;char&gt; span = line.AsSpan().Trim();
+int commaIdx = span.IndexOf(',');
+ReadOnlySpan&lt;char&gt; symSpan = span[..commaIdx];</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ string operations</h3>
+  <pre><code class="language-cpp">#include &lt;string&gt;
+#include &lt;string_view&gt;
+#include &lt;vector&gt;
+#include &lt;sstream&gt;
+#include &lt;algorithm&gt;
+#include &lt;regex&gt;
+#include &lt;format&gt;  // C++20
+
+// Formatting — C++20
+double price  = 100.25;
+std::string msg = std::format("Price of AAPL: £{:.2f}", price);
+
+// Split on delimiter
+std::vector&lt;std::string&gt; split(std::string_view s, char delim) {
+    std::vector&lt;std::string&gt; result;
+    std::string part;
+    for (char c : s) {
+        if (c == delim) { result.push_back(part); part.clear(); }
+        else part += c;
+    }
+    result.push_back(part);
+    return result;
+}
+
+// Trim whitespace
+std::string trim(std::string_view s) {
+    auto start = s.find_first_not_of(" \t\r\n");
+    auto end   = s.find_last_not_of(" \t\r\n");
+    if (start == std::string_view::npos) return "";
+    return std::string(s.substr(start, end - start + 1));
+}
+
+// string_view — zero-copy substring
+void parse_csv_line(std::string_view line) {
+    std::size_t pos = 0, next;
+    while ((next = line.find(',', pos)) != std::string_view::npos) {
+        std::string_view field = line.substr(pos, next - pos);
+        // process field — no allocation
+        pos = next + 1;
+    }
+    std::string_view last = line.substr(pos);
+}
+
+// Regex
+#include &lt;regex&gt;
+std::string line = "AAPL,100,150.25,BUY";
+std::regex pattern(R"((\w+),(\d+),([\d.]+))");
+std::smatch m;
+if (std::regex_search(line, m, pattern)) {
+    auto sym = m[1].str();
+    auto qty = m[2].str();
+    auto px  = m[3].str();
+}</code></pre>
+  <div class="cpp-note">💡 <code>std::string_view</code> is the single biggest quality-of-life improvement for C++ string handling. Pass it instead of <code>const std::string&</code> whenever you don't need to own the string — it accepts string literals, substrings, and std::string with no copying.</div>
+</div>

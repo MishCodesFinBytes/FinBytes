@@ -1,0 +1,123 @@
+---
+layout: cpp-post
+title: "Name Lookup and ADL Surprises"
+description: "Two-phase lookup, ADL (Koenig lookup), why using namespace std is dangerous."
+date: 2025-09-17
+tags: [cpp, name-lookup, templates]
+permalink: /cpp/name-lookup/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>How C++ finds names</h3>
+  <p>When you write <code>sort(v.begin(), v.end())</code>, how does the compiler find <code>sort</code>? Name lookup in C++ is surprisingly complex — two-phase lookup for templates, argument-dependent lookup (ADL) for free functions, and namespace rules that can cause subtle bugs.</p>
+
+  <h3>Argument-Dependent Lookup (ADL)</h3>
+  <p>When you call a function with arguments from a namespace, the compiler also searches that namespace for the function name. This is why <code>std::cout &lt;&lt; obj</code> finds your <code>operator&lt;&lt;</code> defined in the same namespace as <code>obj</code> — even without a <code>using</code> directive.</p>
+
+  <h3>Why <code>using namespace std</code> is dangerous</h3>
+  <p>It pulls all of <code>std</code> into the current scope. If std later adds a function whose name matches something in your code, compilation breaks. In header files, it poisons every file that includes it. The fix: use <code>std::</code> prefix, or targeted <code>using std::cout</code>.</p>
+
+  <h3>Two-phase lookup</h3>
+  <p>Template bodies are parsed in two phases. Names not dependent on template parameters are resolved at definition time; dependent names are resolved at instantiation time. This is why some template errors appear only when you use the template, not when you define it.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python name resolution — LEGB</h3>
+  <pre><code class="language-python"># Python name resolution: Local, Enclosing, Global, Built-in
+x = "global"
+
+def outer():
+    x = "enclosing"
+    def inner():
+        # x = "local"  # uncomment to shadow enclosing
+        print(x)  # finds "enclosing" via LEGB
+    inner()
+
+outer()  # enclosing
+
+# Import namespaces
+import math
+math.sqrt(4)  # explicit namespace — always clear
+
+from math import sqrt  # import name into local scope
+sqrt(4)                # clear, but now sqrt could shadow a local
+
+from math import *    # imports everything — avoid this (like using namespace std)</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — using directives and aliases</h3>
+  <pre><code class="language-csharp">// using directive — imports namespace
+using System.Collections.Generic;
+var list = new List&lt;int&gt;();  // found via using
+
+// Alias — avoids ambiguity
+using Dict = System.Collections.Generic.Dictionary&lt;string, double&gt;;
+var d = new Dict();
+
+// Global using (C# 10+) — project-wide
+// In a single file: global using System.Linq;
+
+// Explicit namespace — always unambiguous
+var list2 = new System.Collections.Generic.List&lt;int&gt;();
+
+// No equivalent of ADL — extension methods are the closest
+// "str".ToUpper() finds ToUpper via the string type, not namespace lookup</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ name lookup in detail</h3>
+
+  <h4>ADL in action</h4>
+  <pre><code class="language-cpp">namespace finance {
+    struct Price { double value; };
+
+    // ADL finds this when called with a finance::Price argument
+    std::ostream& operator&lt;&lt;(std::ostream& os, const Price& p) {
+        return os &lt;&lt; "£" &lt;&lt; p.value;
+    }
+
+    void swap(Price& a, Price& b) {  // ADL finds this for std::swap(a, b)
+        std::swap(a.value, b.value);
+    }
+}
+
+int main() {
+    finance::Price p1{100.0}, p2{200.0};
+    std::cout &lt;&lt; p1 &lt;&lt; "
+";  // ADL finds finance::operator&lt;&lt;
+    swap(p1, p2);               // ADL finds finance::swap (without std:: prefix!)
+    return 0;
+}</code></pre>
+
+  <h4>The <code>using namespace std</code> hazard</h4>
+  <pre><code class="language-cpp">// count.h — NEVER do this in a header
+using namespace std;  // poisons every file that includes count.h
+
+// This creates ambiguity if the user also has their own count()
+// or if std adds a new count() — both are real bugs in production code
+
+// CORRECT: explicit prefix
+std::vector&lt;int&gt; v = {1, 2, 3};
+std::cout &lt;&lt; std::count(v.begin(), v.end(), 2) &lt;&lt; "
+";
+
+// ACCEPTABLE: targeted using in .cpp file (not header)
+// using std::cout;
+// using std::vector;</code></pre>
+
+  <h4>Two-phase lookup</h4>
+  <pre><code class="language-cpp">template&lt;typename T&gt;
+void process(T value) {
+    helper(value);  // dependent name — resolved at instantiation
+    // If T is from namespace foo, ADL will find foo::helper
+}
+
+// If you want a specific helper regardless of T:
+template&lt;typename T&gt;
+void process_explicit(T value) {
+    ::helper(value);  // :: forces global scope lookup
+}</code></pre>
+
+  <div class="cpp-note">💡 The practical takeaway: always use <code>std::</code> prefix (or targeted <code>using</code> declarations in .cpp files). Never put <code>using namespace std</code> in a header. Understand ADL so you can write good <code>operator&lt;&lt;</code> and <code>swap</code> overloads for your types.</div>
+</div>

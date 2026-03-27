@@ -1,0 +1,149 @@
+---
+layout: cpp-post
+title: "Lifetime Traps — Dangling Refs and Temporaries"
+description: "Reference to local, range-for over temporaries, string_view pitfalls."
+date: 2025-09-24
+tags: [cpp, lifetime, dangling-references]
+permalink: /cpp/lifetime-traps/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Lifetimes — the hardest part of C++</h3>
+  <p>A dangling reference is a reference to memory that has been freed. Accessing it is undefined behaviour. Unlike use-after-free with raw pointers (usually obvious), dangling references often look completely innocent — they're often caused by temporaries and lifetime extension rules that most developers don't know by heart.</p>
+
+  <h3>Common traps for Python/C# developers</h3>
+  <ul>
+    <li>Returning a reference to a local variable</li>
+    <li>Storing a reference to a vector element, then modifying the vector</li>
+    <li><code>string_view</code> outliving the string it refers to</li>
+    <li>Range-for over a temporary that's destroyed mid-loop</li>
+    <li>Structured bindings to temporaries</li>
+  </ul>
+
+  <h3>Detection</h3>
+  <p>ASan (address sanitiser) catches most use-after-free and dangling references at runtime. <code>-Wall -Wextra</code> catches return-of-local-reference at compile time. Clang-tidy's lifetime checks catch more complex cases.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — references can't dangle (GC prevents it)</h3>
+  <pre><code class="language-python">def get_list():
+    local = [1, 2, 3]
+    return local  # fine: returns reference, GC keeps the list alive
+
+result = get_list()
+print(result)  # [1, 2, 3] — no dangling
+
+# Python objects stay alive as long as any reference to them exists
+x = [1, 2, 3]
+y = x           # y holds a reference
+del x           # x deleted, but y still alive
+print(y)        # [1, 2, 3] — fine
+
+# string_view equivalent: Python strings are immutable, no slicing hazard
+s = "Hello, world"
+sub = s[7:]     # new string object — no reference to original storage</code></pre>
+  <div class="cpp-note">Python's GC guarantees objects live as long as any reference to them exists. C++ has no such guarantee — you manage lifetimes manually.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — GC prevents most lifetime issues</h3>
+  <pre><code class="language-csharp">// Reference types: GC keeps them alive while referenced
+int[] GetArray() {
+    var local = new[] { 1, 2, 3 };
+    return local;  // safe: GC keeps array alive
+}
+
+// Value types in unsafe context: can dangle (rare)
+// C# ref local to managed heap is safe
+ref int GetRef(int[] arr) => ref arr[0];  // safe while arr is alive
+
+// Span&lt;T&gt;: CAN dangle if source is stack-allocated
+Span&lt;int&gt; DangerousMethod() {
+    Span&lt;int&gt; local = stackalloc int[3] { 1, 2, 3 };
+    // return local;  // compile error! C# prevents this
+    return Array.Empty&lt;int&gt;();  // must return heap data
+}
+
+// ReadOnlySpan&lt;char&gt; from string is safe — strings are heap-allocated
+ReadOnlySpan&lt;char&gt; GetSpan(string s) => s.AsSpan()[7..];  // safe</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ lifetime traps</h3>
+
+  <h4>Returning reference to local (compile warning)</h4>
+  <pre><code class="language-cpp">// WRONG — returns reference to local that is destroyed on return
+const double& get_price() {
+    double price = 100.0;
+    return price;  // compiler warning: reference to local
+}  // price destroyed here
+
+// CORRECT
+double get_price_safe() { return 100.0; }  // return by value</code></pre>
+
+  <h4>Iterator/reference invalidation (silent UB)</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+
+void bad_iteration() {
+    std::vector&lt;double&gt; v = {1.0, 2.0, 3.0};
+    const double& ref = v[0];   // reference to first element
+    v.push_back(4.0);           // may reallocate!
+    // std::cout &lt;&lt; ref;        // UB — ref may be dangling
+}
+
+// Safe: use indices, not references, across mutations
+void safe_iteration() {
+    std::vector&lt;double&gt; v = {1.0, 2.0, 3.0};
+    v.push_back(4.0);
+    std::cout &lt;&lt; v[0] &lt;&lt; "
+";  // always valid
+}</code></pre>
+
+  <h4>string_view outliving the string</h4>
+  <pre><code class="language-cpp">#include &lt;string&gt;
+#include &lt;string_view&gt;
+
+std::string_view get_symbol() {
+    std::string s = "AAPL";
+    return s;         // WRONG: s is destroyed, view dangles
+}
+
+std::string_view get_literal() {
+    return "AAPL";    // OK: string literal has static lifetime
+}
+
+class Trade {
+public:
+    // WRONG: storing view of temporary
+    void set_symbol(std::string_view sym) {
+        symbol_ = sym;  // if sym views a temporary, it dangles
+    }
+
+    // CORRECT: store a string, not a view
+    void set_symbol_safe(std::string_view sym) {
+        symbol_str_ = std::string(sym);
+    }
+private:
+    std::string_view symbol_;      // dangerous if not careful
+    std::string      symbol_str_;  // always safe
+};</code></pre>
+
+  <h4>Range-for over temporary</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;string&gt;
+
+std::vector&lt;std::string&gt; get_symbols() {
+    return {"AAPL", "MSFT", "GOOGL"};
+}
+
+// SAFE: range-for binds the temporary's lifetime
+for (const auto& sym : get_symbols()) {
+    // sym is valid here
+}
+
+// DANGER: storing a reference to the temporary (C++23 fixed some cases)
+// const auto& symbols = get_symbols();  // lifetime extended — actually safe
+// for (const auto& sym : symbols) { }   // safe</code></pre>
+
+  <div class="cpp-note">💡 Enable <code>-Wall -Wextra -Wlifetime</code> (Clang) and run with ASan during tests. These catch most lifetime bugs at compile time or test time rather than in production.</div>
+</div>

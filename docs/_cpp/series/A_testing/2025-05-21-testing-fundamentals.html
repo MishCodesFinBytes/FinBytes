@@ -1,0 +1,274 @@
+---
+layout: cpp-post
+title: "Testing Fundamentals — Arrange, Act, Assert"
+description: "Test structure, naming, test doubles. pytest vs xUnit vs Catch2."
+date: 2025-05-21
+tags: [testing, fundamentals]
+permalink: /cpp/testing-fundamentals/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why the same test matters in all three languages</h3>
+  <p>Testing philosophy is language-agnostic. The same principles — isolation, repeatability, fast feedback — apply whether you're writing pytest, xUnit, or Catch2. What differs is syntax and ecosystem. This post walks through the same test suite implemented in all three.</p>
+
+  <h3>Arrange, Act, Assert (AAA)</h3>
+  <p>Every test has three phases. Arrange: set up inputs and state. Act: call the code under test. Assert: verify the result. Keep them visually separated — it makes the test readable as documentation.</p>
+
+  <h3>Test naming</h3>
+  <p>A good test name reads as a sentence: <em>given_atm_option_when_vol_increases_then_price_increases</em>. You should be able to understand what failed without reading the test body.</p>
+
+  <h3>Test doubles</h3>
+  <ul>
+    <li><strong>Stub</strong> — returns canned values, no behaviour verification</li>
+    <li><strong>Mock</strong> — verifies interactions (was this method called?)</li>
+    <li><strong>Fake</strong> — working implementation, simplified (in-memory DB)</li>
+    <li><strong>Spy</strong> — records calls for later assertion</li>
+  </ul>
+
+  <h3>What we're testing</h3>
+  <p>A simple <code>Portfolio</code> class: add positions, compute total value, handle edge cases. Same logic, same tests, three languages.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — pytest</h3>
+
+  <h4>The class under test</h4>
+  <pre><code class="language-python"># portfolio.py
+from dataclasses import dataclass, field
+
+@dataclass
+class Portfolio:
+    _positions: dict[str, float] = field(default_factory=dict)
+
+    def add(self, symbol: str, quantity: float, price: float) -> None:
+        if quantity <= 0:
+            raise ValueError(f"quantity must be positive, got {quantity}")
+        self._positions[symbol] = quantity * price
+
+    def total_value(self) -> float:
+        return sum(self._positions.values())
+
+    def position_count(self) -> int:
+        return len(self._positions)</code></pre>
+
+  <h4>Test file</h4>
+  <pre><code class="language-python"># test_portfolio.py
+import pytest
+from portfolio import Portfolio
+
+class TestPortfolio:
+    # Arrange shared state in fixtures
+    @pytest.fixture
+    def empty_portfolio(self) -> Portfolio:
+        return Portfolio()
+
+    @pytest.fixture
+    def portfolio_with_positions(self) -> Portfolio:
+        p = Portfolio()
+        p.add("AAPL", 100, 150.0)
+        p.add("MSFT", 50,  300.0)
+        return p
+
+    # AAA pattern
+    def test_empty_portfolio_has_zero_value(self, empty_portfolio):
+        # Arrange — done by fixture
+        # Act
+        value = empty_portfolio.total_value()
+        # Assert
+        assert value == 0.0
+
+    def test_single_position_value(self, empty_portfolio):
+        empty_portfolio.add("AAPL", 100, 150.0)
+        assert empty_portfolio.total_value() == 15_000.0
+
+    def test_multiple_positions_sum_correctly(self, portfolio_with_positions):
+        assert portfolio_with_positions.total_value() == 30_000.0
+
+    def test_negative_quantity_raises(self, empty_portfolio):
+        with pytest.raises(ValueError, match="quantity must be positive"):
+            empty_portfolio.add("AAPL", -10, 150.0)
+
+    def test_zero_quantity_raises(self, empty_portfolio):
+        with pytest.raises(ValueError):
+            empty_portfolio.add("AAPL", 0, 150.0)
+
+    # Parametrised test — runs once per set of inputs
+    @pytest.mark.parametrize("qty,price,expected", [
+        (100, 150.0, 15_000.0),
+        (1,   100.0,    100.0),
+        (200,  50.5, 10_100.0),
+    ])
+    def test_position_value_parametrised(self, empty_portfolio, qty, price, expected):
+        empty_portfolio.add("X", qty, price)
+        assert empty_portfolio.total_value() == expected</code></pre>
+
+  <div class="cpp-note">Run with <code>pytest -v</code> for verbose output. <code>pytest --tb=short</code> for compact tracebacks. <code>pytest -k "value"</code> to run only tests whose name contains "value".</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — xUnit</h3>
+
+  <h4>The class under test</h4>
+  <pre><code class="language-csharp">// Portfolio.cs
+public class Portfolio
+{
+    private readonly Dictionary&lt;string, double&gt; _positions = new();
+
+    public void Add(string symbol, double quantity, double price)
+    {
+        if (quantity &lt;= 0)
+            throw new ArgumentException($"quantity must be positive, got {quantity}");
+        _positions[symbol] = quantity * price;
+    }
+
+    public double TotalValue()    =&gt; _positions.Values.Sum();
+    public int    PositionCount() =&gt; _positions.Count;
+}</code></pre>
+
+  <h4>Test file</h4>
+  <pre><code class="language-csharp">// PortfolioTests.cs
+using Xunit;
+
+public class PortfolioTests
+{
+    // xUnit creates a new instance per test — no shared state issues
+    private readonly Portfolio _portfolio = new();
+
+    [Fact]
+    public void EmptyPortfolio_HasZeroValue()
+    {
+        // Arrange — done in constructor
+        // Act
+        var value = _portfolio.TotalValue();
+        // Assert
+        Assert.Equal(0.0, value);
+    }
+
+    [Fact]
+    public void SinglePosition_CorrectValue()
+    {
+        _portfolio.Add("AAPL", 100, 150.0);
+        Assert.Equal(15_000.0, _portfolio.TotalValue());
+    }
+
+    [Fact]
+    public void MultiplePositions_SumCorrectly()
+    {
+        _portfolio.Add("AAPL", 100, 150.0);
+        _portfolio.Add("MSFT",  50, 300.0);
+        Assert.Equal(30_000.0, _portfolio.TotalValue());
+    }
+
+    [Fact]
+    public void NegativeQuantity_ThrowsArgumentException()
+    {
+        var ex = Assert.Throws&lt;ArgumentException&gt;(
+            () =&gt; _portfolio.Add("AAPL", -10, 150.0));
+        Assert.Contains("quantity must be positive", ex.Message);
+    }
+
+    // Theory = parametrised test in xUnit
+    [Theory]
+    [InlineData(100, 150.0, 15_000.0)]
+    [InlineData(  1, 100.0,    100.0)]
+    [InlineData(200,  50.5, 10_100.0)]
+    public void PositionValue_Parametrised(double qty, double price, double expected)
+    {
+        _portfolio.Add("X", qty, price);
+        Assert.Equal(expected, _portfolio.TotalValue());
+    }
+}</code></pre>
+
+  <div class="cpp-note">xUnit creates a new test class instance per test method — no <code>[SetUp]</code>/<code>[TearDown]</code> needed. Use constructor for arrange, <code>IDisposable</code> for cleanup. <code>dotnet test</code> to run.</div>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — Catch2</h3>
+
+  <h4>The class under test</h4>
+  <pre><code class="language-cpp">// portfolio.h
+#pragma once
+#include &lt;string&gt;
+#include &lt;unordered_map&gt;
+#include &lt;stdexcept&gt;
+#include &lt;numeric&gt;
+
+class Portfolio {
+public:
+    void add(const std::string& symbol, double quantity, double price) {
+        if (quantity &lt;= 0)
+            throw std::invalid_argument("quantity must be positive");
+        positions_[symbol] = quantity * price;
+    }
+
+    double total_value() const {
+        return std::accumulate(
+            positions_.begin(), positions_.end(), 0.0,
+            [](double sum, const auto& kv) { return sum + kv.second; });
+    }
+
+    int position_count() const { return static_cast&lt;int&gt;(positions_.size()); }
+
+private:
+    std::unordered_map&lt;std::string, double&gt; positions_;
+};</code></pre>
+
+  <h4>Test file</h4>
+  <pre><code class="language-cpp">// test_portfolio.cpp
+#include &lt;catch2/catch_test_macros.hpp&gt;
+#include &lt;catch2/catch_approx.hpp&gt;
+#include &lt;catch2/generators/catch_generators.hpp&gt;
+#include "portfolio.h"
+
+// TEST_CASE groups related tests; SECTION is like a sub-test with shared setup
+TEST_CASE("Portfolio value calculations", "[portfolio]") {
+    Portfolio p;  // Arrange — fresh portfolio for each SECTION
+
+    SECTION("empty portfolio has zero value") {
+        REQUIRE(p.total_value() == 0.0);
+    }
+
+    SECTION("single position has correct value") {
+        p.add("AAPL", 100, 150.0);
+        REQUIRE(p.total_value() == Catch::Approx(15'000.0));
+    }
+
+    SECTION("multiple positions sum correctly") {
+        p.add("AAPL", 100, 150.0);
+        p.add("MSFT",  50, 300.0);
+        REQUIRE(p.total_value() == Catch::Approx(30'000.0));
+    }
+}
+
+TEST_CASE("Portfolio input validation", "[portfolio]") {
+    Portfolio p;
+
+    SECTION("negative quantity throws") {
+        REQUIRE_THROWS_AS(p.add("AAPL", -10, 150.0), std::invalid_argument);
+    }
+
+    SECTION("zero quantity throws") {
+        REQUIRE_THROWS_AS(p.add("AAPL", 0, 150.0), std::invalid_argument);
+    }
+
+    SECTION("exception message is informative") {
+        REQUIRE_THROWS_WITH(
+            p.add("AAPL", -10, 150.0),
+            Catch::Matchers::ContainsSubstring("quantity must be positive"));
+    }
+}
+
+// Parametrised test with GENERATE
+TEST_CASE("Portfolio position value parametrised", "[portfolio]") {
+    Portfolio p;
+    auto [qty, price, expected] = GENERATE(table&lt;double, double, double&gt;({
+        {100, 150.0, 15'000.0},
+        {  1, 100.0,    100.0},
+        {200,  50.5, 10'100.0},
+    }));
+    p.add("X", qty, price);
+    REQUIRE(p.total_value() == Catch::Approx(expected));
+}</code></pre>
+
+  <div class="cpp-note">💡 Each <code>SECTION</code> re-runs from the top of the <code>TEST_CASE</code> — so the <code>Portfolio p</code> is freshly constructed for every section. This gives you per-test isolation without any setup/teardown boilerplate.</div>
+</div>

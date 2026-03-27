@@ -1,0 +1,203 @@
+---
+layout: cpp-post
+title: "Cache-Friendly Data Layout — AoS vs SoA"
+description: "Array of Structs vs Struct of Arrays, benchmarking with tick data"
+date: 2025-02-26
+tags: [performance, memory, data-structures]
+permalink: /cpp/aos-vs-soa/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The cache is the bottleneck</h3>
+  <p>Modern CPUs are so fast that they're almost always waiting for memory. A cache miss costs ~100ns — hundreds of cycles stalled. For tight loops over large datasets (pricing, risk, backtesting), memory layout determines performance more than algorithmic complexity.</p>
+
+  <h3>How CPU caches work</h3>
+  <p>When you access a memory address, the CPU fetches not just that address but an entire <em>cache line</em> — typically 64 bytes. If your next access is within that 64-byte window, it's essentially free. If it's elsewhere in RAM, you take another 100ns penalty.</p>
+
+  <h3>Array of Structs (AoS)</h3>
+  <p>Store an array of structs: <code>[{price, volume, time}, {price, volume, time}, ...]</code>. Natural and readable. When you loop over prices only, you load the volume and time fields too — wasted cache bandwidth.</p>
+
+  <h3>Struct of Arrays (SoA)</h3>
+  <p>Store each field in its own array: <code>prices[]</code>, <code>volumes[]</code>, <code>times[]</code>. When you loop over prices, you only load prices — full cache line utilisation. Common in high-performance quant, graphics, and game engines.</p>
+
+  <h3>When to use which</h3>
+  <ul>
+    <li><strong>AoS</strong> — when you always access all fields together (e.g. processing a single tick with all its fields)</li>
+    <li><strong>SoA</strong> — when you loop over one or two fields at a time (e.g. computing VWAP over a million ticks)</li>
+  </ul>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — objects are always AoS (badly)</h3>
+  <p>Python objects are heap-allocated and scattered in memory. A list of tick objects is a list of pointers, each pointing to an object elsewhere on the heap. Cache performance is poor regardless of access pattern.</p>
+
+  <pre><code class="language-python">from dataclasses import dataclass
+
+# AoS — natural Python style
+@dataclass
+class Tick:
+    price:  float
+    volume: int
+    time:   float
+
+ticks = [Tick(100.0 + i*0.01, 1000, i*0.001) for i in range(1_000_000)]
+
+# Looping over prices — loads entire Tick object for each price
+import time
+t0 = time.perf_counter()
+total = sum(t.price for t in ticks)
+print(f"AoS: {(time.perf_counter()-t0)*1000:.1f}ms")</code></pre>
+
+  <h3>NumPy — SoA under the hood</h3>
+  <pre><code class="language-python">import numpy as np
+
+# SoA — each field is a contiguous array
+N = 1_000_000
+prices  = np.random.uniform(99, 101, N)
+volumes = np.random.randint(100, 10000, N)
+times   = np.linspace(0, 3600, N)
+
+# Vectorised loop — all prices in one contiguous block
+t0 = time.perf_counter()
+total = prices.sum()
+print(f"SoA (numpy): {(time.perf_counter()-t0)*1000:.1f}ms")
+# Typically 5-20x faster than the object loop above</code></pre>
+
+  <div class="cpp-note">NumPy's performance advantage over Python lists isn't just "C vs Python" — it's also the memory layout. Contiguous arrays of raw doubles are cache-friendly. Lists of Python objects are not.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — structs give AoS with value semantics</h3>
+  <p>C# structs stored in arrays give contiguous memory layout — similar to C++ AoS. For SoA, you maintain separate arrays manually, same as C++.</p>
+
+  <pre><code class="language-csharp">// AoS with struct — contiguous in memory
+struct Tick {
+    public double Price;
+    public int    Volume;
+    public double Time;
+}
+
+var ticks = new Tick[1_000_000];
+for (int i = 0; i &lt; ticks.Length; i++)
+    ticks[i] = new Tick { Price = 100.0 + i * 0.01, Volume = 1000, Time = i * 0.001 };
+
+// Loop over prices — loads entire Tick per iteration
+double sum = 0;
+for (int i = 0; i &lt; ticks.Length; i++)
+    sum += ticks[i].Price;</code></pre>
+
+  <h3>SoA in C#</h3>
+  <pre><code class="language-csharp">// SoA — separate arrays per field
+var prices  = new double[1_000_000];
+var volumes = new int[1_000_000];
+var times   = new double[1_000_000];
+
+// Loop over prices only — full cache efficiency
+double sum = 0;
+for (int i = 0; i &lt; prices.Length; i++)
+    sum += prices[i];</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — AoS vs SoA with benchmarks</h3>
+
+  <h4>AoS layout</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;chrono&gt;
+#include &lt;numeric&gt;
+#include &lt;iostream&gt;
+
+struct Tick {
+    double price;   // 8 bytes
+    int    volume;  // 4 bytes
+    double time;    // 8 bytes
+    int    flags;   // 4 bytes
+};  // 24 bytes per tick — price is 1 of 3 doubles per cache line
+
+using AoS = std::vector&lt;Tick&gt;;
+
+double sum_prices_aos(const AoS&amp; ticks) {
+    double sum = 0;
+    for (const auto&amp; t : ticks)
+        sum += t.price;  // loads 24 bytes, uses 8
+    return sum;
+}</code></pre>
+
+  <h4>SoA layout</h4>
+  <pre><code class="language-cpp">struct TickStore {  // Struct of Arrays
+    std::vector&lt;double&gt; prices;   // all prices contiguous
+    std::vector&lt;int&gt;    volumes;
+    std::vector&lt;double&gt; times;
+    std::vector&lt;int&gt;    flags;
+
+    explicit TickStore(std::size_t n) {
+        prices.resize(n);
+        volumes.resize(n);
+        times.resize(n);
+        flags.resize(n);
+    }
+
+    std::size_t size() const { return prices.size(); }
+};
+
+double sum_prices_soa(const TickStore&amp; store) {
+    double sum = 0;
+    for (double p : store.prices)  // 100% cache utilisation
+        sum += p;
+    return sum;
+
+    // Or with SIMD-friendly std::reduce:
+    // return std::reduce(store.prices.begin(), store.prices.end(), 0.0);
+}</code></pre>
+
+  <h4>Benchmark</h4>
+  <pre><code class="language-cpp">int main() {
+    constexpr int N = 1'000'000;
+
+    // Populate AoS
+    AoS ticks(N);
+    for (int i = 0; i &lt; N; ++i)
+        ticks[i] = {100.0 + i*0.01, 1000, i*0.001, 0};
+
+    // Populate SoA
+    TickStore store(N);
+    for (int i = 0; i &lt; N; ++i) {
+        store.prices[i]  = 100.0 + i*0.01;
+        store.volumes[i] = 1000;
+        store.times[i]   = i*0.001;
+    }
+
+    auto bench = [](auto label, auto fn, auto&amp; data) {
+        auto t0 = std::chrono::high_resolution_clock::now();
+        volatile double s = 0;
+        for (int iter = 0; iter &lt; 100; ++iter) s += fn(data);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto us = std::chrono::duration_cast&lt;std::chrono::microseconds&gt;(t1-t0).count();
+        std::cout &lt;&lt; label &lt;&lt; ": " &lt;&lt; us/100 &lt;&lt; "us avg\n";
+    };
+
+    bench("AoS", sum_prices_aos, ticks);
+    bench("SoA", sum_prices_soa, store);
+    // Typical result: SoA is 2-4x faster
+    return 0;
+}</code></pre>
+
+  <div class="cpp-note">💡 With SIMD auto-vectorisation enabled (<code>-O2</code> or <code>-O3</code>), the SoA advantage grows further. The compiler can vectorise a loop over contiguous doubles using AVX2 — processing 4 doubles per instruction. AoS interleaving prevents this.</div>
+
+  <h4>Hybrid — hot/cold splitting</h4>
+  <pre><code class="language-cpp">// Split frequently-accessed fields from rarely-accessed ones
+struct TickHot {   // accessed every tick
+    double price;
+    int    volume;
+};
+
+struct TickCold {  // accessed only on signals
+    double time;
+    int    flags;
+    char   source[8];
+};
+
+std::vector&lt;TickHot&gt;  hot_data(N);
+std::vector&lt;TickCold&gt; cold_data(N);
+// hot_data fits more ticks per cache line — better for the main loop</code></pre>
+</div>

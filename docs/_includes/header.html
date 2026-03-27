@@ -1,3 +1,37 @@
+<style>
+.nav-dropdown{display:inline-block;position:relative;margin-right:20px;line-height:54px}
+.nav-dropdown-toggle{margin-right:0!important;cursor:default;user-select:none}
+.nav-caret{font-size:9px;opacity:.45;margin-left:2px;vertical-align:middle;display:inline-block;transition:transform .15s ease}
+.nav-dropdown-menu{display:none;position:absolute;top:calc(100% - 2px);left:0;z-index:1000;background:#fff;border:1px solid #e8e8e8;border-radius:6px;min-width:220px;padding:6px 0;box-shadow:0 4px 16px rgba(0,0,0,.08);line-height:1.5;overflow:visible}
+.nav-dropdown-menu--wide{min-width:260px}
+.nav-dropdown:hover .nav-dropdown-menu,.nav-dropdown:focus-within .nav-dropdown-menu{display:block}
+.nav-dropdown:hover .nav-caret{transform:rotate(180deg)}
+.nav-dropdown-header{padding:8px 16px 3px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#aaa;pointer-events:none;line-height:1.4}
+.nav-dropdown-header:first-child{padding-top:6px}
+.nav-dropdown-item{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;font-size:13px;color:#333;line-height:1.4;text-decoration:none;cursor:pointer;white-space:nowrap;position:relative}
+a.nav-dropdown-item{display:block}
+.nav-dropdown-item:hover,.nav-dropdown-item:hover>a{background:#f5f5f5;color:#111;text-decoration:none}
+.nav-dropdown-sep{height:1px;background:#ebebeb;margin:5px 0}
+.nav-badge{font-size:10px;padding:1px 5px;border-radius:3px;background:#e8f4fd;color:#2171b5;margin-left:6px;font-weight:500;flex-shrink:0}
+.nav-has-sub{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;font-size:13px;color:#333;cursor:default;position:relative;white-space:nowrap}
+.nav-has-sub:hover{background:#f5f5f5}
+.nav-sub-caret{font-size:9px;opacity:.4;flex-shrink:0;margin-left:8px}
+.nav-submenu{display:none!important;position:absolute;top:-6px;left:100%;overflow:visible;background:#fff;border:1px solid #e8e8e8;border-radius:6px;min-width:220px;padding:6px 0;box-shadow:0 4px 16px rgba(0,0,0,.08);z-index:1001;line-height:1.5}.nav-has-sub:hover>.nav-submenu,.nav-has-sub:focus-within>.nav-submenu{display:block!important}.nav-submenu-left{left:auto!important;right:100%!important}
+
+@media screen and (max-width:600px){
+  .nav-dropdown{display:block;position:static;margin-right:0;line-height:1}
+  .nav-dropdown-toggle{display:block;margin-left:20px;padding:5px 10px}
+  .nav-caret,.nav-sub-caret{display:none}
+  .nav-dropdown-menu{display:block;position:static;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0}
+  .nav-dropdown-header{margin-left:20px;padding:8px 10px 2px;font-size:10px;color:#bbb}
+  .nav-dropdown-item,a.nav-dropdown-item{display:block;margin-left:30px;padding:4px 10px;font-size:13px;color:#666}
+  .nav-has-sub{display:block;margin-left:30px;padding:4px 10px;font-size:13px;color:#666}
+  .nav-submenu{display:block!important;position:static!important;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0;margin-left:10px}
+  .nav-dropdown-sep{margin:4px 20px}
+  .nav-badge{display:none}
+}
+</style>
+
 <header class="site-header">
   <div class="wrapper">
     <a class="site-title" rel="author" href="{{ "/" | relative_url }}">
@@ -8,7 +42,6 @@
       {% endif %}
     </a>
 
-    {% assign page_paths = site.header_pages | default: site.pages %}
     <nav class="site-nav">
       <input type="checkbox" id="nav-trigger" class="nav-trigger" />
       <label for="nav-trigger">
@@ -18,13 +51,154 @@
           </svg>
         </span>
       </label>
+
       <div class="trigger">
-        {% for path in page_paths %}
-          {% assign my_page = site.pages | where: "path", path | first %}
-          {% if my_page.title %}
-            <a class="page-link" href="{{ my_page.url | relative_url }}">{{ my_page.title }}</a>
-          {% endif %}
-        {% endfor %}
+
+        <!-- Python -->
+        <div class="nav-dropdown">
+          <a class="page-link nav-dropdown-toggle" href="{{ "/python/" | relative_url }}">Python <span class="nav-caret">&#9662;</span></a>
+          <div class="nav-dropdown-menu">
+            <div class="nav-dropdown-header">By topic</div>
+            <a class="nav-dropdown-item" href="{{ "/python/#basics" | relative_url }}">Python fundamentals</a>
+            <a class="nav-dropdown-item" href="{{ "/python/#finance" | relative_url }}">Finance &amp; data projects</a>
+            <a class="nav-dropdown-item" href="{{ "/python/#testing" | relative_url }}">Testing — pytest series</a>
+            <a class="nav-dropdown-item" href="{{ "/python/#systems" | relative_url }}">Systems and infrastructure</a>
+            <a class="nav-dropdown-item" href="{{ "/python/#tools" | relative_url }}">Tools and workflow</a>
+            <div class="nav-dropdown-sep"></div>
+            <a class="nav-dropdown-item" href="{{ "/python/#all" | relative_url }}">All Python posts</a>
+          </div>
+        </div>
+
+        <!-- C++ -->
+        <div class="nav-dropdown">
+          <a class="page-link nav-dropdown-toggle" href="{{ "/cpp/" | relative_url }}">C++ <span class="nav-caret">&#9662;</span></a>
+          <div class="nav-dropdown-menu nav-dropdown-menu--wide">
+            <div class="nav-dropdown-header">Getting started</div>
+            <a class="nav-dropdown-item" href="{{ "/cpp/intro/" | relative_url }}">Why C++? Starting from scratch</a>
+            <a class="nav-dropdown-item" href="{{ "/cpp/compilation-model/" | relative_url }}">Compilation model</a>
+            <a class="nav-dropdown-item" href="{{ "/cpp/stack-vs-heap/" | relative_url }}">Stack vs heap</a>
+            <a class="nav-dropdown-item" href="{{ "/cpp/raii-smart-pointers/" | relative_url }}">RAII and smart pointers</a>
+            <div class="nav-dropdown-sep"></div>
+            <div class="nav-dropdown-header">Learning series</div>
+            <div class="nav-has-sub">Unit testing <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu">
+                <a class="nav-dropdown-item" href="{{ "/cpp/testing-fundamentals/" | relative_url }}">Testing fundamentals</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/mocking-dependency-injection/" | relative_url }}">Mocking and DI</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/testing-numerical-code/" | relative_url }}">Testing numerical code</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">File I/O <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu">
+                <a class="nav-dropdown-item" href="{{ "/cpp/text-files/" | relative_url }}">Text files</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/csv-parsing/" | relative_url }}">CSV parsing</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/excel-files/" | relative_url }}">Excel files</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/json-files/" | relative_url }}">JSON</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Practical tasks <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu">
+                <a class="nav-dropdown-item" href="{{ "/cpp/string-handling/" | relative_url }}">String handling</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/dates-and-times/" | relative_url }}">Dates and times</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/logging/" | relative_url }}">Logging</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/cli-and-config/" | relative_url }}">CLI args and config</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">STL deep dive <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu">
+                <a class="nav-dropdown-item" href="{{ "/cpp/stl-containers/" | relative_url }}">Containers</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/stl-algorithms/" | relative_url }}">Algorithms</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/iterators-views-ranges/" | relative_url }}">Iterators, views, ranges</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Unknown unknowns <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu">
+                <a class="nav-dropdown-item" href="{{ "/cpp/undefined-behaviour/" | relative_url }}">Undefined behaviour</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/rule-of-five/" | relative_url }}">Rule of Five</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/const-correctness/" | relative_url }}">Const correctness</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/name-lookup-adl/" | relative_url }}">Name lookup and ADL</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/lifetime-traps/" | relative_url }}">Lifetime traps</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Speed comparisons <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu">
+                <a class="nav-dropdown-item" href="{{ "/cpp/operation-benchmarks/" | relative_url }}">Operation benchmarks</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/which-language-when/" | relative_url }}">Which language for which job</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/simd-vectorisation/" | relative_url }}">SIMD and vectorisation</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">C++ mini projects <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu">
+                <a class="nav-dropdown-item" href="{{ "/cpp/bond-pricer-cli/" | relative_url }}">Bond pricer CLI</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/order-book/" | relative_url }}">In-memory order book</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/tick-data-replay/" | relative_url }}">Tick data replay engine</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/expression-evaluator/" | relative_url }}">Mini expression evaluator</a>
+              </div>
+            </div>
+            <div class="nav-dropdown-sep"></div>
+            <a class="nav-dropdown-item" href="{{ "/cpp/" | relative_url }}">All C++ posts</a>
+          </div>
+        </div>
+
+        <!-- Design & reliability -->
+        <div class="nav-dropdown">
+          <a class="page-link nav-dropdown-toggle" href="{{ "/cpp/solid-principles/" | relative_url }}">Design &amp; reliability <span class="nav-caret">&#9662;</span></a>
+          <div class="nav-dropdown-menu nav-dropdown-menu--wide">
+            <div class="nav-has-sub">Design patterns <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/cpp/solid-principles/" | relative_url }}">SOLID principles</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/creational-patterns/" | relative_url }}">Creational patterns</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/strategy-pattern/" | relative_url }}">Strategy pattern</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/observer-pattern/" | relative_url }}">Observer / events</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/decorator-pipeline/" | relative_url }}">Decorator and pipeline</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/repository-pattern/" | relative_url }}">Repository pattern</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/crtp-policy-design/" | relative_url }}">CRTP and policy design</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/command-pattern/" | relative_url }}">Command and undo/redo</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Defensive engineering <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/cpp/memory-leaks/" | relative_url }}">Memory leaks</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/crashes/" | relative_url }}">Crashes</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/infinite-loops/" | relative_url }}">Infinite loops and hangs</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/numerical-accuracy/" | relative_url }}">Numerical accuracy</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/speed-regressions/" | relative_url }}">Speed regressions</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/race-conditions/" | relative_url }}">Race conditions</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/exception-safety/" | relative_url }}">Exception safety</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/resource-exhaustion/" | relative_url }}">Resource exhaustion</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/defensive-checklist/" | relative_url }}">Defensive checklist</a>
+              </div>
+            </div>
+            <div class="nav-has-sub">Queues &amp; reliability <span class="nav-sub-caret">&#9656;</span>
+              <div class="nav-submenu nav-submenu-left">
+                <a class="nav-dropdown-item" href="{{ "/cpp/queue-patterns/" | relative_url }}">Queue patterns</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/backpressure/" | relative_url }}">Backpressure</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/circuit-breaker/" | relative_url }}">Circuit breaker</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/retry-backoff/" | relative_url }}">Retry and backoff</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/health-checks/" | relative_url }}">Health checks</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/graceful-degradation/" | relative_url }}">Graceful degradation</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/idempotency/" | relative_url }}">Idempotency</a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/resilient-market-data-pipeline/" | relative_url }}">Market data pipeline <span class="nav-badge">example</span></a>
+                <a class="nav-dropdown-item" href="{{ "/cpp/self-healing-oms/" | relative_url }}">Self-healing OMS <span class="nav-badge">example</span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quant Lab -->
+        <a class="page-link" href="{{ "/quant-lab/" | relative_url }}">Quant Lab</a>
+
+        <!-- About -->
+        {% assign about_page = site.pages | where: "path", "_pages/2024-10-30-about.html" | first %}
+        {% if about_page %}
+          <a class="page-link" href="{{ about_page.url | relative_url }}">{{ about_page.title }}</a>
+        {% endif %}
+
+        <!-- Private -->
+        {% assign private_page = site.pages | where: "path", "private.html" | first %}
+        {% if private_page %}
+          <a class="page-link" href="{{ private_page.url | relative_url }}">{{ private_page.title }}</a>
+        {% endif %}
+
       </div>
     </nav>
   </div>

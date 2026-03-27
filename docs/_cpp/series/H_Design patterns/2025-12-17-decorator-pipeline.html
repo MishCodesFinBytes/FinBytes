@@ -1,0 +1,142 @@
+---
+layout: cpp-post
+title: "Decorator and Pipeline Patterns"
+description: "Wrap a pricer with caching, logging, validation. Functional pipelines."
+date: 2025-12-17
+tags: [design-patterns, decorator, pipeline]
+permalink: /cpp/decorator-pipeline/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Adding behaviour without modifying classes</h3>
+  <p>The Decorator pattern wraps an object with another that adds behaviour while preserving the same interface. A caching decorator wraps a pricer and returns cached results for repeated inputs. A logging decorator wraps it again. The underlying pricer is unchanged.</p>
+  <p>The Pipeline pattern passes data through a sequence of transformations, each independent and composable. A raw tick flows through normalisation, validation, pricing, and output stages. Each stage is a function or class with a known interface.</p>
+  <p>Both patterns express composition over inheritance. A <code>CachingPricer</code> that inherits from <code>BlackScholes</code> is brittle - you cannot use the caching with Monte Carlo. A <code>CachingPricer</code> that wraps any <code>IPricingModel</code> works with everything.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python decorator and pipeline</h3>
+  <pre><code class="language-python">import time
+
+class IPricer:
+    def price(self, S: float, K: float, T: float) -> float: ...
+
+class BSPricer(IPricer):
+    def price(self, S, K, T) -> float: return max(S - K, 0) * 1.05
+
+class CachingPricer(IPricer):
+    def __init__(self, inner: IPricer):
+        self._inner = inner; self._cache: dict = {}
+    def price(self, S, K, T) -> float:
+        key = (round(S,4), round(K,4), round(T,4))
+        if key not in self._cache:
+            self._cache[key] = self._inner.price(S, K, T)
+        return self._cache[key]
+
+class TimingPricer(IPricer):
+    def __init__(self, inner: IPricer): self._inner = inner
+    def price(self, S, K, T) -> float:
+        t0 = time.perf_counter()
+        result = self._inner.price(S, K, T)
+        print(f"price() took {(time.perf_counter()-t0)*1e6:.1f}us")
+        return result
+
+# Stack decorators - order matters
+pricer = TimingPricer(CachingPricer(BSPricer()))
+pricer.price(100, 100, 1)
+
+# Functional pipeline
+from typing import Callable
+def pipeline(*fns: Callable) -> Callable:
+    def run(x):
+        for fn in fns: x = fn(x)
+        return x
+    return run
+
+normalise = lambda t: {**t, "price": round(t["price"], 4)}
+enrich    = lambda t: {**t, "mid": t["price"] * 1.001}
+process   = pipeline(normalise, enrich)
+result    = process({"price": 100.123456, "symbol": "AAPL"})</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# decorator and pipeline</h3>
+  <pre><code class="language-csharp">interface IPricer { double Price(double S, double K, double T); }
+class BSPricer : IPricer { public double Price(double S, double K, double T) => Math.Max(S-K,0)*1.05; }
+
+class CachingPricer : IPricer {
+    private readonly IPricer _inner;
+    private readonly Dictionary&lt;(double,double,double), double&gt; _cache = new();
+    public CachingPricer(IPricer inner) => _inner = inner;
+    public double Price(double S, double K, double T) {
+        var key = (Math.Round(S,4), Math.Round(K,4), Math.Round(T,4));
+        if (!_cache.TryGetValue(key, out var v)) _cache[key] = v = _inner.Price(S, K, T);
+        return v;
+    }
+}
+
+class LoggingPricer : IPricer {
+    private readonly IPricer _inner;
+    public LoggingPricer(IPricer inner) => _inner = inner;
+    public double Price(double S, double K, double T) {
+        var result = _inner.Price(S, K, T);
+        Console.WriteLine($"Priced S={S} K={K} T={T} -> {result:F4}");
+        return result;
+    }
+}
+
+IPricer pricer = new LoggingPricer(new CachingPricer(new BSPricer()));</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ decorator and pipeline</h3>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;unordered_map&gt;
+#include &lt;functional&gt;
+#include &lt;chrono&gt;
+#include &lt;iostream&gt;
+#include &lt;initializer_list&gt;
+#include &lt;cmath&gt;
+
+struct IPricer {
+    virtual ~IPricer() = default;
+    virtual double price(double S, double K, double T) const = 0;
+};
+
+struct BSPricer : IPricer {
+    double price(double S, double K, double T) const override { return std::max(S-K,0.0)*1.05; }
+};
+
+class CachingPricer : public IPricer {
+    std::unique_ptr&lt;IPricer&gt; inner_;
+    mutable std::unordered_map&lt;std::size_t, double&gt; cache_;
+    static std::size_t key(double S, double K, double T) {
+        std::size_t h = std::hash&lt;int&gt;{}((int)(S*100));
+        h ^= std::hash&lt;int&gt;{}((int)(K*100)) &lt;&lt; 16;
+        h ^= std::hash&lt;int&gt;{}((int)(T*100)) &lt;&lt; 32;
+        return h;
+    }
+public:
+    explicit CachingPricer(std::unique_ptr&lt;IPricer&gt; inner) : inner_(std::move(inner)) {}
+    double price(double S, double K, double T) const override {
+        auto k = key(S, K, T);
+        auto it = cache_.find(k);
+        if (it != cache_.end()) return it->second;
+        return cache_[k] = inner_->price(S, K, T);
+    }
+};
+
+// Functional pipeline
+template&lt;typename T&gt;
+T pipeline(T value, std::initializer_list&lt;std::function&lt;T(T)&gt;&gt; stages) {
+    for (auto& fn : stages) value = fn(value);
+    return value;
+}
+
+double result = pipeline&lt;double&gt;(100.123456, {
+    [](double x) { return std::round(x * 10000) / 10000; },
+    [](double x) { return x * 1.001; },
+    [](double x) { return x + 0.5;   },
+});</code></pre>
+  <div class="cpp-note">Decorators in C++ must manage ownership carefully - use <code>unique_ptr</code> and move semantics. The outermost decorator owns the next one, which owns the next. The whole stack is freed when the outermost goes out of scope.</div>
+</div>

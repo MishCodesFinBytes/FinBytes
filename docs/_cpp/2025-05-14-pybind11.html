@@ -1,0 +1,213 @@
+---
+layout: cpp-post
+title: "Python ↔ C++ Interop with pybind11"
+description: "Wrap the C++ pricer as a Python extension, call it from a notebook"
+date: 2025-05-14
+tags: [interop, python, production]
+permalink: /cpp/pybind11/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The best of both worlds</h3>
+  <p>Production quant libraries are often C++ under the hood with a Python interface on top. The C++ does the heavy lifting — fast, deterministic, tested. The Python layer is for research, notebooks, strategy development, and integration with the broader data science ecosystem.</p>
+  <p>pybind11 is the standard tool for this. It lets you expose C++ classes and functions to Python with minimal boilerplate, full NumPy integration, and clean error propagation.</p>
+  <h3>The pattern</h3>
+  <ol>
+    <li>Write the C++ library with no Python knowledge</li>
+    <li>Write a thin pybind11 wrapper that exposes the public interface</li>
+    <li>Build as a Python extension module (<code>.so</code> / <code>.pyd</code>)</li>
+    <li>Import in Python like any other module</li>
+  </ol>
+  <h3>NumPy integration</h3>
+  <p>pybind11 can accept and return NumPy arrays directly, mapping them to C++ spans or Eigen matrices with zero copy. You can vectorise a C++ pricer across a whole array of inputs from Python without writing a loop.</p>
+  <h3>This is the capstone</h3>
+  <p>By the end of this post you'll have a C++ pricing library callable from Python. That's the standard architecture for quant systems at most firms — and the point where all the previous posts come together.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — calling the C++ extension</h3>
+  <p>Once built, the C++ library looks like any Python module. No special syntax, no marshalling boilerplate — it just works.</p>
+
+  <pre><code class="language-python">import pricer  # our C++ extension
+import numpy as np
+
+# Single price
+result = pricer.price_cds(
+    hazard_rate=0.02,
+    recovery_rate=0.4,
+    discount_factors=[np.exp(-0.03*t) for t in [0.5,1,1.5,2,3,4,5]],
+    tenors=[0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0],
+)
+print(f"Par spread: {result.par_spread * 10000:.2f} bps")
+
+# Vectorised — price a whole portfolio in C++
+hazard_rates = np.linspace(0.01, 0.05, 10_000)
+spreads = pricer.price_cds_vectorised(
+    hazard_rates=hazard_rates,
+    recovery_rate=0.4,
+    discount_factors=[np.exp(-0.03*t) for t in [0.5,1,1.5,2,3,4,5]],
+    tenors=[0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0],
+)
+print(f"Priced {len(spreads)} CDS in one call")</code></pre>
+
+  <h3>Using in a notebook</h3>
+  <pre><code class="language-python">import pricer
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Spread curve as hazard rate varies
+hazard_rates = np.linspace(0.001, 0.1, 200)
+tenors       = [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0]
+dfs          = [np.exp(-0.03*t) for t in tenors]
+
+spreads_bps = np.array([
+    pricer.price_cds(h, 0.4, dfs, tenors).par_spread * 10_000
+    for h in hazard_rates
+])
+
+plt.plot(hazard_rates * 100, spreads_bps)
+plt.xlabel("Hazard rate (%)")
+plt.ylabel("Par spread (bps)")
+plt.title("CDS spread vs hazard rate")
+plt.show()</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — P/Invoke and native interop</h3>
+  <p>C# uses P/Invoke for calling C functions. For C++ you need to expose a C interface. More verbose than pybind11 — this is one area where Python has a clear advantage.</p>
+
+  <pre><code class="language-csharp">// C++ side: expose C interface
+// extern "C" double price_cds_c(double hazard_rate, ...);
+
+// C# side: P/Invoke
+using System.Runtime.InteropServices;
+
+public static class NativePricer
+{
+    [DllImport("pricer.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern double price_cds_c(
+        double hazardRate,
+        double recoveryRate,
+        double[] discountFactors,
+        double[] tenors,
+        int n);
+}
+
+double spread = NativePricer.price_cds_c(
+    0.02, 0.4,
+    new[] { 0.985, 0.97, 0.956, 0.942, 0.915, 0.888, 0.861 },
+    new[] { 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0 },
+    7
+);</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — pybind11 wrapper</h3>
+
+  <h4>CMakeLists.txt</h4>
+  <pre><code class="language-cmake">cmake_minimum_required(VERSION 3.20)
+project(pricer)
+
+set(CMAKE_CXX_STANDARD 20)
+
+find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG v2.11.1)
+FetchContent_MakeAvailable(pybind11)
+
+# Core library — no Python dependency
+add_library(pricer_core STATIC cds.cpp)
+
+# Python extension
+pybind11_add_module(pricer bindings.cpp)
+target_link_libraries(pricer PRIVATE pricer_core)</code></pre>
+
+  <h4>cds.h — pure C++ interface</h4>
+  <pre><code class="language-cpp">#pragma once
+#include &lt;vector&gt;
+
+struct CDSResult {
+    double par_spread;
+    double protection_leg;
+    double premium_leg;
+};
+
+CDSResult price_cds(
+    double hazard_rate,
+    double recovery_rate,
+    const std::vector&lt;double&gt;&amp; discount_factors,
+    const std::vector&lt;double&gt;&amp; tenors);</code></pre>
+
+  <h4>bindings.cpp — pybind11 wrapper</h4>
+  <pre><code class="language-cpp">#include &lt;pybind11/pybind11.h&gt;
+#include &lt;pybind11/stl.h&gt;       // std::vector &lt;-&gt; Python list
+#include &lt;pybind11/numpy.h&gt;     // NumPy array support
+#include "cds.h"
+
+namespace py = pybind11;
+
+// Vectorised version — prices many CDS at once
+py::array_t&lt;double&gt; price_cds_vectorised(
+    py::array_t&lt;double&gt; hazard_rates,
+    double recovery_rate,
+    const std::vector&lt;double&gt;&amp; discount_factors,
+    const std::vector&lt;double&gt;&amp; tenors)
+{
+    auto hr  = hazard_rates.unchecked&lt;1&gt;();
+    int  n   = static_cast&lt;int&gt;(hr.shape(0));
+    auto out = py::array_t&lt;double&gt;(n);
+    auto buf = out.mutable_unchecked&lt;1&gt;();
+
+    for (int i = 0; i &lt; n; ++i)
+        buf(i) = price_cds(hr(i), recovery_rate, discount_factors, tenors).par_spread;
+
+    return out;
+}
+
+PYBIND11_MODULE(pricer, m) {
+    m.doc() = "C++ CDS pricing library";
+
+    // Expose CDSResult as a Python class
+    py::class_&lt;CDSResult&gt;(m, "CDSResult")
+        .def_readonly("par_spread",      &amp;CDSResult::par_spread)
+        .def_readonly("protection_leg",  &amp;CDSResult::protection_leg)
+        .def_readonly("premium_leg",     &amp;CDSResult::premium_leg)
+        .def("__repr__", [](const CDSResult&amp; r) {
+            return "CDSResult(par_spread=" + std::to_string(r.par_spread) + ")";
+        });
+
+    // Expose price_cds
+    m.def("price_cds", &amp;price_cds,
+        py::arg("hazard_rate"),
+        py::arg("recovery_rate"),
+        py::arg("discount_factors"),
+        py::arg("tenors"),
+        "Price a single CDS using constant hazard rate model");
+
+    // Expose vectorised version
+    m.def("price_cds_vectorised", &amp;price_cds_vectorised,
+        py::arg("hazard_rates"),
+        py::arg("recovery_rate"),
+        py::arg("discount_factors"),
+        py::arg("tenors"),
+        "Price an array of CDS — accepts NumPy array of hazard rates");
+}</code></pre>
+
+  <h4>Building and installing</h4>
+  <pre><code class="language-bash">mkdir build &amp;&amp; cd build
+cmake ..
+cmake --build . --config Release
+
+# Install into current Python environment
+pip install .
+# or copy the .so/.pyd directly:
+cp pricer.cpython-311-x86_64-linux-gnu.so ..
+
+# Test
+python -c "import pricer; print(pricer.price_cds(0.02, 0.4, [...], [...]))"</code></pre>
+
+  <div class="cpp-note">💡 pybind11 handles all the reference counting, type conversion, and exception translation automatically. A C++ exception thrown in <code>price_cds</code> becomes a Python exception — <code>std::invalid_argument</code> maps to <code>ValueError</code>, <code>std::runtime_error</code> maps to <code>RuntimeError</code>.</div>
+</div>

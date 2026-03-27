@@ -1,0 +1,120 @@
+---
+layout: cpp-post
+title: "Backpressure - Handling a Producer Faster Than Consumer"
+description: "Drop vs block vs shed. How a market data feed overwhelms a pricer."
+date: 2026-04-01
+tags: [queues, reliability, backpressure]
+permalink: /cpp/backpressure/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>When the consumer cannot keep up</h3>
+  <p>A market data feed can publish 1 million ticks per second. A pricer might handle 50,000 per second. Without backpressure, the queue grows without bound until the process is killed by OOM.</p>
+  <p><strong>Three strategies:</strong></p>
+  <ul>
+    <li><strong>Block:</strong> the producer waits when the queue is full. Correct but introduces latency into the producer - risky if the producer is time-sensitive.</li>
+    <li><strong>Drop:</strong> discard new items when full. Lose data but the producer is never blocked. Appropriate when old data is less valuable than new (market data: drop old prices, keep latest).</li>
+    <li><strong>Shed:</strong> reject work at the API level before it enters the queue. Caller receives an error and can retry. Appropriate for RPC-style requests where the caller can back off.</li>
+  </ul>
+  <p><strong>Key insight:</strong> backpressure is a signal, not an error. A queue reaching capacity is telling you the consumer is too slow. Monitor queue depth continuously - alert at 70%, page at 85%.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python backpressure</h3>
+  <pre><code class="language-python">from queue import Queue, Full
+import threading
+
+# Drop strategy: keep only the latest item per symbol
+class LatestOnlyQueue:
+    def __init__(self): self._data: dict = {}; self._lock = threading.Lock()
+    def put(self, symbol: str, price: float) -> None:
+        with self._lock: self._data[symbol] = price  # overwrites old price
+    def get_all(self) -> dict:
+        with self._lock: items = dict(self._data); self._data.clear(); return items
+
+# Non-blocking push with drop counting
+feed_queue = Queue(maxsize=1000)
+dropped = 0
+
+def producer():
+    global dropped
+    for tick in simulate_feed():
+        try:
+            feed_queue.put_nowait(tick)
+        except Full:
+            dropped += 1
+
+# Rate limiting at API level (shed)
+import time
+class RateLimitedPricer:
+    def __init__(self, max_rps: int):
+        self._max_rps = max_rps; self._window = []; self._lock = threading.Lock()
+    def price(self, trade):
+        now = time.monotonic()
+        with self._lock:
+            self._window = [t for t in self._window if now - t &lt; 1.0]
+            if len(self._window) &gt;= self._max_rps:
+                raise RuntimeError("Rate limit exceeded - retry later")
+            self._window.append(now)
+        return self._price_impl(trade)</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# backpressure with channels</h3>
+  <pre><code class="language-csharp">using System.Threading.Channels;
+
+// Drop oldest when full
+var channel = Channel.CreateBounded&lt;Tick&gt;(new BoundedChannelOptions(1000) {
+    FullMode = BoundedChannelFullMode.DropOldest
+});
+
+// Drop newest (skip fast producers)
+var channel2 = Channel.CreateBounded&lt;Tick&gt;(new BoundedChannelOptions(1000) {
+    FullMode = BoundedChannelFullMode.DropWrite
+});
+
+// Monitor queue depth
+var metrics = new System.Diagnostics.Metrics.Meter("pricer");
+var queueDepth = metrics.CreateObservableGauge("queue.depth",
+    () => channel.Reader.Count);</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ latest-value cache and drop counting</h3>
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;array&gt;
+#include &lt;optional&gt;
+
+// Latest-value cache: producer overwrites, consumer reads latest
+// No queue needed for market data where only the latest price matters
+template&lt;typename T, std::size_t N&gt;
+class LatestValueCache {
+    struct Slot { std::atomic&lt;uint64_t&gt; seq{0}; T value{}; };
+    std::array&lt;Slot, N&gt; slots_;
+public:
+    void put(std::size_t idx, T val) {
+        auto& s = slots_[idx % N];
+        s.seq.fetch_add(1, std::memory_order_release);
+        s.value = val;
+        s.seq.fetch_add(1, std::memory_order_release);
+    }
+    std::optional&lt;T&gt; get(std::size_t idx) const {
+        auto& s = slots_[idx % N];
+        uint64_t seq1 = s.seq.load(std::memory_order_acquire);
+        if (seq1 & 1) return std::nullopt;   // write in progress
+        T val = s.value;
+        uint64_t seq2 = s.seq.load(std::memory_order_acquire);
+        if (seq1 != seq2) return std::nullopt;  // concurrent write
+        return val;
+    }
+};
+
+// Non-blocking push with drop counter
+std::atomic&lt;uint64_t&gt; dropped_ticks{0};
+
+// In producer:
+if (!queue.push(tick, std::chrono::milliseconds(0))) {
+    dropped_ticks.fetch_add(1, std::memory_order_relaxed);
+}</code></pre>
+  <div class="cpp-note">Monitor your queue depth continuously. At 50% capacity the system is healthy. At 80% investigate. At 95% you are minutes from blocking the producer or running out of memory. Alert at 70%; page at 85%.</div>
+</div>

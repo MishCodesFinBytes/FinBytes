@@ -1,0 +1,118 @@
+---
+layout: cpp-post
+title: "Memory Management - Leaks, Fragmentation, Bloat"
+description: "Valgrind, ASan, Windows memory profiler. Pool allocators for pricing loops."
+date: 2026-01-21
+tags: [defensive, memory, performance]
+permalink: /cpp/memory-leaks/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Three memory problems</h3>
+  <p>Memory <em>leaks</em>: you allocate and never free. The process grows until killed. Memory <em>fragmentation</em>: repeated alloc/free leaves the heap full of unusable gaps. Memory <em>bloat</em>: you use far more memory than needed - large containers, unnecessary copies, objects that live too long.</p>
+  <p>A risk engine that leaks 1KB per trade processing a million trades per day uses 1GB of extra memory by end of day. A market data handler that fragments the heap will eventually fail an allocation mid-session. A pricer that copies large vol surfaces unnecessarily will be slower than it needs to be.</p>
+  <p><strong>Detection tools:</strong> C++: Valgrind (Linux), AddressSanitizer (<code>-fsanitize=address</code>). Python: <code>tracemalloc</code>, <code>memory_profiler</code>. C#: dotMemory, Visual Studio Diagnostic Tools, BenchmarkDotNet <code>[MemoryDiagnoser]</code>.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python memory tracking</h3>
+  <pre><code class="language-python">import tracemalloc
+import sys
+from array import array
+import numpy as np
+
+# Detect leaks with tracemalloc
+tracemalloc.start()
+snapshot1 = tracemalloc.take_snapshot()
+
+trades = [{"id": i, "data": "x" * 1000} for i in range(10_000)]
+
+snapshot2 = tracemalloc.take_snapshot()
+top_stats = snapshot2.compare_to(snapshot1, "lineno")
+for stat in top_stats[:5]:
+    print(stat)
+
+# Circular reference trap
+class Node:
+    def __init__(self, val): self.val = val; self.parent = None
+
+root  = Node(1)
+child = Node(2)
+child.parent = root  # cycle - gc.collect() handles but adds latency
+
+# Memory-efficient containers
+lst = [1.0] * 1_000_000          # 8 bytes/float + 8 bytes pointer = 16 bytes/item
+arr = array("d", [1.0] * 1_000_000)  # 8 bytes/float - no pointer overhead
+npa = np.ones(1_000_000, dtype=np.float64)  # raw C memory - most efficient
+print(sys.getsizeof(lst), sys.getsizeof(arr), npa.nbytes)</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# memory diagnostics</h3>
+  <pre><code class="language-csharp">using System.Buffers;
+
+// BenchmarkDotNet memory diagnoser
+[MemoryDiagnoser]
+public class AllocationBenchmark {
+    [Benchmark]
+    public List&lt;double&gt; WithAllocation() {
+        var list = new List&lt;double&gt;();
+        for (int i = 0; i &lt; 1000; i++) list.Add(i);
+        return list;
+    }
+    [Benchmark]
+    public List&lt;double&gt; WithPreallocation() {
+        var list = new List&lt;double&gt;(capacity: 1000);  // no re-alloc
+        for (int i = 0; i &lt; 1000; i++) list.Add(i);
+        return list;
+    }
+}
+
+// Pool to reduce GC pressure
+byte[] buffer = ArrayPool&lt;byte&gt;.Shared.Rent(4096);
+try { /* use buffer */ }
+finally { ArrayPool&lt;byte&gt;.Shared.Return(buffer); }
+
+// Span for zero-copy slicing
+double[] prices = GetPriceArray();
+Span&lt;double&gt; slice = prices.AsSpan(10, 100);  // no allocation</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ memory tracking and prevention</h3>
+  <pre><code class="language-cpp">// Build with AddressSanitizer
+// g++ -fsanitize=address,leak -fno-omit-frame-pointer -g -O1 pricer.cpp
+// Valgrind: valgrind --leak-check=full ./pricer
+
+// Common leak: raw pointer escape
+void bad_function() {
+    double* prices = new double[1000];  // leak if exception thrown
+    compute(prices);                     // if this throws, prices leaks
+    delete[] prices;
+}
+
+// Fix: RAII
+void good_function() {
+    std::vector&lt;double&gt; prices(1000);  // freed on exit, always
+    compute(prices.data());
+}
+
+// Pool allocator: prevent fragmentation, eliminate heap calls
+#include &lt;array&gt;
+template&lt;typename T, std::size_t N&gt;
+class PoolAllocator {
+    std::array&lt;T, N&gt;    pool_;
+    std::array&lt;bool, N&gt; used_{};
+public:
+    T* allocate() {
+        for (std::size_t i = 0; i &lt; N; ++i)
+            if (!used_[i]) { used_[i] = true; return &pool_[i]; }
+        return nullptr;
+    }
+    void deallocate(T* p) {
+        auto idx = p - pool_.data();
+        if (idx &gt;= 0 && idx &lt; (int)N) used_[idx] = false;
+    }
+};</code></pre>
+  <div class="cpp-note">For a pricing loop creating and destroying many small objects, a pool allocator can outperform the system allocator by 5-10x. Pre-allocate a fixed block at startup; allocation becomes a pointer increment. No heap calls, no fragmentation.</div>
+</div>

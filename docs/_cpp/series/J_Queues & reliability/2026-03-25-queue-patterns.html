@@ -1,0 +1,127 @@
+---
+layout: cpp-post
+title: "Queue Patterns - Bounded, Priority, Delay, Work-Stealing"
+description: "When to use each. Bounded queues for backpressure. Priority queues for order routing."
+date: 2026-03-25
+tags: [queues, reliability, concurrency]
+permalink: /cpp/queue-patterns/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Four queue types, four use cases</h3>
+  <ul>
+    <li><strong>Bounded FIFO:</strong> market data feed to pricer. Bounded provides backpressure when the pricer cannot keep up.</li>
+    <li><strong>Priority queue:</strong> order router. High-urgency cancel/replace jumps the queue ahead of new orders.</li>
+    <li><strong>Delay queue:</strong> retry scheduler. Failed connections retry after an exponentially increasing delay.</li>
+    <li><strong>Work-stealing deque:</strong> parallel batch pricer. Threads steal work from each other when their own queue is empty.</li>
+  </ul>
+  <p><strong>Bounded vs unbounded:</strong> unbounded queues hide backpressure problems - the producer keeps adding work, memory grows without limit, the system eventually OOMs. Bounded queues force the producer to slow down (block), shed load (drop), or signal the caller (return error). Always prefer bounded in production.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python queue types</h3>
+  <pre><code class="language-python">from queue import Queue, PriorityQueue
+import heapq, time
+from dataclasses import dataclass, field
+
+# Bounded FIFO
+market_feed = Queue(maxsize=1024)  # blocks producer when full
+
+def feed_handler():
+    for tick in ticks:
+        try:
+            market_feed.put(tick, timeout=0.1)
+        except Exception:
+            dropped_ticks.increment()
+
+# Priority queue
+@dataclass(order=True)
+class OrderMsg:
+    priority: int                               # lower = higher priority
+    order: object = field(compare=False)
+
+order_queue = PriorityQueue()
+order_queue.put(OrderMsg(priority=1, order=cancel_order))  # high priority
+order_queue.put(OrderMsg(priority=5, order=new_order))
+
+# Delay queue
+@dataclass(order=True)
+class DelayedTask:
+    run_at: float; task: object = field(compare=False)
+
+delay_heap: list = []
+def schedule(task, delay_s: float):
+    heapq.heappush(delay_heap, DelayedTask(time.time() + delay_s, task))
+
+def drain_due():
+    now = time.time()
+    while delay_heap and delay_heap[0].run_at &lt;= now:
+        yield heapq.heappop(delay_heap).task</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# channel and priority queue</h3>
+  <pre><code class="language-csharp">using System.Threading.Channels;
+
+// Bounded channel (preferred over BlockingCollection in modern C#)
+var channel = Channel.CreateBounded&lt;Tick&gt;(new BoundedChannelOptions(1024) {
+    FullMode = BoundedChannelFullMode.Wait,    // block producer
+    // alternatives: DropOldest, DropNewest, DropWrite
+});
+
+await channel.Writer.WriteAsync(tick, cancellationToken);
+await foreach (var tick in channel.Reader.ReadAllAsync(cancellationToken))
+    await ProcessTickAsync(tick);
+
+// Priority queue (C# 6+)
+var pq = new PriorityQueue&lt;Order, int&gt;();
+pq.Enqueue(cancelOrder, 1);  // priority 1 = dequeued first
+pq.Enqueue(newOrder,    5);
+var next = pq.Dequeue();</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ bounded thread-safe queue</h3>
+  <pre><code class="language-cpp">#include &lt;queue&gt;
+#include &lt;mutex&gt;
+#include &lt;condition_variable&gt;
+#include &lt;optional&gt;
+#include &lt;chrono&gt;
+
+template&lt;typename T&gt;
+class BoundedQueue {
+    std::queue&lt;T&gt;           q_;
+    std::mutex              mtx_;
+    std::condition_variable not_full_, not_empty_;
+    std::size_t             capacity_;
+public:
+    explicit BoundedQueue(std::size_t cap) : capacity_(cap) {}
+
+    bool push(T item, std::chrono::milliseconds timeout = std::chrono::seconds(1)) {
+        std::unique_lock lock(mtx_);
+        if (!not_full_.wait_for(lock, timeout, [&]{ return q_.size() &lt; capacity_; }))
+            return false;   // timeout - caller can drop or count
+        q_.push(std::move(item));
+        not_empty_.notify_one();
+        return true;
+    }
+
+    std::optional&lt;T&gt; pop(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
+        std::unique_lock lock(mtx_);
+        if (!not_empty_.wait_for(lock, timeout, [&]{ return !q_.empty(); }))
+            return std::nullopt;
+        T item = std::move(q_.front()); q_.pop();
+        not_full_.notify_one();
+        return item;
+    }
+
+    std::size_t size() const { std::lock_guard l(mtx_); return q_.size(); }
+};
+
+// Priority queue
+#include &lt;vector&gt;
+struct Order { int priority; std::string id; };
+auto cmp = [](const Order& a, const Order& b) { return a.priority &gt; b.priority; };
+std::priority_queue&lt;Order, std::vector&lt;Order&gt;, decltype(cmp)&gt; order_pq(cmp);</code></pre>
+  <div class="cpp-note">For ultra-low-latency use an SPSC (single-producer single-consumer) lock-free queue instead of the mutex-based one above. The SPSC queue is appropriate for the 10-50ns market data hot path; the mutex version is fine for background threads.</div>
+</div>

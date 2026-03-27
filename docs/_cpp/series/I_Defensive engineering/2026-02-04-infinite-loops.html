@@ -1,0 +1,140 @@
+---
+layout: cpp-post
+title: "Infinite Loops and Hangs - Detection and Prevention"
+description: "Watchdog threads, timeouts, progress counters. Detecting deadlocks."
+date: 2026-02-04
+tags: [defensive, concurrency, reliability]
+permalink: /cpp/infinite-loops/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>When code stops making progress</h3>
+  <p>Infinite loops and deadlocks are insidious: the process is running but not producing results. No exception is thrown, no crash occurs. Without monitoring they go undetected until someone notices the system is unresponsive.</p>
+  <p><strong>Common causes:</strong> loop condition that never becomes false, floating-point comparison that never terminates (NaN != NaN always), off-by-one in convergence check, deadlock (two threads each hold a lock the other needs), livelock (threads keep changing state in response to each other but make no progress).</p>
+  <p><strong>Prevention:</strong> always impose an upper bound on iterations. Use timeouts on blocking operations. For numerical algorithms (Newton-Raphson, vol calibration), cap the iteration count. Never rely on convergence alone. Check <code>std::isfinite(x)</code> in convergence loops.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python loop guards and watchdog</h3>
+  <pre><code class="language-python">import signal, time, threading, os
+from contextlib import contextmanager
+
+# Iteration cap for numerical algorithms
+def newton_raphson(f, df, x0: float, tol=1e-8, max_iter=100) -> float:
+    x = x0
+    for i in range(max_iter):
+        fx = f(x)
+        if abs(fx) &lt; tol: return x
+        dfx = df(x)
+        if abs(dfx) &lt; 1e-15: raise ValueError("Zero derivative")
+        x -= fx / dfx
+    raise RuntimeError(f"No convergence after {max_iter} iterations")
+
+# Timeout context manager (Unix only)
+@contextmanager
+def timeout(seconds: float):
+    def handler(signum, frame): raise TimeoutError(f"Timed out after {seconds}s")
+    old = signal.signal(signal.SIGALRM, handler)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try: yield
+    finally: signal.setitimer(signal.ITIMER_REAL, 0); signal.signal(signal.SIGALRM, old)
+
+# Watchdog thread
+class Watchdog:
+    def __init__(self, timeout_s: float):
+        self._timeout = timeout_s
+        self._last    = time.monotonic()
+        threading.Thread(target=self._watch, daemon=True).start()
+
+    def heartbeat(self) -> None: self._last = time.monotonic()
+
+    def _watch(self) -> None:
+        while True:
+            time.sleep(1.0)
+            if time.monotonic() - self._last > self._timeout:
+                print(f"WATCHDOG: no heartbeat - killing")
+                os.kill(os.getpid(), signal.SIGABRT)</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# timeout and watchdog</h3>
+  <pre><code class="language-csharp">// CancellationToken for timeout
+async Task&lt;double&gt; PriceWithTimeout(Trade trade, TimeSpan timeout) {
+    using var cts = new CancellationTokenSource(timeout);
+    try {
+        return await Task.Run(() => PriceExpensive(trade, cts.Token), cts.Token);
+    } catch (OperationCanceledException) {
+        Log.Warning("Pricing timed out for {TradeId}", trade.Id);
+        return double.NaN;
+    }
+}
+
+// Iteration cap
+double NewtonRaphson(Func&lt;double, double&gt; f, Func&lt;double, double&gt; df,
+                     double x0, double tol = 1e-8, int maxIter = 100) {
+    double x = x0;
+    for (int i = 0; i &lt; maxIter; i++) {
+        double fx = f(x);
+        if (Math.Abs(fx) &lt; tol) return x;
+        double dfx = df(x);
+        if (Math.Abs(dfx) &lt; 1e-15) throw new ArithmeticException("Zero derivative");
+        x -= fx / dfx;
+    }
+    throw new ArithmeticException($"No convergence after {maxIter} iterations");
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ watchdog and loop guards</h3>
+  <pre><code class="language-cpp">#include &lt;atomic&gt;
+#include &lt;thread&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;stdexcept&gt;
+#include &lt;string&gt;
+
+// Iteration cap with NaN guard
+double newton_raphson(auto f, auto df, double x0, double tol=1e-8, int max_iter=100) {
+    double x = x0;
+    for (int i = 0; i &lt; max_iter; ++i) {
+        if (!std::isfinite(x)) throw std::runtime_error("NaN/Inf in iteration");
+        double fx  = f(x);
+        if (std::abs(fx) &lt; tol) return x;
+        double dfx = df(x);
+        if (std::abs(dfx) &lt; 1e-15) throw std::runtime_error("zero derivative");
+        x -= fx / dfx;
+    }
+    throw std::runtime_error("no convergence after " + std::to_string(max_iter) + " iterations");
+}
+
+// Watchdog thread
+class Watchdog {
+    std::atomic&lt;int64_t&gt; last_beat_{0};
+    std::atomic&lt;bool&gt;    running_{true};
+    std::thread          watcher_;
+    int64_t              timeout_ns_;
+public:
+    explicit Watchdog(std::chrono::milliseconds timeout) {
+        timeout_ns_ = std::chrono::nanoseconds(timeout).count();
+        heartbeat();
+        watcher_ = std::thread([this] {
+            while (running_.load()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                auto now  = std::chrono::steady_clock::now().time_since_epoch().count();
+                auto last = last_beat_.load(std::memory_order_relaxed);
+                if (now - last > timeout_ns_) { std::cerr &lt;&lt; "WATCHDOG: aborting
+"; std::abort(); }
+            }
+        });
+    }
+    void heartbeat() {
+        last_beat_.store(std::chrono::steady_clock::now().time_since_epoch().count(),
+                         std::memory_order_relaxed);
+    }
+    ~Watchdog() { running_ = false; if (watcher_.joinable()) watcher_.join(); }
+};
+
+Watchdog wd(std::chrono::seconds(10));
+for (auto& trade : trades) { price(trade); wd.heartbeat(); }</code></pre>
+  <div class="cpp-note">NaN causes infinite loops in numerical code. <code>NaN != NaN</code> is always true, so <code>while (abs(x) > tol)</code> loops forever if x becomes NaN. Always add <code>std::isfinite(x)</code> to convergence checks.</div>
+</div>

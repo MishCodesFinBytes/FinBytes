@@ -1,0 +1,83 @@
+---
+layout: page
+title: "Project: Fixed-Income Pricer CLI Tool"
+description: "Command-line bond pricer. CMake, CLI11, JSON input, CSV output."
+date: 2025-10-22
+tags: [project, cpp]
+permalink: /cpp/project-bond-pricer/
+---
+
+<style>
+.project-post h2 {
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #555;
+  margin: 2em 0 0.6em;
+  border-left: 3px solid #c0392b;
+  padding-left: 0.75em;
+}
+.project-post pre {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1em 1.2em;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  border: none;
+}
+.project-post code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.project-note {
+  border-left: 4px solid #e8e8e8;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: #828282;
+  margin: 4px 0 20px;
+}
+</style>
+
+<div class="project-post">
+<p>This is a C++-only project post. No Python or C# comparison — the point is to build something real in C++ from the ground up, applying the techniques from the earlier posts.</p>
+
+<h2>Overview</h2>
+<p>Command-line bond pricer. CMake, CLI11, JSON input, CSV output. Full source on GitHub in the <code>_cpp/projects/g1-bond-pricer-cli</code> folder.</p>
+
+<h2>Project structure</h2>
+<pre><code>g1-bond-pricer-cli/
+├── CMakeLists.txt
+├── src/
+│   ├── main.cpp
+│   └── *.h / *.cpp
+├── tests/
+│   └── test_*.cpp
+└── data/
+    └── sample_input.*</code></pre>
+
+<h2>Building</h2>
+<pre><code class="language-bash">mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+./app --help</code></pre>
+
+<h2>Implementation notes</h2>
+<p>See the inline code comments for design decisions. Key techniques used from previous posts:</p>
+<ul>
+  <li>RAII for resource management</li>
+  <li>STL containers chosen for access pattern (see D1)</li>
+  <li>Catch2 tests for all core logic (see A series)</li>
+  <li>CLI11 for command-line parsing (see C4)</li>
+  <li>nlohmann/json for config (see B4)</li>
+</ul>
+
+<div class="project-note">Full source code for this project is in the linked GitHub repository. This post focuses on the design decisions and lessons learned rather than reproducing the entire codebase.</div>
+
+<h2>Lessons learned</h2>
+<p>Notes from building this — what was harder than expected, what C++ made easy, and what I'd do differently next time. Updated as the project evolves.</p>
+</div>

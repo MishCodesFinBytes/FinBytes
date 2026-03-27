@@ -1,0 +1,133 @@
+---
+layout: page
+title: "Example: Self-Healing Order Management System"
+description: "OMS that detects stale state, reconnects, replays missed fills, reconciles positions."
+date: 2026-05-20
+tags: [example, reliability, oms, healing]
+permalink: /cpp/self-healing-oms/
+---
+<style>
+.ep h2 { font-size:.9rem; font-weight:bold; letter-spacing:.06em; text-transform:uppercase;
+  color:#555; margin:2em 0 .5em; border-left:3px solid #2980b9; padding-left:.75em; }
+.ep pre { background:#1e1e1e; color:#d4d4d4; padding:1em 1.2em; border-radius:4px;
+  overflow-x:auto; font-size:.87rem; line-height:1.6; }
+.ep code { background:none; border:none; padding:0; }
+.ep table { border-collapse:collapse; width:100%; margin:1em 0; font-size:.9rem; }
+.ep th, .ep td { border:1px solid #ddd; padding:8px 12px; text-align:left; }
+.ep th { background:#f5f5f5; font-weight:bold; }
+.warn { border-left:4px solid #e67e22; background:#fdf6e3; padding:7px 14px;
+  font-size:.9rem; color:#666; margin:4px 0 12px; }
+.good { border-left:4px solid #27ae60; background:#f0fdf4; padding:7px 14px;
+  font-size:.9rem; color:#444; margin:4px 0 12px; }
+</style>
+<div class="ep">
+
+<h2>The problem</h2>
+<p>An OMS connects to an exchange. Connections drop. Messages are lost. The process restarts. After any of these events, the OMS's view may be inconsistent with the exchange's. A self-healing OMS detects this automatically and recovers without manual intervention.</p>
+
+<h2>Recovery scenarios</h2>
+<pre><code class="language-python">recovery_scenarios = {
+    "connection_lost": {
+        "detection": "heartbeat timeout or TCP disconnect",
+        "action": "reconnect with backoff, then replay missed fills",
+    },
+    "process_restart": {
+        "detection": "startup",
+        "action": "load last known state from DB, request fill history from exchange",
+    },
+    "sequence_gap": {
+        "detection": "received sequence 1001 after 999 - 1000 is missing",
+        "action": "request retransmission of missing range",
+    },
+    "position_mismatch": {
+        "detection": "OMS position != exchange position in EOD reconciliation",
+        "action": "alert, apply exchange position as authoritative, log discrepancy",
+    },
+}</code></pre>
+
+<h2>Connection lifecycle state machine</h2>
+<pre><code class="language-cpp">enum class ConnState { Disconnected, Connecting, Connected, Active, Recovering, Draining };
+
+class ExchangeConnection {
+    std::atomic&lt;ConnState&gt; state_{ConnState::Disconnected};
+    std::atomic&lt;uint64_t&gt;  last_seq_rx_{0};
+public:
+    void on_message(const Message& msg) {
+        uint64_t expected = last_seq_rx_.load() + 1;
+        if (msg.sequence > expected)
+            request_retransmit(expected, msg.sequence - 1);
+        last_seq_rx_.store(msg.sequence, std::memory_order_relaxed);
+        process_message(msg);
+    }
+    void on_heartbeat_timeout() {
+        state_.store(ConnState::Disconnected, std::memory_order_release);
+        reconnect_with_backoff();
+    }
+    void on_reconnect_success() {
+        state_.store(ConnState::Recovering, std::memory_order_release);
+        request_fill_history(last_seq_rx_.load());
+    }
+};</code></pre>
+
+<h2>Position reconciliation</h2>
+<pre><code class="language-python">from dataclasses import dataclass
+
+@dataclass
+class ReconciliationResult:
+    symbol: str; oms_qty: float; exch_qty: float; diff: float; action: str
+
+def reconcile(oms: dict, exch: dict) -> list[ReconciliationResult]:
+    results = []
+    for sym in set(oms) | set(exch):
+        o = oms.get(sym, 0.0); e = exch.get(sym, 0.0); diff = abs(o - e)
+        if diff &lt; 1e-6:
+            action = "ok"
+        elif diff &lt; 10:
+            oms[sym] = e  # exchange is authoritative for small discrepancies
+            action = f"corrected: {o} -> {e}"
+        else:
+            action = f"ALERT: large discrepancy ({diff:.0f}) - manual review"
+        results.append(ReconciliationResult(sym, o, e, diff, action))
+    return results</code></pre>
+
+<h2>Outbox pattern - guaranteed delivery</h2>
+<pre><code class="language-python">import sqlite3, json, time
+
+class OutboxPublisher:
+    def __init__(self, db_path: str):
+        self._db = sqlite3.connect(db_path)
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS outbox "
+            "(id INTEGER PRIMARY KEY, payload TEXT NOT NULL, "
+            " created_at REAL NOT NULL, acked_at REAL)"
+        )
+
+    def publish(self, payload: dict) -> int:
+        row_id = self._db.execute(
+            "INSERT INTO outbox (payload, created_at) VALUES (?, ?)",
+            (json.dumps(payload), time.time())
+        ).lastrowid
+        self._db.commit()
+        self._send_and_ack(row_id, payload)
+        return row_id
+
+    def _send_and_ack(self, row_id: int, payload: dict) -> None:
+        try:
+            exchange.send(payload)
+            self._db.execute("UPDATE outbox SET acked_at=? WHERE id=?", (time.time(), row_id))
+            self._db.commit()
+        except Exception:
+            pass  # background worker retries unacked messages
+
+    def retry_unacked(self) -> int:
+        rows = self._db.execute(
+            "SELECT id, payload FROM outbox WHERE acked_at IS NULL ORDER BY id"
+        ).fetchall()
+        for row_id, payload_json in rows:
+            self._send_and_ack(row_id, json.loads(payload_json))
+        return len(rows)</code></pre>
+
+<div class="good">Write to the outbox atomically with your state change (same DB transaction). A background poller retries unacknowledged messages. Nothing is lost on crash - even if the process dies between send and ack, the message is retried on restart.</div>
+<div class="warn">Do not implement a self-healing system without comprehensive observability. You need to see current connection state, sequence numbers, reconciliation outcomes, outbox depth. A system that heals silently and logs nothing is harder to trust than one that fails loudly.</div>
+
+</div>

@@ -1,0 +1,181 @@
+---
+layout: cpp-post
+title: "Reading and Writing Excel Files"
+description: "openpyxl vs ClosedXML vs libxlsxwriter. Write a P&L report with formatting."
+date: 2025-06-25
+tags: [practical, file-io, excel]
+permalink: /cpp/excel/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Excel in three languages</h3>
+  <p>Excel is unavoidable in finance — reports, risk summaries, trade blotters. Python has excellent support via openpyxl and xlsxwriter. C# via ClosedXML or EPPlus. C++ via libxlsxwriter (write-only) or OpenXLSX (read/write).</p>
+  <h3>The task</h3>
+  <p>Write a P&L summary report: one sheet per trading day, formatted table with conditional formatting (red/green for negative/positive P&L), column totals, bold headers.</p>
+  <h3>C++ caveat</h3>
+  <p>C++ Excel libraries are notably less capable than Python/C# equivalents. For complex formatting or reading, consider generating CSV and post-processing in Python. For write-only reports, libxlsxwriter is solid.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — openpyxl</h3>
+  <pre><code class="language-python">from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, numbers
+from openpyxl.formatting.rule import ColorScaleRule
+from dataclasses import dataclass
+
+@dataclass
+class Trade:
+    symbol: str
+    qty:    int
+    price:  float
+    pnl:    float
+
+def write_pnl_report(trades: list[Trade], path: str) -> None:
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "P&L Summary"
+
+    # Header row
+    headers = ["Symbol", "Qty", "Price", "P&L"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font      = Font(bold=True, color="FFFFFF")
+        cell.fill      = PatternFill("solid", fgColor="2a7ae2")
+        cell.alignment = Alignment(horizontal="center")
+
+    # Data rows
+    for row, t in enumerate(trades, 2):
+        ws.cell(row=row, column=1, value=t.symbol)
+        ws.cell(row=row, column=2, value=t.qty)
+        ws.cell(row=row, column=3, value=t.price).number_format = "#,##0.00"
+        pnl_cell = ws.cell(row=row, column=4, value=t.pnl)
+        pnl_cell.number_format = "#,##0.00"
+        if t.pnl &lt; 0:
+            pnl_cell.font = Font(color="C00000")
+        else:
+            pnl_cell.font = Font(color="007000")
+
+    # Total row
+    last = len(trades) + 1
+    ws.cell(row=last+1, column=3, value="Total").font = Font(bold=True)
+    ws.cell(row=last+1, column=4, value=f"=SUM(D2:D{last})").font = Font(bold=True)
+
+    # Column widths
+    ws.column_dimensions["A"].width = 12
+    ws.column_dimensions["D"].width = 14
+
+    wb.save(path)
+
+trades = [
+    Trade("AAPL",  100, 150.25,  1_250.0),
+    Trade("MSFT",   50, 300.10, -  430.0),
+    Trade("GOOGL",  20, 140.80,    890.0),
+]
+write_pnl_report(trades, "pnl_report.xlsx")</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — ClosedXML</h3>
+  <pre><code class="language-csharp">// Install: dotnet add package ClosedXML
+using ClosedXML.Excel;
+
+record Trade(string Symbol, int Qty, double Price, double Pnl);
+
+void WritePnlReport(List&lt;Trade&gt; trades, string path) {
+    using var wb = new XLWorkbook();
+    var ws = wb.Worksheets.Add("P&L Summary");
+
+    // Headers
+    string[] headers = { "Symbol", "Qty", "Price", "P&L" };
+    for (int i = 0; i &lt; headers.Length; i++) {
+        var cell = ws.Cell(1, i + 1);
+        cell.Value = headers[i];
+        cell.Style.Font.Bold = true;
+        cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#2a7ae2");
+        cell.Style.Font.FontColor = XLColor.White;
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+    }
+
+    // Data
+    for (int r = 0; r &lt; trades.Count; r++) {
+        var t = trades[r];
+        int row = r + 2;
+        ws.Cell(row, 1).Value = t.Symbol;
+        ws.Cell(row, 2).Value = t.Qty;
+        ws.Cell(row, 3).Value = t.Price;
+        ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.00";
+        var pnlCell = ws.Cell(row, 4);
+        pnlCell.Value = t.Pnl;
+        pnlCell.Style.NumberFormat.Format = "#,##0.00";
+        pnlCell.Style.Font.FontColor = t.Pnl &lt; 0
+            ? XLColor.Red : XLColor.DarkGreen;
+    }
+
+    // Total
+    int last = trades.Count + 1;
+    ws.Cell(last + 1, 4).FormulaA1 = $"=SUM(D2:D{last})";
+    ws.Cell(last + 1, 4).Style.Font.Bold = true;
+
+    ws.Columns().AdjustToContents();
+    wb.SaveAs(path);
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — libxlsxwriter</h3>
+  <pre><code class="language-cpp">// vcpkg install xlsxwriter
+#include "xlsxwriter.h"
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+struct Trade {
+    std::string symbol;
+    int         qty;
+    double      price;
+    double      pnl;
+};
+
+void write_pnl_report(const std::vector&lt;Trade&gt;& trades,
+                      const std::string& path)
+{
+    lxw_workbook*  wb = workbook_new(path.c_str());
+    lxw_worksheet* ws = workbook_add_worksheet(wb, "P&L Summary");
+
+    // Formats
+    lxw_format* header_fmt = workbook_add_format(wb);
+    format_set_bold(header_fmt);
+    format_set_bg_color(header_fmt, 0x2a7ae2);
+    format_set_font_color(header_fmt, LXW_COLOR_WHITE);
+    format_set_align(header_fmt, LXW_ALIGN_CENTER);
+
+    lxw_format* money_fmt = workbook_add_format(wb);
+    format_set_num_format(money_fmt, "#,##0.00");
+
+    lxw_format* neg_fmt = workbook_add_format(wb);
+    format_set_num_format(neg_fmt, "#,##0.00");
+    format_set_font_color(neg_fmt, 0xC00000);
+
+    lxw_format* pos_fmt = workbook_add_format(wb);
+    format_set_num_format(pos_fmt, "#,##0.00");
+    format_set_font_color(pos_fmt, 0x007000);
+
+    // Headers
+    const char* headers[] = {"Symbol", "Qty", "Price", "P&L"};
+    for (int c = 0; c &lt; 4; ++c)
+        worksheet_write_string(ws, 0, c, headers[c], header_fmt);
+
+    // Data
+    for (int r = 0; r &lt; (int)trades.size(); ++r) {
+        const auto& t = trades[r];
+        worksheet_write_string(ws, r+1, 0, t.symbol.c_str(), nullptr);
+        worksheet_write_number(ws, r+1, 1, t.qty,   nullptr);
+        worksheet_write_number(ws, r+1, 2, t.price, money_fmt);
+        worksheet_write_number(ws, r+1, 3, t.pnl,
+            t.pnl &lt; 0 ? neg_fmt : pos_fmt);
+    }
+
+    workbook_close(wb);
+}
+</code></pre>
+  <div class="cpp-note">💡 libxlsxwriter is write-only. For reading Excel in C++, use OpenXLSX or xlnt. For complex reports that need both reading and writing, pybind11 + openpyxl is often the pragmatic choice.</div>
+</div>

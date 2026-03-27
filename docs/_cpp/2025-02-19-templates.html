@@ -1,0 +1,229 @@
+---
+layout: cpp-post
+title: "Templates and Generic Programming"
+description: "Function and class templates, specialisation, how STL containers use them"
+date: 2025-02-19
+tags: [templates, modern-cpp, foundations]
+permalink: /cpp/templates/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Write once, compile for any type</h3>
+  <p>Templates are C++'s mechanism for generic programming — write code once, have the compiler generate type-specific versions automatically. <code>std::vector&lt;double&gt;</code> and <code>std::vector&lt;int&gt;</code> are both generated from the same template.</p>
+
+  <h3>Compile-time, not runtime</h3>
+  <p>This is the key difference from Python generics (type hints, runtime duck typing) and C# generics (runtime type parameter, JIT specialisation). C++ templates are resolved entirely at compile time — the compiler generates separate machine code for each type you use. Zero runtime overhead, but longer compile times.</p>
+
+  <h3>Function templates</h3>
+  <p>Write a function that works for any type satisfying certain operations. The compiler instantiates a version for each type it's called with.</p>
+
+  <h3>Class templates</h3>
+  <p>Write a class parameterised by one or more types. <code>std::vector</code>, <code>std::map</code>, <code>std::unique_ptr</code> are all class templates.</p>
+
+  <h3>Template specialisation</h3>
+  <p>Provide a custom implementation for a specific type. Useful for optimising hot paths — e.g. a special version of your pricer for <code>float</code> vs <code>double</code>.</p>
+
+  <h3>Concepts (C++20)</h3>
+  <p>Named constraints on template parameters. Instead of a cryptic error when the wrong type is passed, you get a clear message at the call site. The modern replacement for SFINAE.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — duck typing and type hints</h3>
+  <p>Python is dynamically typed — any function works with any type that has the right methods. Type hints are documentation for the type checker, not enforced at runtime.</p>
+
+  <pre><code class="language-python">from typing import TypeVar, Generic
+
+# Works for any type with + and / operators
+def mean(values):
+    return sum(values) / len(values)
+
+print(mean([1.0, 2.0, 3.0]))  # 2.0
+print(mean([1, 2, 3]))         # 2.0 — works for int too
+
+# Type hints for documentation
+T = TypeVar('T', int, float)
+
+def mean_typed(values: list[T]) -> float:
+    return sum(values) / len(values)</code></pre>
+
+  <h3>Generic class with TypeVar</h3>
+  <pre><code class="language-python">from typing import Generic, TypeVar
+
+T = TypeVar('T')
+
+class Stack(Generic[T]):
+    def __init__(self) -> None:
+        self._items: list[T] = []
+
+    def push(self, item: T) -> None:
+        self._items.append(item)
+
+    def pop(self) -> T:
+        return self._items.pop()
+
+    def peek(self) -> T:
+        return self._items[-1]
+
+s: Stack[float] = Stack()
+s.push(1.0)
+s.push(2.0)
+print(s.pop())  # 2.0</code></pre>
+
+  <div class="cpp-note">Python generics are purely a type-checking tool. The runtime doesn't specialise — a <code>Stack[float]</code> and <code>Stack[int]</code> are the same class at runtime. C++ generates completely separate machine code for each instantiation.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# generics — runtime type parameters</h3>
+  <p>C# generics are reified — the type parameter exists at runtime. <code>List&lt;double&gt;</code> and <code>List&lt;int&gt;</code> are distinct types at runtime, but value types are specialised by the JIT while reference types share one compiled form.</p>
+
+  <pre><code class="language-csharp">// Generic function
+static T Max&lt;T&gt;(T a, T b) where T : IComparable&lt;T&gt;
+    =&gt; a.CompareTo(b) &gt;= 0 ? a : b;
+
+Console.WriteLine(Max(1.0, 2.0));   // 2.0
+Console.WriteLine(Max("a", "b"));   // b
+
+// Generic class
+public class Stack&lt;T&gt; {
+    private readonly List&lt;T&gt; _items = new();
+    public void Push(T item) =&gt; _items.Add(item);
+    public T    Pop()        =&gt; _items[^1]; // also removes
+    public T    Peek()       =&gt; _items[^1];
+    public int  Count        =&gt; _items.Count;
+}
+
+var s = new Stack&lt;double&gt;();
+s.Push(1.0);
+s.Push(2.0);</code></pre>
+
+  <div class="cpp-note">C# constraints (<code>where T : IComparable&lt;T&gt;</code>) are like C++20 concepts — they restrict what types can be used and produce readable errors at the call site.</div>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ templates</h3>
+
+  <h4>Function template</h4>
+  <pre><code class="language-cpp">#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+
+// Works for any numeric type
+template&lt;typename T&gt;
+T mean(const std::vector&lt;T&gt;&amp; values) {
+    if (values.empty()) return T{};
+    return std::accumulate(values.begin(), values.end(), T{}) / values.size();
+}
+
+int main() {
+    std::vector&lt;double&gt; d = {1.0, 2.0, 3.0};
+    std::vector&lt;float&gt;  f = {1.0f, 2.0f, 3.0f};
+
+    std::cout &lt;&lt; mean(d) &lt;&lt; "\n";  // compiler instantiates mean&lt;double&gt;
+    std::cout &lt;&lt; mean(f) &lt;&lt; "\n";  // compiler instantiates mean&lt;float&gt;
+    return 0;
+}</code></pre>
+
+  <h4>Class template</h4>
+  <pre><code class="language-cpp">#include &lt;stdexcept&gt;
+#include &lt;vector&gt;
+
+template&lt;typename T&gt;
+class Stack {
+public:
+    void push(const T&amp; val) { data_.push_back(val); }
+    void push(T&amp;&amp; val)      { data_.push_back(std::move(val)); }
+
+    T pop() {
+        if (empty()) throw std::underflow_error("empty stack");
+        T val = std::move(data_.back());
+        data_.pop_back();
+        return val;
+    }
+
+    const T&amp; peek() const {
+        if (empty()) throw std::underflow_error("empty stack");
+        return data_.back();
+    }
+
+    bool        empty() const { return data_.empty(); }
+    std::size_t size()  const { return data_.size();  }
+
+private:
+    std::vector&lt;T&gt; data_;
+};
+
+// Usage
+Stack&lt;double&gt; prices;
+prices.push(100.5);
+prices.push(101.0);
+std::cout &lt;&lt; prices.pop() &lt;&lt; "\n";  // 101.0</code></pre>
+
+  <h4>Template specialisation</h4>
+  <pre><code class="language-cpp">#include &lt;cmath&gt;
+
+// General template
+template&lt;typename T&gt;
+T square_root(T x) {
+    return static_cast&lt;T&gt;(std::sqrt(static_cast&lt;double&gt;(x)));
+}
+
+// Full specialisation for float — use sqrtf directly
+template&lt;&gt;
+float square_root&lt;float&gt;(float x) {
+    return std::sqrtf(x);
+}
+
+// Now square_root&lt;float&gt; calls sqrtf, square_root&lt;double&gt; calls sqrt</code></pre>
+
+  <h4>C++20 Concepts — readable constraints</h4>
+  <pre><code class="language-cpp">#include &lt;concepts&gt;
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+
+// Constraint: T must support arithmetic operations
+template&lt;typename T&gt;
+concept Numeric = std::is_arithmetic_v&lt;T&gt;;
+
+template&lt;Numeric T&gt;
+T mean(const std::vector&lt;T&gt;&amp; v) {
+    return std::accumulate(v.begin(), v.end(), T{}) / v.size();
+}
+
+// mean&lt;std::string&gt; now gives a clear error at the call site:
+// "constraint 'Numeric' not satisfied"
+// Instead of a wall of template instantiation errors</code></pre>
+
+  <div class="cpp-note">💡 Before C++20, you'd use SFINAE (<code>std::enable_if</code>) to constrain templates — cryptic and verbose. Concepts are the modern, readable replacement. Use them in all new code targeting C++20 or later.</div>
+
+  <h4>Non-type template parameters — compile-time constants</h4>
+  <pre><code class="language-cpp">#include &lt;array&gt;
+#include &lt;numeric&gt;
+
+// N is a compile-time constant — no dynamic allocation
+template&lt;typename T, std::size_t N&gt;
+class RollingWindow {
+public:
+    void push(T val) {
+        buf_[head_] = val;
+        head_ = (head_ + 1) % N;
+        if (count_ &lt; N) ++count_;
+    }
+
+    T mean() const {
+        T sum = std::accumulate(buf_.begin(), buf_.begin() + count_, T{});
+        return sum / count_;
+    }
+
+    std::size_t size() const { return count_; }
+
+private:
+    std::array&lt;T, N&gt; buf_{};
+    std::size_t head_  = 0;
+    std::size_t count_ = 0;
+};
+
+// Instantiate a 20-period rolling window — all on the stack
+RollingWindow&lt;double, 20&gt; ma20;
+for (double p : {100.0, 101.0, 99.5, 102.0})
+    ma20.push(p);</code></pre>
+</div>

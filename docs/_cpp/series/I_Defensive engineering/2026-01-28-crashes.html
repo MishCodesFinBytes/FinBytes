@@ -1,0 +1,145 @@
+---
+layout: cpp-post
+title: "Crashes - Null Deref, Stack Overflow, Out-of-Memory"
+description: "Signal handlers, structured exception handling, post-mortem debugging."
+date: 2026-01-28
+tags: [defensive, crashes, debugging]
+permalink: /cpp/crashes/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Crashes in production are expensive</h3>
+  <p>A crashed pricing server during market hours means missed trades, manual intervention, and potential regulatory exposure.</p>
+  <p><strong>Common crash causes:</strong></p>
+  <ul>
+    <li>Null/invalid pointer dereference - SIGSEGV on Linux, access violation on Windows</li>
+    <li>Stack overflow - infinite recursion, or too much stack-allocated data</li>
+    <li>Out-of-memory - allocation fails; in C++ this throws <code>std::bad_alloc</code></li>
+    <li>Integer divide by zero - a hardware exception (float just gives inf/nan)</li>
+    <li>Abort - <code>assert()</code> failure, unhandled exception</li>
+  </ul>
+  <p><strong>Post-mortem debugging:</strong> When a crash happens in production, a core dump (Linux) or minidump (Windows) captures the process state at the moment of crash. Load with <code>gdb ./pricer core</code> to inspect stack traces and variable values without reproducing the issue.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python crash handling</h3>
+  <pre><code class="language-python">import sys, traceback, logging, faulthandler, signal
+from contextlib import contextmanager
+
+# Enable fault handler - prints stack trace on SIGSEGV
+faulthandler.enable()
+
+# Global exception handler
+def global_exception_handler(exc_type, exc_value, exc_traceback):
+    logging.critical("Unhandled exception",
+        exc_info=(exc_type, exc_value, exc_traceback))
+    sys.__excepthook__(exc_type, exc_value, exc_traceback)
+sys.excepthook = global_exception_handler
+
+# Guard against None in hot path
+from typing import Optional
+def safe_price(pricer, trade) -> Optional[float]:
+    if pricer is None or trade is None:
+        logging.error(f"Null argument: pricer={pricer} trade={trade}")
+        return None
+    try:
+        return pricer.price(trade)
+    except Exception as e:
+        logging.error(f"Pricing failed for {trade}: {e}", exc_info=True)
+        return None
+
+# Timeout context manager
+@contextmanager
+def timeout(seconds: float):
+    def handler(signum, frame): raise TimeoutError(f"Timed out after {seconds}s")
+    old = signal.signal(signal.SIGALRM, handler)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try: yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, old)
+
+with timeout(5.0):
+    result = price_exotic_option(trade)</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# crash handling</h3>
+  <pre><code class="language-csharp">// Unhandled exception handlers
+AppDomain.CurrentDomain.UnhandledException += (_, args) => {
+    var ex = (Exception)args.ExceptionObject;
+    Log.Fatal(ex, "Unhandled exception - terminating");
+    Log.CloseAndFlush();
+};
+
+TaskScheduler.UnobservedTaskException += (_, args) => {
+    Log.Error(args.Exception, "Unobserved task exception");
+    args.SetObserved();
+};
+
+// Nullable reference types (enable in .csproj)
+// &lt;Nullable&gt;enable&lt;/Nullable&gt;
+double? TryPrice(IPricer? pricer, Trade? trade) {
+    if (pricer is null || trade is null) return null;
+    try { return pricer.Price(trade); }
+    catch (Exception ex) {
+        Log.Error(ex, "Pricing failed for {TradeId}", trade.Id);
+        return null;
+    }
+}
+
+// Iterative instead of recursive to avoid stack overflow
+void IterativeProcess(int n) {
+    var stack = new Stack&lt;int&gt;();
+    stack.Push(n);
+    while (stack.Count > 0) {
+        var item = stack.Pop();
+        if (item &lt;= 0) continue;
+        stack.Push(item - 1);
+    }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ crash handling</h3>
+  <pre><code class="language-cpp">#include &lt;csignal&gt;
+#include &lt;cstdlib&gt;
+#include &lt;execinfo.h&gt;  // Linux only
+#include &lt;new&gt;
+
+// Signal handler for SIGSEGV / SIGABRT
+void crash_handler(int sig) {
+    void* bt[64];
+    int   n = backtrace(bt, 64);
+    char** syms = backtrace_symbols(bt, n);
+    for (int i = 0; i &lt; n; ++i) fprintf(stderr, "  %s
+", syms[i]);
+    free(syms);
+    signal(sig, SIG_DFL); raise(sig);  // re-raise to generate core dump
+}
+
+// Custom new handler - called when malloc fails
+void out_of_memory_handler() {
+    fprintf(stderr, "FATAL: out of memory
+");
+    std::abort();
+}
+
+int main() {
+    signal(SIGSEGV, crash_handler);
+    signal(SIGABRT, crash_handler);
+    std::set_new_handler(out_of_memory_handler);
+
+    // Safe null check
+    double* ptr = nullptr;
+    if (ptr == nullptr) throw std::runtime_error("null pointer");
+
+    // bad_alloc handling
+    try {
+        auto huge = std::make_unique&lt;double[]&gt;(1'000'000'000'000ULL);
+    } catch (const std::bad_alloc& e) {
+        // log, degrade, reject new work
+    }
+}</code></pre>
+  <div class="cpp-note">Enable core dumps in production: <code>ulimit -c unlimited</code> on Linux. When the process crashes it writes a core file you can load with <code>gdb ./pricer core</code> to inspect the stack and variable values at the moment of crash.</div>
+</div>

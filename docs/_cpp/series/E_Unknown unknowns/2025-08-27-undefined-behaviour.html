@@ -1,0 +1,176 @@
+---
+layout: cpp-post
+title: "Undefined Behaviour — The Silent Killer"
+description: "Signed overflow, null deref, use-after-free, data races. UBSan and ASan."
+date: 2025-08-27
+tags: [cpp, undefined-behaviour, safety]
+permalink: /cpp/undefined-behaviour/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>What undefined behaviour actually means</h3>
+  <p>In Python and C#, wrong code throws an exception. In C++, undefined behaviour (UB) means the C++ standard places <em>no requirement</em> on what the program does. It might crash, produce wrong answers, appear to work, corrupt memory silently, or behave differently between debug and release builds. The compiler is free to assume UB never occurs — and optimise accordingly.</p>
+
+  <h3>The most common sources</h3>
+  <ul>
+    <li>Signed integer overflow (unlike unsigned, which wraps)</li>
+    <li>Null pointer dereference</li>
+    <li>Out-of-bounds array access</li>
+    <li>Use-after-free (accessing memory after it's been deleted)</li>
+    <li>Data races (two threads, shared memory, at least one write, no sync)</li>
+    <li>Uninitialized variables</li>
+  </ul>
+
+  <h3>How to find it</h3>
+  <p>Sanitisers are your best friend. Enable them during development:</p>
+  <ul>
+    <li><code>-fsanitize=undefined</code> — catches UB at runtime (UBSan)</li>
+    <li><code>-fsanitize=address</code> — catches memory errors (ASan)</li>
+    <li><code>-fsanitize=thread</code> — catches data races (TSan)</li>
+  </ul>
+  <p>These add ~2x overhead — use in tests, not in production builds.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — exceptions, not silent corruption</h3>
+  <pre><code class="language-python"># Python raises exceptions for most "undefined" operations
+
+# Integer overflow: Python ints are arbitrary precision
+x = 2**63        # works fine, no overflow
+print(x)         # 9223372036854775808
+
+# Index out of bounds: IndexError
+lst = [1, 2, 3]
+try:
+    val = lst[10]
+except IndexError as e:
+    print(f"Caught: {e}")  # list index out of range
+
+# None dereference: AttributeError
+obj = None
+try:
+    obj.method()
+except AttributeError as e:
+    print(f"Caught: {e}")
+
+# Use after "free": Python GC handles it
+x = [1, 2, 3]
+y = x          # reference, not copy
+del x          # x deleted, but y still holds a reference
+print(y)       # [1, 2, 3] — still valid</code></pre>
+  <div class="cpp-note">Python's safety comes at a cost — every operation has type checking, bounds checking, and reference counting overhead. C++ UB is the price you pay for skipping all of that.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — checked arithmetic and managed memory</h3>
+  <pre><code class="language-csharp">// Integer overflow: wraps silently by default
+int x = int.MaxValue;
+int y = x + 1;
+Console.WriteLine(y);  // -2147483648 — silent wrap!
+
+// Use checked to make overflow throw
+try {
+    checked {
+        int z = int.MaxValue + 1;  // OverflowException
+    }
+} catch (OverflowException e) {
+    Console.WriteLine($"Caught: {e.Message}");
+}
+
+// Array bounds: IndexOutOfRangeException
+int[] arr = { 1, 2, 3 };
+try {
+    var v = arr[10];
+} catch (IndexOutOfRangeException e) {
+    Console.WriteLine($"Caught: {e.Message}");
+}
+
+// Null: NullReferenceException (or use null-safety operators)
+string? s = null;
+Console.WriteLine(s?.Length);    // null (safe navigation)
+Console.WriteLine(s ?? "empty"); // "empty" (null coalescing)</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — UB examples and how to catch them</h3>
+
+  <h4>Signed integer overflow (UB)</h4>
+  <pre><code class="language-cpp">#include &lt;climits&gt;
+#include &lt;iostream&gt;
+
+int main() {
+    int x = INT_MAX;
+    int y = x + 1;  // UNDEFINED BEHAVIOUR
+    // In optimised builds, the compiler may assume this never happens
+    // and eliminate entire code paths that "can't" execute
+
+    // Safe: use unsigned (wraps defined) or check first
+    if (x == INT_MAX) {
+        std::cout &lt;&lt; "would overflow
+";
+    } else {
+        int y2 = x + 1;
+        std::cout &lt;&lt; y2 &lt;&lt; "
+";
+    }
+    return 0;
+}</code></pre>
+
+  <h4>Out-of-bounds access (UB)</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+
+int main() {
+    std::vector&lt;double&gt; v = {1.0, 2.0, 3.0};
+
+    // UB — no bounds check in operator[]
+    double bad = v[10];  // reads garbage memory, may crash, may not
+
+    // Safe — throws std::out_of_range
+    double safe = v.at(10);  // always checks
+
+    // Safe — check first
+    if (10 &lt; v.size())
+        double ok = v[10];
+
+    return 0;
+}</code></pre>
+
+  <h4>Use-after-free (UB)</h4>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;iostream&gt;
+
+int main() {
+    // Raw pointer — easy to get wrong
+    int* p = new int(42);
+    delete p;
+    // std::cout &lt;&lt; *p;  // UB — use after free
+
+    // Smart pointer — safe
+    auto sp = std::make_unique&lt;int&gt;(42);
+    std::cout &lt;&lt; *sp &lt;&lt; "
+";  // 42
+    sp.reset();  // freed
+    // std::cout &lt;&lt; *sp;  // would throw/crash — sp is null
+    if (sp) std::cout &lt;&lt; *sp &lt;&lt; "
+";  // safe check
+
+    return 0;
+}</code></pre>
+
+  <h4>Enabling sanitisers (CMakeLists.txt)</h4>
+  <pre><code class="language-cmake">option(ENABLE_SANITIZERS "Enable UBSan and ASan" OFF)
+
+if(ENABLE_SANITIZERS)
+    target_compile_options(myapp PRIVATE
+        -fsanitize=address,undefined
+        -fno-omit-frame-pointer
+    )
+    target_link_options(myapp PRIVATE
+        -fsanitize=address,undefined
+    )
+endif()
+
+# Build with: cmake -DENABLE_SANITIZERS=ON ..</code></pre>
+
+  <div class="cpp-note">💡 Always run your test suite with sanitisers enabled. UB that "works" in debug mode due to coincidental memory layout will bite you in production with optimisations enabled. ASan + UBSan together catch the vast majority of memory and arithmetic bugs.</div>
+</div>

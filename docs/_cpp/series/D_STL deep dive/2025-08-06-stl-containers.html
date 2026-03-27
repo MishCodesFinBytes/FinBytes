@@ -1,0 +1,156 @@
+---
+layout: cpp-post
+title: "STL Containers — Which One, When"
+description: "vector, deque, list, set, map, unordered_map, array, span. Decision guide."
+date: 2025-08-06
+tags: [stl, data-structures, cpp]
+permalink: /cpp/stl-containers/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The STL container zoo</h3>
+  <p>C++ ships with 14+ container types. Python has 4 (list, dict, set, tuple). Knowing which C++ container to reach for — and why — is one of the first real C++ skills.</p>
+
+  <h3>The decision in one sentence</h3>
+  <p>Default to <code>std::vector</code>. Switch to something else only when you have a measured reason.</p>
+
+  <h3>Quick reference</h3>
+  <ul>
+    <li><code>std::vector&lt;T&gt;</code> — dynamic array. O(1) random access, O(1) amortised push_back. Use for almost everything.</li>
+    <li><code>std::array&lt;T,N&gt;</code> — fixed-size array, stack allocated. Use when size is compile-time constant.</li>
+    <li><code>std::deque&lt;T&gt;</code> — double-ended queue. O(1) push_front and push_back. Use for sliding windows.</li>
+    <li><code>std::list&lt;T&gt;</code> — doubly linked list. O(1) insert/erase anywhere. Rarely worth it — poor cache performance.</li>
+    <li><code>std::map&lt;K,V&gt;</code> — sorted by key, O(log n). Use for order books (need sorted iteration).</li>
+    <li><code>std::unordered_map&lt;K,V&gt;</code> — hash map, O(1) average. Use for fast lookup by key.</li>
+    <li><code>std::set&lt;T&gt;</code> / <code>std::unordered_set&lt;T&gt;</code> — unique elements, same tradeoffs as map.</li>
+    <li><code>std::span&lt;T&gt;</code> — non-owning view into contiguous data. Use for function parameters.</li>
+  </ul>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python container equivalents</h3>
+  <pre><code class="language-python">from collections import deque, defaultdict, OrderedDict
+import heapq
+
+# list → std::vector (dynamic array)
+prices = [100.0, 101.5, 99.8]
+prices.append(102.0)
+prices.insert(0, 99.0)  # O(n) — expensive
+
+# dict → std::unordered_map (hash map)
+positions = {"AAPL": 100.0, "MSFT": 200.0}
+positions["GOOGL"] = 50.0
+
+# set → std::unordered_set
+symbols = {"AAPL", "MSFT", "GOOGL"}
+symbols.add("TSLA")
+
+# deque → std::deque
+window = deque(maxlen=20)  # circular buffer
+for p in prices:
+    window.append(p)
+
+# heapq → std::priority_queue
+heap = []
+heapq.heappush(heap, (100.0, "AAPL"))
+best = heapq.heappop(heap)
+
+# OrderedDict → std::map (sorted)
+book = OrderedDict(sorted({"100.5": 1000, "99.5": 500}.items()))</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# container equivalents</h3>
+  <pre><code class="language-csharp">using System.Collections.Generic;
+
+// List&lt;T&gt; → std::vector
+var prices = new List&lt;double&gt; { 100.0, 101.5, 99.8 };
+prices.Add(102.0);
+
+// T[] → std::array
+double[] fixedPrices = new double[256];
+
+// Dictionary&lt;K,V&gt; → std::unordered_map
+var positions = new Dictionary&lt;string, double&gt;();
+positions["AAPL"] = 100.0;
+
+// SortedDictionary&lt;K,V&gt; → std::map
+var orderBook = new SortedDictionary&lt;double, int&gt;();
+orderBook[100.5] = 1000;
+
+// HashSet&lt;T&gt; → std::unordered_set
+var symbols = new HashSet&lt;string&gt; { "AAPL", "MSFT" };
+
+// Queue&lt;T&gt; → std::queue
+var tickQueue = new Queue&lt;double&gt;();
+tickQueue.Enqueue(100.0);
+var next = tickQueue.Dequeue();
+
+// PriorityQueue&lt;T,P&gt; → std::priority_queue
+var pq = new PriorityQueue&lt;string, double&gt;();
+pq.Enqueue("AAPL", -100.5);  // negate for max-heap
+var (sym, pri) = (pq.Peek(), 0.0);</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ STL containers in practice</h3>
+
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;array&gt;
+#include &lt;deque&gt;
+#include &lt;map&gt;
+#include &lt;unordered_map&gt;
+#include &lt;set&gt;
+#include &lt;queue&gt;
+#include &lt;span&gt;
+#include &lt;string&gt;
+#include &lt;iostream&gt;
+
+// vector — default choice
+std::vector&lt;double&gt; prices = {100.0, 101.5, 99.8};
+prices.push_back(102.0);
+prices.reserve(1000);  // pre-allocate
+
+// array — compile-time size, stack allocated
+std::array&lt;double, 256&gt; buffer{};
+buffer.fill(0.0);
+
+// span — non-owning view, function parameter
+double mean(std::span&lt;const double&gt; v) {
+    return std::reduce(v.begin(), v.end()) / v.size();
+}
+// Works with vector, array, C-array — no copies
+double m = mean(prices);
+
+// deque — O(1) both ends
+std::deque&lt;double&gt; window;
+for (double p : prices) {
+    window.push_back(p);
+    if (window.size() &gt; 20) window.pop_front();
+}
+
+// map — sorted by key (use for order book)
+std::map&lt;double, int, std::greater&lt;double&gt;&gt; bids;  // descending price
+bids[100.5] = 1000;
+bids[99.5]  = 500;
+auto best_bid = bids.begin();  // highest price first
+
+// unordered_map — O(1) lookup
+std::unordered_map&lt;std::string, double&gt; positions;
+positions.reserve(100);
+positions["AAPL"] = 100.0;
+auto it = positions.find("AAPL");
+if (it != positions.end()) std::cout &lt;&lt; it-&gt;second &lt;&lt; "
+";
+
+// priority_queue — max heap by default
+std::priority_queue&lt;std::pair&lt;double,std::string&gt;&gt; pq;
+pq.push({100.5, "AAPL"});
+auto [price, sym] = pq.top();
+
+// set — unique sorted elements
+std::set&lt;std::string&gt; liquid_symbols = {"AAPL", "MSFT", "GOOGL"};
+bool is_liquid = liquid_symbols.count("AAPL") &gt; 0;</code></pre>
+
+  <div class="cpp-note">💡 Use <code>std::span&lt;const T&gt;</code> for function parameters that just need to read a sequence — it accepts vector, array, raw pointer+size, and std::array without any copies or template instantiation bloat. It's the C++ equivalent of Python's duck typing for sequences.</div>
+</div>

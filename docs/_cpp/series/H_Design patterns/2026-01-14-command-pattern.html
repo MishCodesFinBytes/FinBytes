@@ -1,0 +1,148 @@
+---
+layout: cpp-post
+title: "Command Pattern and Undo/Redo"
+description: "Trade amendment history, position adjustments. Command queue as audit trail."
+date: 2026-01-14
+tags: [design-patterns, command, audit]
+permalink: /cpp/command-pattern/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Encapsulating operations as objects</h3>
+  <p>The Command pattern encapsulates a request as an object. This gives you undo/redo (keep the command, reverse it later), queuing (store commands for later execution), logging (every operation is an object you can serialise), and replay (reconstruct state from scratch by replaying commands).</p>
+  <p>In an OMS: every change to a trade - quantity adjustment, price correction, cancel - is a Command. The command history is the audit trail. Undo reverses the last change. Replay reconstructs the position from scratch.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python command pattern</h3>
+  <pre><code class="language-python">from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class Position:
+    symbol: str; quantity: float = 0.0; avg_price: float = 0.0
+
+class Command(ABC):
+    @abstractmethod
+    def execute(self) -> None: ...
+    @abstractmethod
+    def undo(self) -> None: ...
+    @abstractmethod
+    def description(self) -> str: ...
+
+class AdjustQuantity(Command):
+    def __init__(self, position: Position, delta: float):
+        self._pos = position; self._delta = delta
+    def execute(self) -> None: self._pos.quantity += self._delta
+    def undo(self) -> None:    self._pos.quantity -= self._delta
+    def description(self) -> str: return f"Adjust {self._pos.symbol} qty by {self._delta:+.0f}"
+
+class CorrectPrice(Command):
+    def __init__(self, position: Position, new_price: float):
+        self._pos = position; self._new = new_price; self._old = position.avg_price
+    def execute(self) -> None: self._pos.avg_price = self._new
+    def undo(self) -> None:    self._pos.avg_price = self._old
+    def description(self) -> str: return f"Correct {self._pos.symbol} price {self._old:.4f}->{self._new:.4f}"
+
+class CommandHistory:
+    def __init__(self): self._done: list[Command] = []; self._undone: list[Command] = []
+    def execute(self, cmd: Command) -> None:
+        cmd.execute(); self._done.append(cmd); self._undone.clear()
+    def undo(self) -> Optional[str]:
+        if not self._done: return None
+        cmd = self._done.pop(); cmd.undo(); self._undone.append(cmd)
+        return f"Undone: {cmd.description()}"
+    def audit_trail(self) -> list[str]:
+        return [c.description() for c in self._done]
+
+pos     = Position("AAPL", 0, 150.0)
+history = CommandHistory()
+history.execute(AdjustQuantity(pos, 100))
+history.execute(CorrectPrice(pos, 151.25))
+print(history.audit_trail())
+history.undo()
+print(pos.avg_price)  # 150.0</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# command pattern</h3>
+  <pre><code class="language-csharp">public class Position { public string Symbol = ""; public double Qty; public double AvgPrice; }
+
+public interface ICommand {
+    void Execute(); void Undo(); string Description { get; }
+}
+
+public class AdjustQty(Position pos, double delta) : ICommand {
+    public void Execute() => pos.Qty += delta;
+    public void Undo()    => pos.Qty -= delta;
+    public string Description => $"Adjust {pos.Symbol} qty by {delta:+0;-0}";
+}
+
+public class CommandHistory {
+    private readonly Stack&lt;ICommand&gt; _done   = new();
+    private readonly Stack&lt;ICommand&gt; _undone = new();
+    public void Execute(ICommand cmd) { cmd.Execute(); _done.Push(cmd); _undone.Clear(); }
+    public void Undo() { if (_done.TryPop(out var cmd)) { cmd.Undo(); _undone.Push(cmd); } }
+    public void Redo() { if (_undone.TryPop(out var cmd)) { cmd.Execute(); _done.Push(cmd); } }
+    public IEnumerable&lt;string&gt; AuditTrail() => _done.Select(c => c.Description);
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ command pattern</h3>
+  <pre><code class="language-cpp">#include &lt;memory&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+struct Position { std::string symbol; double quantity = 0.0; double avg_price = 0.0; };
+
+struct ICommand {
+    virtual ~ICommand() = default;
+    virtual void        execute()           = 0;
+    virtual void        undo()              = 0;
+    virtual std::string description() const = 0;
+};
+
+class AdjustQuantity : public ICommand {
+    Position& pos_; double delta_;
+public:
+    AdjustQuantity(Position& pos, double delta) : pos_(pos), delta_(delta) {}
+    void execute() override { pos_.quantity += delta_; }
+    void undo()    override { pos_.quantity -= delta_; }
+    std::string description() const override {
+        return "Adjust " + pos_.symbol + " qty by " + std::to_string((int)delta_);
+    }
+};
+
+class CorrectPrice : public ICommand {
+    Position& pos_; double new_price_, old_price_;
+public:
+    CorrectPrice(Position& pos, double np)
+        : pos_(pos), new_price_(np), old_price_(pos.avg_price) {}
+    void execute() override { pos_.avg_price = new_price_; }
+    void undo()    override { pos_.avg_price = old_price_; }
+    std::string description() const override {
+        return "Correct " + pos_.symbol + " price";
+    }
+};
+
+class CommandHistory {
+    std::vector&lt;std::unique_ptr&lt;ICommand&gt;&gt; done_, undone_;
+public:
+    void execute(std::unique_ptr&lt;ICommand&gt; cmd) {
+        cmd->execute(); done_.push_back(std::move(cmd)); undone_.clear();
+    }
+    void undo() {
+        if (done_.empty()) return;
+        done_.back()->undo();
+        undone_.push_back(std::move(done_.back())); done_.pop_back();
+    }
+    std::vector&lt;std::string&gt; audit_trail() const {
+        std::vector&lt;std::string&gt; log;
+        for (const auto& c : done_) log.push_back(c->description());
+        return log;
+    }
+};</code></pre>
+  <div class="cpp-note">The Command pattern's audit trail property makes it ideal for financial systems where every change must be traceable. Serialise commands to a database as they execute and you have a complete, replayable history of every position change - invaluable for reconciliation and regulatory reporting.</div>
+</div>

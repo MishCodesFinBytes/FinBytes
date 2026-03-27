@@ -1,0 +1,194 @@
+---
+layout: cpp-post
+title: "Move Semantics — Stealing Resources Efficiently"
+description: "lvalue vs rvalue, std::move, move constructors"
+date: 2025-01-29
+tags: [memory, modern-cpp, performance]
+permalink: /cpp/move-semantics/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The problem move semantics solves</h3>
+  <p>Imagine you have a large price series — a vector of a million doubles. You want to return it from a function. Without move semantics, C++ would copy all million doubles. With move semantics, it <em>steals</em> the underlying buffer — an O(1) operation regardless of size.</p>
+
+  <h3>lvalues and rvalues</h3>
+  <p>Every expression in C++ is either an lvalue (has an address, can appear on the left of <code>=</code>) or an rvalue (temporary, about to be destroyed). Move semantics let you detect rvalues and steal their resources instead of copying them.</p>
+
+  <h3>The move constructor</h3>
+  <p>Alongside the copy constructor, modern C++ classes can define a move constructor that takes an rvalue reference (<code>T&amp;&amp;</code>). Instead of duplicating data, it transfers ownership of the internal buffer from the source to the destination, then nulls out the source.</p>
+
+  <h3>std::move</h3>
+  <p><code>std::move</code> doesn't move anything — it casts an lvalue to an rvalue reference, telling the compiler "I'm done with this, you can steal from it". The actual move happens in the move constructor or move assignment operator.</p>
+
+  <h3>Why this matters for quant code</h3>
+  <p>Returning large containers from functions, inserting into vectors of vectors, passing time series between components — all of these are O(1) with move semantics instead of O(n). Essential for any code that manipulates large financial data structures.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — everything is a reference</h3>
+  <p>Python doesn't have value semantics for objects — assignment always copies a reference, never the data. There's no concept of move because there's no copying of object contents to begin with.</p>
+
+  <pre><code class="language-python">import sys
+
+prices = [1.0, 2.0, 3.0]
+
+# "assignment" copies the reference, not the data
+prices2 = prices
+prices2.append(4.0)
+print(prices)   # [1.0, 2.0, 3.0, 4.0] — same object!
+
+# To actually copy, use copy() or slicing
+import copy
+prices3 = prices.copy()       # shallow copy
+prices4 = copy.deepcopy(prices)  # deep copy</code></pre>
+
+  <h3>Returning large data from functions</h3>
+  <pre><code class="language-python">def load_prices(path: str) -> list[float]:
+    prices = []
+    with open(path) as f:
+        for line in f:
+            prices.append(float(line.strip()))
+    return prices  # returns reference — no copy
+
+result = load_prices("data.csv")  # O(1) — just a reference</code></pre>
+
+  <div class="cpp-note">Python's reference semantics mean returning large objects is always O(1) — you're just passing a pointer. C++ value semantics mean you get a copy by default, which is why move semantics matter.</div>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — reference types are always "moved"</h3>
+  <p>Reference types in C# work like Python — assignment copies a reference. Value types (structs) are copied by value, but C# has no explicit move semantics. The GC handles cleanup.</p>
+
+  <pre><code class="language-csharp">// Reference type — assignment copies reference
+var prices = new List&lt;double&gt; { 1.0, 2.0, 3.0 };
+var prices2 = prices;  // same object
+prices2.Add(4.0);
+Console.WriteLine(prices.Count);  // 4 — same list
+
+// Value type — copied by value
+struct Point { public double X, Y; }
+var p1 = new Point { X = 1.0, Y = 2.0 };
+var p2 = p1;  // copy
+p2.X = 99.0;
+Console.WriteLine(p1.X);  // 1.0 — independent copy</code></pre>
+
+  <div class="cpp-note">C# 7+ added <code>ref return</code> and <code>ref local</code> for avoiding copies in performance-critical code — the same motivation as C++ move semantics, but more limited.</div>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — move semantics in detail</h3>
+
+  <h4>The cost of copying</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;chrono&gt;
+#include &lt;iostream&gt;
+#include &lt;numeric&gt;
+
+std::vector&lt;double&gt; make_prices(int n) {
+    std::vector&lt;double&gt; v(n);
+    std::iota(v.begin(), v.end(), 0.0);
+    return v;  // NRVO: compiler likely elides the copy entirely
+}
+
+int main() {
+    // Move: buffer ownership transferred, O(1)
+    auto prices = make_prices(1'000'000);
+
+    // Explicit copy: duplicates all 1M doubles, O(n)
+    auto copy = prices;
+
+    // Explicit move: transfers ownership, O(1), prices is now empty
+    auto moved = std::move(prices);
+    std::cout &lt;&lt; prices.size()  &lt;&lt; "\n";  // 0 — emptied
+    std::cout &lt;&lt; moved.size()   &lt;&lt; "\n";  // 1000000
+    return 0;
+}</code></pre>
+
+  <h4>Writing a moveable class</h4>
+  <pre><code class="language-cpp">#include &lt;cstring&gt;
+#include &lt;utility&gt;
+#include &lt;iostream&gt;
+
+class PriceSeries {
+public:
+    explicit PriceSeries(int n)
+        : data_(new double[n]), size_(n)
+    {
+        std::cout &lt;&lt; "construct(" &lt;&lt; n &lt;&lt; ")\n";
+    }
+
+    // Copy constructor — duplicates data
+    PriceSeries(const PriceSeries&amp; other)
+        : data_(new double[other.size_]), size_(other.size_)
+    {
+        std::memcpy(data_, other.data_, size_ * sizeof(double));
+        std::cout &lt;&lt; "copy(" &lt;&lt; size_ &lt;&lt; ")\n";
+    }
+
+    // Move constructor — steals the buffer
+    PriceSeries(PriceSeries&amp;&amp; other) noexcept
+        : data_(other.data_), size_(other.size_)
+    {
+        other.data_ = nullptr;  // null out the source
+        other.size_ = 0;
+        std::cout &lt;&lt; "move\n";
+    }
+
+    ~PriceSeries() { delete[] data_; }
+
+    int    size()           const { return size_; }
+    double operator[](int i) const { return data_[i]; }
+
+private:
+    double* data_;
+    int     size_;
+};
+
+int main() {
+    PriceSeries s1(1000);         // construct(1000)
+    PriceSeries s2 = s1;          // copy(1000)
+    PriceSeries s3 = std::move(s1); // move
+    std::cout &lt;&lt; s1.size() &lt;&lt; "\n"; // 0
+    std::cout &lt;&lt; s3.size() &lt;&lt; "\n"; // 1000
+    return 0;
+}</code></pre>
+
+  <h4>Move semantics with STL containers</h4>
+  <pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;iostream&gt;
+
+int main() {
+    std::vector&lt;std::vector&lt;double&gt;&gt; matrix;
+
+    for (int i = 0; i &lt; 100; ++i) {
+        std::vector&lt;double&gt; row(1000, i * 1.0);
+
+        // push_back(row)        — copies row (expensive)
+        // push_back(std::move(row)) — moves row (free)
+        matrix.push_back(std::move(row));  // O(1) per row
+    }
+
+    std::cout &lt;&lt; matrix.size() &lt;&lt; "\n";  // 100
+    return 0;
+}</code></pre>
+
+  <div class="cpp-note">💡 Mark move constructors <code>noexcept</code>. Standard containers like <code>std::vector</code> will only use your move constructor during reallocation if it's marked <code>noexcept</code> — otherwise they fall back to copying for exception safety.</div>
+
+  <h4>Perfect forwarding — passing moves through</h4>
+  <pre><code class="language-cpp">#include &lt;utility&gt;
+#include &lt;vector&gt;
+
+template&lt;typename T&gt;
+void insert_into(std::vector&lt;T&gt;&amp; v, T&amp;&amp; item) {
+    v.push_back(std::forward&lt;T&gt;(item));  // preserves lvalue/rvalue-ness
+}
+
+int main() {
+    std::vector&lt;std::vector&lt;double&gt;&gt; store;
+    std::vector&lt;double&gt; prices = {1.0, 2.0, 3.0};
+
+    insert_into(store, std::move(prices));  // moves into vector
+    return 0;
+}</code></pre>
+</div>

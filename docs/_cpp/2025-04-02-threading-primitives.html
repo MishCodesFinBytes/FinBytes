@@ -1,0 +1,209 @@
+---
+layout: cpp-post
+title: "std::thread, mutex, condition_variable"
+description: "Threading primitives, data races, RAII locks"
+date: 2025-04-02
+tags: [concurrency, foundations]
+permalink: /cpp/threading-primitives/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Threads in C++</h3>
+  <p>C++11 introduced a portable threading library — <code>std::thread</code>, <code>std::mutex</code>, <code>std::condition_variable</code>. Before that, you used platform-specific APIs (pthreads on Linux, Win32 on Windows). Now there's one standard interface everywhere.</p>
+  <h3>Data races</h3>
+  <p>Two threads accessing the same memory location, at least one writing, with no synchronisation — undefined behaviour. Not "might be wrong" — the C++ standard says the program has no defined behaviour at all. Mutexes prevent this.</p>
+  <h3>RAII locks</h3>
+  <p><code>std::lock_guard</code> and <code>std::unique_lock</code> acquire a mutex on construction and release it on destruction. They compose with exceptions — the mutex is always released even if the protected code throws. Never call <code>mutex.lock()</code>/<code>mutex.unlock()</code> directly.</p>
+  <h3>condition_variable</h3>
+  <p>For producer/consumer patterns: the consumer waits on a condition variable until the producer signals that work is available. More efficient than spinning.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python threading — the GIL</h3>
+  <p>Python's Global Interpreter Lock (GIL) means only one thread runs Python bytecode at a time. Threading in Python is mainly useful for I/O-bound work. For CPU-bound parallelism, use <code>multiprocessing</code> or <code>concurrent.futures.ProcessPoolExecutor</code>.</p>
+
+  <pre><code class="language-python">import threading
+import time
+from collections import deque
+
+# Shared queue with lock
+class SafeQueue:
+    def __init__(self):
+        self._q    = deque()
+        self._lock = threading.Lock()
+        self._cond = threading.Condition(self._lock)
+
+    def push(self, item):
+        with self._cond:
+            self._q.append(item)
+            self._cond.notify()
+
+    def pop(self, timeout=1.0):
+        with self._cond:
+            self._cond.wait_for(lambda: len(self._q) > 0, timeout=timeout)
+            return self._q.popleft() if self._q else None
+
+q = SafeQueue()
+
+def producer():
+    for i in range(5):
+        time.sleep(0.1)
+        q.push(i)
+        print(f"produced {i}")
+
+def consumer():
+    for _ in range(5):
+        item = q.pop()
+        print(f"consumed {item}")
+
+t1 = threading.Thread(target=producer)
+t2 = threading.Thread(target=consumer)
+t1.start(); t2.start()
+t1.join();  t2.join()</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# threading — Task and async/await</h3>
+  <p>C# has both low-level <code>Thread</code> and high-level <code>Task</code>/<code>async</code>. For CPU-bound work, use <code>Task.Run</code> or <code>Parallel</code>. For shared state, use <code>lock</code> (syntactic sugar for Monitor).</p>
+
+  <pre><code class="language-csharp">using System.Collections.Concurrent;
+
+// Thread-safe queue built in
+var queue = new BlockingCollection&lt;int&gt;(boundedCapacity: 100);
+
+// Producer
+var producer = Task.Run(() => {
+    for (int i = 0; i &lt; 5; i++) {
+        Thread.Sleep(100);
+        queue.Add(i);
+        Console.WriteLine($"produced {i}");
+    }
+    queue.CompleteAdding();
+});
+
+// Consumer
+var consumer = Task.Run(() => {
+    foreach (var item in queue.GetConsumingEnumerable())
+        Console.WriteLine($"consumed {item}");
+});
+
+await Task.WhenAll(producer, consumer);
+
+// Manual lock example
+object lockObj = new();
+int shared = 0;
+
+Parallel.For(0, 1000, _ => {
+    lock (lockObj) { shared++; }  // RAII-style
+});
+Console.WriteLine(shared);  // 1000</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ threading primitives</h3>
+
+  <h4>Basic thread</h4>
+  <pre><code class="language-cpp">#include &lt;thread&gt;
+#include &lt;iostream&gt;
+
+void worker(int id) {
+    std::cout &lt;&lt; "thread " &lt;&lt; id &lt;&lt; " running\n";
+}
+
+int main() {
+    std::thread t1(worker, 1);
+    std::thread t2(worker, 2);
+    t1.join();  // wait for t1 to finish
+    t2.join();  // wait for t2 to finish
+    return 0;
+}</code></pre>
+
+  <h4>Mutex and lock_guard</h4>
+  <pre><code class="language-cpp">#include &lt;thread&gt;
+#include &lt;mutex&gt;
+#include &lt;vector&gt;
+#include &lt;iostream&gt;
+
+std::mutex mtx;
+int shared_counter = 0;
+
+void increment(int n) {
+    for (int i = 0; i &lt; n; ++i) {
+        std::lock_guard&lt;std::mutex&gt; lock(mtx);  // acquired here
+        ++shared_counter;
+    }  // released here — even if exception thrown
+}
+
+int main() {
+    std::vector&lt;std::thread&gt; threads;
+    for (int i = 0; i &lt; 8; ++i)
+        threads.emplace_back(increment, 10'000);
+    for (auto&amp; t : threads) t.join();
+    std::cout &lt;&lt; shared_counter &lt;&lt; "\n";  // always 80000
+    return 0;
+}</code></pre>
+
+  <h4>Producer/consumer with condition_variable</h4>
+  <pre><code class="language-cpp">#include &lt;thread&gt;
+#include &lt;mutex&gt;
+#include &lt;condition_variable&gt;
+#include &lt;queue&gt;
+#include &lt;optional&gt;
+#include &lt;iostream&gt;
+
+template&lt;typename T&gt;
+class SafeQueue {
+public:
+    void push(T item) {
+        {
+            std::lock_guard&lt;std::mutex&gt; lock(mtx_);
+            q_.push(std::move(item));
+        }
+        cv_.notify_one();
+    }
+
+    std::optional&lt;T&gt; pop() {
+        std::unique_lock&lt;std::mutex&gt; lock(mtx_);
+        cv_.wait(lock, [&amp;] { return !q_.empty() || done_; });
+        if (q_.empty()) return std::nullopt;
+        T item = std::move(q_.front());
+        q_.pop();
+        return item;
+    }
+
+    void done() {
+        std::lock_guard&lt;std::mutex&gt; lock(mtx_);
+        done_ = true;
+        cv_.notify_all();
+    }
+
+private:
+    std::queue&lt;T&gt;           q_;
+    std::mutex              mtx_;
+    std::condition_variable cv_;
+    bool                    done_ = false;
+};
+
+int main() {
+    SafeQueue&lt;int&gt; q;
+
+    std::thread producer([&amp;] {
+        for (int i = 0; i &lt; 5; ++i) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            q.push(i);
+            std::cout &lt;&lt; "produced " &lt;&lt; i &lt;&lt; "\n";
+        }
+        q.done();
+    });
+
+    std::thread consumer([&amp;] {
+        while (auto item = q.pop())
+            std::cout &lt;&lt; "consumed " &lt;&lt; *item &lt;&lt; "\n";
+    });
+
+    producer.join();
+    consumer.join();
+    return 0;
+}</code></pre>
+  <div class="cpp-note">💡 Always use <code>lock_guard</code> or <code>unique_lock</code> — never call <code>mutex.lock()</code> directly. If an exception fires between lock() and unlock(), the mutex is never released and every subsequent thread deadlocks.</div>
+</div>

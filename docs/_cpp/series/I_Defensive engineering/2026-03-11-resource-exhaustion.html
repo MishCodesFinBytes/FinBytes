@@ -1,0 +1,126 @@
+---
+layout: cpp-post
+title: "Resource Exhaustion - File Handles, Threads, Connections"
+description: "Handle leaks, thread pool saturation, connection pool starvation."
+date: 2026-03-11
+tags: [defensive, resources, reliability]
+permalink: /cpp/resource-exhaustion/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Resources are finite</h3>
+  <p>A process can have at most ~65535 open file descriptors on Linux by default. A thread pool has a maximum size. A database connection pool has a configured limit. Exhaust any of these and new operations fail - often with cryptic errors far from the actual cause.</p>
+  <p><strong>Common patterns:</strong> file handle leak (open files in a loop, forget to close - eventually open() returns EMFILE); thread pool saturation (queue tasks faster than they complete, latency spikes); connection pool starvation (long transactions hold connections, new requests wait indefinitely).</p>
+  <p><strong>Prevention:</strong> RAII for everything. Set explicit limits. Monitor pool utilisation. Reject new work when approaching limits (backpressure) rather than queuing infinitely. Alert at 70% utilisation; page at 85%.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python resource management</h3>
+  <pre><code class="language-python">import resource
+from contextlib import contextmanager
+from queue import Queue, Empty
+import time
+
+# File handle exhaustion - always use context managers
+def bad_reader(path: str):
+    f = open(path)
+    data = f.read()  # if this raises, f is never closed
+    f.close()
+
+def good_reader(path: str):
+    with open(path) as f:   # guaranteed close even on exception
+        return f.read()
+
+# Check current limits
+soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+print(f"File descriptor limit: {soft}/{hard}")
+
+# Thread pool with explicit limit
+from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor(max_workers=8) as executor:
+    futures = [executor.submit(price_trade, t) for t in trades]
+
+# Connection pool
+class ConnectionPool:
+    def __init__(self, size: int = 10, timeout: float = 5.0):
+        self._pool    = Queue(maxsize=size)
+        self._timeout = timeout
+        for _ in range(size): self._pool.put(self._create_connection())
+
+    @contextmanager
+    def get(self):
+        try:
+            conn = self._pool.get(timeout=self._timeout)
+        except Empty:
+            raise RuntimeError("Connection pool exhausted")
+        try: yield conn
+        finally: self._pool.put(conn)  # always returned, even on exception
+
+    def _create_connection(self): return object()</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# resource management</h3>
+  <pre><code class="language-csharp">using System.Buffers;
+
+// IDisposable: always use 'using'
+using var file = new StreamReader("prices.csv");   // closed on scope exit
+using var conn = dbPool.GetConnection();            // returned to pool on scope exit
+
+// Semaphore as rate limiter
+private readonly SemaphoreSlim _semaphore = new(initialCount: 10, maxCount: 10);
+
+async Task&lt;double&gt; PriceWithLimit(Trade trade) {
+    if (!await _semaphore.WaitAsync(TimeSpan.FromSeconds(5)))
+        throw new TimeoutException("Too many concurrent requests");
+    try { return await PriceAsync(trade); }
+    finally { _semaphore.Release(); }
+}</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ resource limits and RAII</h3>
+  <pre><code class="language-cpp">#include &lt;fstream&gt;
+#include &lt;semaphore&gt;
+#include &lt;queue&gt;
+#include &lt;mutex&gt;
+#include &lt;condition_variable&gt;
+#include &lt;stdexcept&gt;
+
+// RAII: file always closed
+std::string read_file(const std::string& path) {
+    std::ifstream f(path);
+    if (!f.is_open()) throw std::runtime_error("Cannot open: " + path);
+    return {std::istreambuf_iterator&lt;char&gt;(f), std::istreambuf_iterator&lt;char&gt;()};
+}   // f.~ifstream() called - file closed even on exception
+
+// Semaphore as concurrency limiter (C++20)
+std::counting_semaphore&lt;64&gt; sem(10);  // max 10 concurrent pricers
+
+double price_with_limit(const Trade& trade) {
+    sem.acquire();   // blocks if 10 already running
+    struct Guard { std::counting_semaphore&lt;64&gt;& s; ~Guard() { s.release(); } } g{sem};
+    return price(trade);
+}   // sem released via RAII
+
+// Connection pool
+template&lt;typename Conn&gt;
+class ConnectionPool {
+    std::queue&lt;std::unique_ptr&lt;Conn&gt;&gt; pool_;
+    std::mutex mtx_; std::condition_variable cv_;
+public:
+    explicit ConnectionPool(int size) {
+        for (int i = 0; i &lt; size; ++i) pool_.push(std::make_unique&lt;Conn&gt;());
+    }
+    std::unique_ptr&lt;Conn&gt; acquire(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
+        std::unique_lock lock(mtx_);
+        if (!cv_.wait_for(lock, timeout, [&]{ return !pool_.empty(); }))
+            throw std::runtime_error("Connection pool exhausted");
+        auto conn = std::move(pool_.front()); pool_.pop(); return conn;
+    }
+    void release(std::unique_ptr&lt;Conn&gt; conn) {
+        std::lock_guard lock(mtx_); pool_.push(std::move(conn)); cv_.notify_one();
+    }
+};</code></pre>
+  <div class="cpp-note">Set <code>ulimit -n</code> (file descriptors) and <code>ulimit -u</code> (threads) explicitly before launching production processes. Know your limits before you hit them. Instrument pool utilisation - 80% is a capacity warning, not yet a failure.</div>
+</div>

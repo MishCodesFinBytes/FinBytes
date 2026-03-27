@@ -1,0 +1,133 @@
+---
+layout: page
+title: "Defensive Coding Checklist"
+description: "Preconditions, postconditions, invariants, assertions, contracts applied to a trade lifecycle."
+date: 2026-03-18
+tags: [defensive, checklist, reference]
+permalink: /cpp/defensive-checklist/
+---
+<style>
+.def h2 { font-size:.9rem; font-weight:bold; letter-spacing:.06em; text-transform:uppercase;
+  color:#555; margin:2em 0 .5em; border-left:3px solid #c0392b; padding-left:.75em; }
+.def pre { background:#1e1e1e; color:#d4d4d4; padding:1em 1.2em; border-radius:4px;
+  overflow-x:auto; font-size:.87rem; line-height:1.6; }
+.def code { background:none; border:none; padding:0; }
+.def table { border-collapse:collapse; width:100%; margin:1em 0; }
+.def th, .def td { border:1px solid #ddd; padding:8px 12px; text-align:left; font-size:.9rem; }
+.def th { background:#f5f5f5; }
+.warn { border-left:4px solid #e67e22; background:#fdf6e3; padding:7px 14px;
+  font-size:.9rem; color:#666; margin:4px 0 12px; }
+.good { border-left:4px solid #27ae60; background:#f0fdf4; padding:7px 14px;
+  font-size:.9rem; color:#444; margin:4px 0 12px; }
+</style>
+<div class="def">
+
+<h2>What this is</h2>
+<p>A single-page reference for defensive coding practices across Python, C#, and C++. Use it as a code review checklist for any system handling financial data.</p>
+
+<h2>Input validation (preconditions)</h2>
+<p>Check at the boundary - the entry point to your system. Do not let bad data travel deep before failing.</p>
+<pre><code class="language-python"># Python
+def price_option(S, K, T, sigma):
+    assert S > 0,          f"S must be positive: {S}"
+    assert K > 0,          f"K must be positive: {K}"
+    assert T > 0,          f"T must be positive: {T}"
+    assert sigma > 0,      f"sigma must be positive: {sigma}"
+    import math
+    assert all(math.isfinite(v) for v in (S, K, T, sigma)), "non-finite input"</code></pre>
+
+<pre><code class="language-cpp">// C++
+double price_option(double S, double K, double T, double sigma) {
+    assert(S > 0     && "S must be positive");
+    assert(K > 0     && "K must be positive");
+    assert(T > 0     && "T must be positive");
+    assert(sigma > 0 && "sigma must be positive");
+    assert(std::isfinite(S) && std::isfinite(K) && std::isfinite(T) && std::isfinite(sigma));
+    // ...
+}</code></pre>
+
+<h2>Output validation (postconditions)</h2>
+<p>Validate results before returning. A price of -5 or NaN should never leave the pricer.</p>
+<pre><code class="language-python">def price_option(S, K, T, sigma) -> float:
+    result = _price_impl(S, K, T, sigma)
+    import math
+    assert math.isfinite(result), f"Non-finite result: {result}"
+    assert result >= 0,           f"Negative option price: {result}"
+    return result</code></pre>
+
+<h2>Class invariants</h2>
+<p>A class invariant is a condition that must be true after every public method. Document them and check in debug builds.</p>
+<pre><code class="language-cpp">class Portfolio {
+    void check_invariants() const {
+        assert(!name_.empty()  && "Portfolio must have a name");
+        for (const auto& [sym, qty] : positions_)
+            assert(qty != 0.0 && "Zero-quantity positions must be removed");
+    }
+public:
+    void add(const std::string& sym, double qty) {
+        positions_[sym] += qty;
+        if (positions_[sym] == 0.0) positions_.erase(sym);
+        check_invariants();  // compile out in release: #ifdef DEBUG
+    }
+};</code></pre>
+
+<h2>Null / missing value handling</h2>
+<table>
+  <thead><tr><th>Language</th><th>Pattern</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>Python</td><td><code>Optional[T]</code>, <code>or</code> default</td><td><code>price = feed.get(sym) or last_known</code></td></tr>
+    <tr><td>C#</td><td><code>T?</code>, null coalescing <code>??</code></td><td><code>price = feed.Get(sym) ?? lastKnown;</code></td></tr>
+    <tr><td>C++</td><td><code>std::optional&lt;T&gt;</code></td><td><code>auto p = feed.get(sym); if (!p) use_fallback();</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Error propagation checklist</h2>
+<ul>
+  <li>Every function that can fail: does the caller check the return?</li>
+  <li>Every exception: is there a handler at the appropriate level?</li>
+  <li>Every <code>std::optional</code>: is the empty case handled?</li>
+  <li>Every thread: is there a top-level exception handler?</li>
+  <li>Every callback/async: are errors surfaced, not swallowed?</li>
+</ul>
+
+<h2>Trade lifecycle checklist</h2>
+<pre><code class="language-python">lifecycle_checks = {
+    "order_received": [
+        "Validate all fields non-null",
+        "Check instrument is in tradeable universe",
+        "Check notional within position limits",
+        "Assign unique trade ID",
+        "Log with all fields",
+    ],
+    "pricing": [
+        "Validate market data freshness (staleness check)",
+        "Validate input parameters are finite and in range",
+        "Validate output is finite and non-negative",
+        "Record pricing timestamp and model used",
+    ],
+    "execution": [
+        "Check for duplicate trade ID before persisting",
+        "Persist atomically (all fields or none)",
+        "Update positions after successful persist only",
+        "Publish trade event after all state is consistent",
+    ],
+    "settlement": [
+        "Reconcile position vs confirmed fills",
+        "Alert if discrepancy exceeds threshold",
+        "Idempotent: safe to replay on failure",
+    ],
+}</code></pre>
+
+<h2>Code review red flags</h2>
+<div class="warn">Returning raw pointers from functions - who owns this?</div>
+<div class="warn">Catching all exceptions (<code>except Exception</code>, <code>catch (...)</code>) without logging or re-raising</div>
+<div class="warn">Shared mutable state with no synchronisation</div>
+<div class="warn">Numeric operations without NaN/Inf check at boundaries</div>
+<div class="warn">Loops with no iteration bound</div>
+<div class="warn">Resource acquisition with no corresponding release</div>
+<div class="good">RAII for all resources - destructor releases unconditionally</div>
+<div class="good">Fail fast at boundaries - validate inputs before processing</div>
+<div class="good">Immutable data passed between threads - no synchronisation needed</div>
+<div class="good">Every public API has documented exception/error behaviour</div>
+
+</div>

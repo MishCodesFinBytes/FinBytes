@@ -1,0 +1,138 @@
+---
+layout: cpp-post
+title: "Logging and Diagnostics"
+description: "logging module vs Serilog vs spdlog. Structured logging, async logging."
+date: 2025-07-23
+tags: [practical, logging, tooling]
+permalink: /cpp/logging/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Why logging matters in finance</h3>
+  <p>When a trade is wrong, a position is unexpected, or a pricer returns a suspicious value, logs are how you find out why. Good logging practice: structured (machine-parseable), levelled (debug/info/warn/error), and asynchronous (don't let I/O slow the hot path).</p>
+  <h3>spdlog</h3>
+  <p>The C++ standard for logging. Header-only, extremely fast (asynchronous mode runs in a background thread), supports structured logging and multiple sinks (file, console, rotating files). Used in production quant systems everywhere.</p>
+  <h3>Log levels</h3>
+  <ul>
+    <li><strong>TRACE/DEBUG</strong> — per-tick detail, turned off in production</li>
+    <li><strong>INFO</strong> — significant events (trade received, pricer initialised)</li>
+    <li><strong>WARN</strong> — unexpected but recoverable (stale price, missing vol)</li>
+    <li><strong>ERROR</strong> — needs attention (connection dropped, pricing failure)</li>
+    <li><strong>CRITICAL</strong> — system cannot continue</li>
+  </ul>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python — logging module</h3>
+  <pre><code class="language-python">import logging
+import sys
+from logging.handlers import RotatingFileHandler
+
+def setup_logging(level: int = logging.INFO) -> logging.Logger:
+    logger = logging.getLogger("pricer")
+    logger.setLevel(level)
+
+    fmt = logging.Formatter(
+        "%(asctime)s %(levelname)-8s %(name)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S"
+    )
+
+    # Console handler
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setFormatter(fmt)
+    logger.addHandler(ch)
+
+    # Rotating file handler (10MB, keep 5 backups)
+    fh = RotatingFileHandler("pricer.log", maxBytes=10_000_000, backupCount=5)
+    fh.setFormatter(fmt)
+    logger.addHandler(fh)
+
+    return logger
+
+log = setup_logging()
+
+# Usage
+log.info("Pricer started")
+log.debug("Pricing AAPL: S=150.25 K=150 T=0.5")
+log.warning("Stale vol for MSFT — using last known")
+log.error("Connection to market data feed lost")
+
+# Structured logging with extra fields
+log.info("Trade received", extra={"symbol": "AAPL", "qty": 100, "price": 150.25})</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# — Serilog</h3>
+  <pre><code class="language-csharp">// Install: Serilog, Serilog.Sinks.Console, Serilog.Sinks.File
+using Serilog;
+using Serilog.Events;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console(outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File("pricer.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 7)
+    .CreateLogger();
+
+// Usage
+Log.Information("Pricer started");
+Log.Debug("Pricing {Symbol}: S={Spot} K={Strike}", "AAPL", 150.25, 150.0);
+Log.Warning("Stale vol for {Symbol} — using last known", "MSFT");
+Log.Error("Connection lost: {Reason}", "timeout");
+
+// Structured data is queryable in log management tools (Seq, Elastic)
+Log.Information("Trade {@Trade} received",
+    new { Symbol = "AAPL", Qty = 100, Price = 150.25 });
+
+Log.CloseAndFlush();</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — spdlog</h3>
+  <pre><code class="language-cpp">// vcpkg install spdlog
+#include &lt;spdlog/spdlog.h&gt;
+#include &lt;spdlog/sinks/rotating_file_sink.h&gt;
+#include &lt;spdlog/sinks/stdout_color_sinks.h&gt;
+#include &lt;spdlog/async.h&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+std::shared_ptr&lt;spdlog::logger&gt; setup_logging() {
+    spdlog::init_thread_pool(8192, 1);  // async: queue size, threads
+
+    auto console_sink = std::make_shared&lt;spdlog::sinks::stdout_color_sink_mt&gt;();
+    auto file_sink    = std::make_shared&lt;spdlog::sinks::rotating_file_sink_mt&gt;(
+        "pricer.log",
+        10 * 1024 * 1024,  // 10MB per file
+        5                   // keep 5 backups
+    );
+
+    auto logger = std::make_shared&lt;spdlog::async_logger&gt;(
+        "pricer",
+        spdlog::sinks_init_list{console_sink, file_sink},
+        spdlog::thread_pool(),
+        spdlog::async_overflow_policy::block
+    );
+
+    logger->set_level(spdlog::level::debug);
+    logger->set_pattern("[%Y-%m-%dT%H:%M:%S.%e] [%l] %v");
+    spdlog::register_logger(logger);
+    return logger;
+}
+
+int main() {
+    auto log = setup_logging();
+
+    log->info("Pricer started");
+    log->debug("Pricing {}: S={:.2f} K={:.2f}", "AAPL", 150.25, 150.0);
+    log->warn("Stale vol for {} — using last known", "MSFT");
+    log->error("Connection lost");
+
+    // Flush on program exit (async logger may have queued writes)
+    spdlog::shutdown();
+    return 0;
+}</code></pre>
+  <div class="cpp-note">💡 Async logging is critical in latency-sensitive systems. Synchronous logging blocks the calling thread on every log write — even a single slow disk write can add milliseconds. Async mode writes to a queue (nanoseconds) and flushes in a background thread.</div>
+</div>

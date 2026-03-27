@@ -1,0 +1,117 @@
+---
+layout: page
+title: "Example: Resilient Market Data Pipeline"
+description: "Feed handler to queue to pricer to risk engine. Circuit breaker, backpressure, reconnect."
+date: 2026-05-13
+tags: [example, reliability, architecture, cpp]
+permalink: /cpp/resilient-market-data-pipeline/
+---
+<style>
+.ep h2 { font-size:.9rem; font-weight:bold; letter-spacing:.06em; text-transform:uppercase;
+  color:#555; margin:2em 0 .5em; border-left:3px solid #2980b9; padding-left:.75em; }
+.ep pre { background:#1e1e1e; color:#d4d4d4; padding:1em 1.2em; border-radius:4px;
+  overflow-x:auto; font-size:.87rem; line-height:1.6; }
+.ep code { background:none; border:none; padding:0; }
+.ep table { border-collapse:collapse; width:100%; margin:1em 0; font-size:.9rem; }
+.ep th, .ep td { border:1px solid #ddd; padding:8px 12px; text-align:left; }
+.ep th { background:#f5f5f5; font-weight:bold; }
+.warn { border-left:4px solid #e67e22; background:#fdf6e3; padding:7px 14px;
+  font-size:.9rem; color:#666; margin:4px 0 12px; }
+.good { border-left:4px solid #27ae60; background:#f0fdf4; padding:7px 14px;
+  font-size:.9rem; color:#444; margin:4px 0 12px; }
+</style>
+<div class="ep">
+
+<h2>What this builds</h2>
+<p>An end-to-end market data pipeline applying every reliability pattern from this series: circuit breaker on the feed connection, bounded queue with backpressure, watchdog on the pricer thread, graceful degradation to stale prices when the feed is unavailable, and health checks for the whole system.</p>
+
+<h2>Architecture</h2>
+<pre><code>Feed (TCP) -> FeedHandler -> BoundedQueue -> Pricer -> RiskEngine
+                 |                |              |
+           CircuitBreaker    Backpressure    Watchdog
+           Reconnect loop    Drop counter    Heartbeat</code></pre>
+
+<h2>Feed handler with circuit breaker and reconnect</h2>
+<pre><code class="language-cpp">class FeedHandler {
+    std::atomic&lt;bool&gt;    running_{true};
+    CircuitBreaker        breaker_{5, 30.0};  // 5 failures, 30s timeout
+    BoundedQueue&lt;Tick&gt;    queue_{65536};
+    std::atomic&lt;uint64_t&gt; dropped_{0};
+    std::atomic&lt;int64_t&gt;  last_tick_ns_{0};
+
+public:
+    void run() {
+        double delay_s = 1.0;
+        while (running_.load()) {
+            try {
+                breaker_.call([&] { connect_and_stream(); });
+                delay_s = 1.0;
+            } catch (const std::exception& e) {
+                delay_s = std::min(delay_s * 2.0, 60.0);
+                double jitter = delay_s * (0.5 + 0.5 * rand() / RAND_MAX);
+                std::this_thread::sleep_for(std::chrono::duration&lt;double&gt;(jitter));
+            }
+        }
+    }
+
+    void connect_and_stream() {
+        auto conn = tcp_connect("feed:5555");
+        while (running_.load()) {
+            auto tick = conn.recv_tick();
+            last_tick_ns_.store(
+                std::chrono::steady_clock::now().time_since_epoch().count(),
+                std::memory_order_relaxed);
+            if (!queue_.push(tick, std::chrono::milliseconds(0)))
+                dropped_.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+
+    bool is_fresh(std::chrono::seconds max_age = std::chrono::seconds(60)) const {
+        auto now  = std::chrono::steady_clock::now().time_since_epoch().count();
+        auto last = last_tick_ns_.load(std::memory_order_relaxed);
+        return (now - last) &lt; std::chrono::nanoseconds(max_age).count();
+    }
+    uint64_t dropped() const { return dropped_.load(); }
+};</code></pre>
+
+<h2>Pricer thread with watchdog and price fallback</h2>
+<pre><code class="language-cpp">class PricerThread {
+    BoundedQueue&lt;Tick&gt;&       feed_q_;
+    BoundedQueue&lt;PriceResult&gt; risk_q_{1024};
+    Watchdog                  watchdog_{std::chrono::seconds(10)};
+    PriceCache                cache_;
+
+public:
+    void run() {
+        while (running_.load()) {
+            auto tick = feed_q_.pop(std::chrono::milliseconds(100));
+            if (!tick) { watchdog_.heartbeat(); continue; }
+            try {
+                auto result = price_tick(*tick);
+                cache_.update(tick->symbol, result.price);
+                risk_q_.push(result, std::chrono::milliseconds(10));
+            } catch (const std::exception& e) {
+                auto stale = cache_.get(tick->symbol);
+                if (stale) risk_q_.push({tick->symbol, *stale, true, "stale"},
+                                        std::chrono::milliseconds(10));
+            }
+            watchdog_.heartbeat();
+        }
+    }
+};</code></pre>
+
+<h2>Alerting thresholds</h2>
+<table>
+  <thead><tr><th>Metric</th><th>Warning</th><th>Critical</th></tr></thead>
+  <tbody>
+    <tr><td>Feed age</td><td>&gt; 30s</td><td>&gt; 60s</td></tr>
+    <tr><td>Queue utilisation</td><td>&gt; 70%</td><td>&gt; 90%</td></tr>
+    <tr><td>Dropped ticks/s</td><td>&gt; 100</td><td>&gt; 1000</td></tr>
+    <tr><td>Circuit state</td><td>half-open</td><td>open</td></tr>
+    <tr><td>Watchdog last beat</td><td>&gt; 5s</td><td>&gt; 10s</td></tr>
+  </tbody>
+</table>
+
+<div class="warn">Never alert on single metric spikes in isolation. A momentary queue spike during a volatility event is normal. Sustained queue growth + rising dropped ticks + increasing feed age together indicate a real problem.</div>
+
+</div>

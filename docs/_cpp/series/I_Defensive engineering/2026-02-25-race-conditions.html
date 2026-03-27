@@ -1,0 +1,110 @@
+---
+layout: cpp-post
+title: "Race Conditions and Data Corruption"
+description: "Thread sanitiser, reproducible test harnesses, patterns in financial systems."
+date: 2026-02-25
+tags: [defensive, concurrency, threading]
+permalink: /cpp/race-conditions/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>The hardest class of bug</h3>
+  <p>Race conditions are non-deterministic, timing-dependent, and often impossible to reproduce on demand. A race that corrupts a position once per day in production might never appear in a month of testing.</p>
+  <p><strong>What causes races:</strong> two threads accessing shared mutable state with no synchronisation. In finance: a position object updated by the order feed thread while being read by the risk engine thread. No mutex, no atomic - undefined behaviour.</p>
+  <p><strong>Prevention strategies:</strong> immutable data (if threads only read, there is no race); message passing (threads communicate via queues rather than shared state); lock hierarchy (always acquire locks in defined order); thread confinement (each object is owned by exactly one thread).</p>
+  <p><strong>Detection:</strong> ThreadSanitiser (TSan) - <code>-fsanitize=thread</code> in C++. Catches races at runtime with ~5x overhead. Run the full test suite under TSan regularly.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python thread safety</h3>
+  <pre><code class="language-python">import threading
+from threading import Lock
+from queue import Queue
+
+class UnsafePosition:
+    def __init__(self): self.quantity = 0.0
+    def add(self, qty: float) -> None:
+        self.quantity += qty  # NOT thread-safe: read-modify-write is three ops
+
+class SafePosition:
+    def __init__(self): self._qty = 0.0; self._lock = Lock()
+    def add(self, qty: float) -> None:
+        with self._lock: self._qty += qty
+    @property
+    def quantity(self) -> float:
+        with self._lock: return self._qty
+
+# Message passing: avoid shared state entirely
+class PositionManager:
+    def __init__(self):
+        self._queue    = Queue()
+        self._position = {}
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def add(self, symbol: str, qty: float) -> None:
+        self._queue.put(("add", symbol, qty))  # queue is thread-safe
+
+    def _run(self) -> None:  # single thread owns the state
+        while True:
+            msg = self._queue.get()
+            if msg[0] == "add":
+                self._position[msg[1]] = self._position.get(msg[1], 0) + msg[2]</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# thread safety</h3>
+  <pre><code class="language-csharp">using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Channels;
+
+// Interlocked for simple counters
+private long _fillCount = 0;
+public void OnFill() => Interlocked.Increment(ref _fillCount);
+
+// ConcurrentDictionary for shared maps
+var positions = new ConcurrentDictionary&lt;string, double&gt;();
+positions.AddOrUpdate("AAPL", 100, (key, old) => old + 100);
+
+// Reader-writer lock for read-heavy workloads
+private readonly ReaderWriterLockSlim _rwLock = new();
+private double _lastPrice;
+public double GetPrice() { _rwLock.EnterReadLock(); try { return _lastPrice; } finally { _rwLock.ExitReadLock(); } }
+public void SetPrice(double p) { _rwLock.EnterWriteLock(); try { _lastPrice = p; } finally { _rwLock.ExitWriteLock(); } }
+
+// Channel - message passing (modern approach)
+var channel = Channel.CreateBounded&lt;Trade&gt;(new BoundedChannelOptions(1000) {
+    FullMode = BoundedChannelFullMode.Wait
+});</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ thread safety</h3>
+  <pre><code class="language-cpp">#include &lt;mutex&gt;
+#include &lt;shared_mutex&gt;
+#include &lt;atomic&gt;
+#include &lt;unordered_map&gt;
+
+// Build with TSan: g++ -fsanitize=thread -g -O1
+
+// Atomic for simple values
+std::atomic&lt;double&gt; last_price{0.0};
+// Writer: last_price.store(p, std::memory_order_release);
+// Reader: auto p = last_price.load(std::memory_order_acquire);
+
+// Shared mutex: many readers, one writer
+class PositionCache {
+    mutable std::shared_mutex mutex_;
+    std::unordered_map&lt;std::string, double&gt; data_;
+public:
+    double get(const std::string& sym) const {
+        std::shared_lock lock(mutex_);
+        auto it = data_.find(sym);
+        return it != data_.end() ? it->second : 0.0;
+    }
+    void set(const std::string& sym, double qty) {
+        std::unique_lock lock(mutex_);
+        data_[sym] = qty;
+    }
+};</code></pre>
+  <div class="cpp-note">The best way to avoid race conditions is to avoid shared mutable state. Thread confinement (each object owned by exactly one thread, communication via queues) eliminates the entire class of problem. It is the design principle behind actor systems and most high-performance market data systems.</div>
+</div>

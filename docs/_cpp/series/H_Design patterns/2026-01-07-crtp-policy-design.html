@@ -1,0 +1,122 @@
+---
+layout: cpp-post
+title: "CRTP and Policy-Based Design in C++"
+description: "Compile-time polymorphism. Static vs dynamic dispatch. Performance implications."
+date: 2026-01-07
+tags: [design-patterns, crtp, templates, cpp]
+permalink: /cpp/crtp-policy-design/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Polymorphism without virtual</h3>
+  <p>CRTP (Curiously Recurring Template Pattern) achieves compile-time polymorphism - the flexibility of inheritance without the runtime cost of virtual dispatch. Used extensively in performance-critical C++ libraries such as Eigen, Boost, and STL internals.</p>
+  <p>A base class template is parameterised by its derived class: <code>template&lt;typename Derived&gt; class Base</code>. The derived class inherits from <code>Base&lt;Derived&gt;</code>. The base can call derived methods without virtual functions, resolved at compile time.</p>
+  <p><strong>Policy-based design</strong> composes behaviour from interchangeable policies - similar to Strategy but at compile time. A pricer parameterised by rate curve policy, vol surface policy, and day count policy, each independently swappable, with zero runtime overhead.</p>
+  <p>Use CRTP when virtual dispatch overhead is measured to be a problem, when you need static interface enforcement, or when building a framework where users provide their own implementation of hot methods. Otherwise, virtual functions are clearer and adequate.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python - duck typing handles this</h3>
+  <pre><code class="language-python"># Python does not need CRTP - duck typing handles compile-time polymorphism
+# If it has the right methods, it works
+
+class FlatVolSurface:
+    def get_vol(self, strike: float, expiry: float) -> float: return 0.2
+
+class SkewVolSurface:
+    def get_vol(self, strike: float, expiry: float) -> float:
+        return 0.2 + 0.01 * abs(strike - 100) / 100
+
+class USDAct360:
+    def day_fraction(self, days: float) -> float: return days / 360
+
+# Policy-style composition via injection
+class Pricer:
+    def __init__(self, vol_surface, day_count):
+        self._vol = vol_surface
+        self._dc  = day_count
+    def price(self, S, K, days):
+        T   = self._dc.day_fraction(days)
+        vol = self._vol.get_vol(K, T)
+        return max(S - K, 0) * vol
+
+p1 = Pricer(FlatVolSurface(), USDAct360())
+p2 = Pricer(SkewVolSurface(), USDAct360())</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# - generics with constraints</h3>
+  <pre><code class="language-csharp">interface IVolSurface { double GetVol(double strike, double expiry); }
+interface IDayCount   { double DayFraction(double days); }
+
+class FlatVol : IVolSurface { public double GetVol(double K, double T) => 0.2; }
+class SkewVol : IVolSurface { public double GetVol(double K, double T) => 0.2 + 0.01*Math.Abs(K-100)/100; }
+class Act360  : IDayCount   { public double DayFraction(double d) => d/360.0; }
+class Act365  : IDayCount   { public double DayFraction(double d) => d/365.0; }
+
+class Pricer&lt;TVol, TDc&gt; where TVol : IVolSurface, new()
+                          where TDc  : IDayCount,   new()
+{
+    private readonly TVol _vol = new();
+    private readonly TDc  _dc  = new();
+    public double Price(double S, double K, double days) {
+        double T   = _dc.DayFraction(days);
+        double vol = _vol.GetVol(K, T);
+        return Math.Max(S - K, 0) * vol;
+    }
+}
+
+var p1 = new Pricer&lt;FlatVol, Act360&gt;();
+var p2 = new Pricer&lt;SkewVol, Act365&gt;();</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ CRTP and policy-based design</h3>
+  <pre><code class="language-cpp">// CRTP: base calls derived methods without virtual
+template&lt;typename Derived&gt;
+class PricerBase {
+public:
+    double price(double S, double K, double T) const {
+        return static_cast&lt;const Derived*&gt;(this)->price_impl(S, K, T);
+    }
+    double pv01(double S, double K, double T, double notional) const {
+        return price(S, K, T) * notional * 0.0001;
+    }
+};
+
+struct BlackScholesPricer : PricerBase&lt;BlackScholesPricer&gt; {
+    double price_impl(double S, double K, double T) const {
+        return std::max(S - K, 0.0) * 1.05;
+    }
+};
+
+struct IntrinsicPricer : PricerBase&lt;IntrinsicPricer&gt; {
+    double price_impl(double S, double K, double T) const {
+        return std::max(S - K, 0.0);
+    }
+};
+
+BlackScholesPricer bs;
+double px = bs.price(100, 100, 1);    // no virtual call
+double pv = bs.pv01(100, 100, 1, 1'000'000);
+
+// Policy-based design
+struct FlatVol { double get_vol(double K, double T) const { return 0.2; } };
+struct SkewVol { double get_vol(double K, double T) const { return 0.2 + 0.01*std::abs(K-100)/100; } };
+struct Act360  { double day_fraction(double d) const { return d/360.0; } };
+struct Act365  { double day_fraction(double d) const { return d/365.0; } };
+
+template&lt;typename VolPolicy, typename DayCountPolicy&gt;
+class PolicyPricer : private VolPolicy, private DayCountPolicy {
+public:
+    double price(double S, double K, double days) const {
+        double T   = DayCountPolicy::day_fraction(days);
+        double vol = VolPolicy::get_vol(K, T);
+        return std::max(S - K, 0.0) * vol;
+    }
+};
+
+PolicyPricer&lt;FlatVol, Act360&gt; p1;  // zero overhead - policies inlined
+PolicyPricer&lt;SkewVol, Act365&gt; p2;</code></pre>
+  <div class="cpp-note">CRTP is an advanced pattern. Measure whether virtual dispatch is your bottleneck before using it. For most pricing code, virtual functions are adequate. CRTP shines when you call the same virtual method millions of times in a tight loop, or when building a framework where users plug in their own hot implementations.</div>
+</div>

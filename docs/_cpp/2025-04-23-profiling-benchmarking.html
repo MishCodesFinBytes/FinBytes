@@ -1,0 +1,183 @@
+---
+layout: cpp-post
+title: "Profiling and Benchmarking C++ Code"
+description: "Google Benchmark, perf, valgrind/callgrind, reading assembly"
+date: 2025-04-23
+tags: [performance, tooling]
+permalink: /cpp/profiling-benchmarking/
+---
+
+<div id="tab-intro" class="ql-tab-content active">
+  <h3>Measure, don't guess</h3>
+  <p>The first rule of performance optimisation: don't optimise without measurement. Intuition about what's slow is usually wrong. A profiler tells you where time is actually being spent. A micro-benchmark tells you the cost of a specific operation.</p>
+  <h3>Three tools</h3>
+  <ul>
+    <li><strong>Google Benchmark</strong> — micro-benchmarking library. Write a benchmark function, run it, get nanoseconds per operation with statistical analysis. The C++ equivalent of Python's timeit.</li>
+    <li><strong>perf</strong> (Linux) — system-level profiler. Shows which functions are hot, cache miss rates, branch mispredictions. No code changes needed.</li>
+    <li><strong>valgrind/callgrind</strong> — instruction-level profiler with cache simulation. Slower but detailed. Good for finding cache misses.</li>
+  </ul>
+  <h3>Reading assembly</h3>
+  <p>Compiler Explorer (godbolt.org) lets you see the assembly output for any C++ snippet. Essential for verifying that the compiler vectorised your loop, eliminated a copy, or inlined a function. Not as scary as it sounds — you don't need to understand every instruction, just spot the patterns.</p>
+</div>
+
+<div id="tab-python" class="ql-tab-content" style="display:none">
+  <h3>Python profiling tools</h3>
+  <pre><code class="language-python">import timeit
+import cProfile
+import pstats
+
+# Quick timing
+t = timeit.timeit(
+    stmt="sum(x**2 for x in range(1000))",
+    number=10_000
+)
+print(f"{t/10_000*1e6:.2f} us per call")
+
+# cProfile — function-level profiling
+def price_portfolio(positions: dict) -> float:
+    return sum(p * q for p, q in positions.items())
+
+with cProfile.Profile() as pr:
+    for _ in range(100_000):
+        price_portfolio({"AAPL": 150.0, "MSFT": 300.0})
+
+stats = pstats.Stats(pr)
+stats.sort_stats("cumulative")
+stats.print_stats(10)</code></pre>
+
+  <h3>line_profiler — line by line</h3>
+  <pre><code class="language-python"># pip install line_profiler
+# @profile decorator (injected by kernprof)
+
+@profile
+def compute_greeks(S, K, T, r, sigma):
+    from scipy.stats import norm
+    import numpy as np
+    d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    delta = norm.cdf(d1)
+    gamma = norm.pdf(d1) / (S * sigma * np.sqrt(T))
+    return delta, gamma
+
+# Run: kernprof -l -v script.py</code></pre>
+</div>
+
+<div id="tab-csharp" class="ql-tab-content" style="display:none">
+  <h3>C# benchmarking with BenchmarkDotNet</h3>
+  <pre><code class="language-csharp">// Install: dotnet add package BenchmarkDotNet
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+
+[MemoryDiagnoser]
+public class PricingBenchmarks
+{
+    private double[] _prices = Enumerable.Range(0, 1_000_000)
+        .Select(i => 100.0 + i * 0.01).ToArray();
+
+    [Benchmark]
+    public double SumLinq() => _prices.Sum();
+
+    [Benchmark]
+    public double SumLoop() {
+        double sum = 0;
+        foreach (var p in _prices) sum += p;
+        return sum;
+    }
+
+    [Benchmark]
+    public double SumSpan() {
+        var span = _prices.AsSpan();
+        double sum = 0;
+        for (int i = 0; i &lt; span.Length; i++) sum += span[i];
+        return sum;
+    }
+}
+
+BenchmarkRunner.Run&lt;PricingBenchmarks&gt;();</code></pre>
+</div>
+
+<div id="tab-cpp" class="ql-tab-content" style="display:none">
+  <h3>C++ — Google Benchmark</h3>
+
+  <h4>CMakeLists.txt with benchmark</h4>
+  <pre><code class="language-cmake">include(FetchContent)
+FetchContent_Declare(
+    benchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.8.3
+)
+set(BENCHMARK_ENABLE_TESTING OFF)
+FetchContent_MakeAvailable(benchmark)
+
+add_executable(bench bench.cpp)
+target_link_libraries(bench benchmark::benchmark)</code></pre>
+
+  <h4>Benchmark file</h4>
+  <pre><code class="language-cpp">#include &lt;benchmark/benchmark.h&gt;
+#include &lt;vector&gt;
+#include &lt;numeric&gt;
+#include &lt;cmath&gt;
+
+// What we're benchmarking: AoS vs SoA price sum
+struct TickAoS { double price; int volume; double time; };
+
+static void BM_AoS(benchmark::State&amp; state) {
+    int n = state.range(0);
+    std::vector&lt;TickAoS&gt; ticks(n);
+    for (int i = 0; i &lt; n; ++i) ticks[i] = {100.0+i*0.01, 1000, i*0.001};
+
+    for (auto _ : state) {
+        double sum = 0;
+        for (const auto&amp; t : ticks) sum += t.price;
+        benchmark::DoNotOptimize(sum);  // prevent optimising away
+    }
+    state.SetItemsProcessed(state.iterations() * n);
+}
+
+static void BM_SoA(benchmark::State&amp; state) {
+    int n = state.range(0);
+    std::vector&lt;double&gt; prices(n);
+    for (int i = 0; i &lt; n; ++i) prices[i] = 100.0 + i*0.01;
+
+    for (auto _ : state) {
+        double sum = std::reduce(prices.begin(), prices.end(), 0.0);
+        benchmark::DoNotOptimize(sum);
+    }
+    state.SetItemsProcessed(state.iterations() * n);
+}
+
+BENCHMARK(BM_AoS)-&gt;Range(1024, 1&lt;&lt;20);
+BENCHMARK(BM_SoA)-&gt;Range(1024, 1&lt;&lt;20);
+BENCHMARK_MAIN();</code></pre>
+
+  <h4>Running perf (Linux)</h4>
+  <pre><code class="language-bash"># Build with debug info
+g++ -O2 -g -o pricer pricer.cpp
+
+# Profile
+perf record -g ./pricer
+perf report
+
+# Cache miss analysis
+perf stat -e cache-misses,cache-references ./pricer
+
+# Typical output:
+# 1,234,567  cache-misses   # 12.3% of cache refs
+#   100,432  cache-references</code></pre>
+
+  <h4>Compiler Explorer — verifying vectorisation</h4>
+  <pre><code class="language-cpp">// Paste this at godbolt.org with g++ -O2 -march=native
+// Look for vmovpd / vaddpd / vmulpd — SIMD instructions
+#include &lt;vector&gt;
+
+double sum_prices(const double* prices, int n) {
+    double sum = 0;
+    for (int i = 0; i &lt; n; ++i)
+        sum += prices[i];
+    return sum;
+}
+// With -O2: auto-vectorised to process 4 doubles per iteration (AVX2)
+// If you see scalar addsd instead of vector vaddpd, vectorisation failed</code></pre>
+
+  <div class="cpp-note">💡 Always build benchmarks with <code>-O2</code> or <code>-O3</code>. Debug builds are so different from optimised builds that debug profiling tells you almost nothing useful. And use <code>benchmark::DoNotOptimize()</code> on your result — without it, the compiler may eliminate the entire computation.</div>
+</div>
