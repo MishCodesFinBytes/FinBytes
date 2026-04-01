@@ -21,6 +21,56 @@ permalink: /cpp/
 .cpp-badge { font-size:.68rem; padding:1px 5px; border-radius:3px; margin-left:6px; background:#f0fdf4; color:#27500A; white-space:nowrap; flex-shrink:0; }
 </style>
 
+<style>
+#cpp-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  gap: 16px;
+}
+#cpp-gate p {
+  font-size: .9rem;
+  color: #666;
+  margin: 0;
+}
+#cpp-gate input {
+  padding: 9px 14px;
+  font-size: .95rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 220px;
+  outline: none;
+}
+#cpp-gate input:focus { border-color: #2a7ae2; }
+#cpp-gate button {
+  padding: 9px 22px;
+  background: #2a7ae2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: .9rem;
+  cursor: pointer;
+}
+#cpp-gate button:hover { background: #1a5bbf; }
+#cpp-gate .err {
+  color: #c0392b;
+  font-size: .85rem;
+  display: none;
+}
+#cpp-content { display: none; }
+</style>
+
+<div id="cpp-gate">
+  <p>This section is password protected.</p>
+  <input type="password" id="cpp-pw" placeholder="Password" onkeydown="if(event.key==='Enter')cppUnlock()" />
+  <button onclick="cppUnlock()">Enter</button>
+  <span class="err" id="cpp-err">Incorrect password</span>
+</div>
+
+<div id="cpp-content">
+
 <p class="cpp-lede">A learning journal — exploring C++ after years in Python and C#. Fundamentals, series deep-dives, design patterns, and system reliability, in the order I learned them.</p>
 
 {% assign all_cpp = site.cpp | sort: "date" %}
@@ -190,3 +240,30 @@ permalink: /cpp/
     {% endfor %}
   </ul>
 </div>
+
+</div>
+
+<script>
+(function() {
+  var PW = 'CHANGE_ME';  /* ← replace with your password */
+  var KEY = 'cpp_unlocked';
+
+  function show() {
+    document.getElementById('cpp-gate').style.display = 'none';
+    document.getElementById('cpp-content').style.display = 'block';
+  }
+
+  if (sessionStorage.getItem(KEY) === PW) show();
+
+  window.cppUnlock = function() {
+    var val = document.getElementById('cpp-pw').value;
+    if (val === PW) {
+      sessionStorage.setItem(KEY, PW);
+      show();
+    } else {
+      document.getElementById('cpp-err').style.display = 'block';
+      document.getElementById('cpp-pw').value = '';
+    }
+  };
+})();
+</script>
