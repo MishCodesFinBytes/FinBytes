@@ -4,56 +4,19 @@ title: QuantLab
 permalink: /quant-lab/
 ---
 
-<div id="ql-index-lock">
-  <div class="ql-gate">
-    <h2>QuantLab</h2>
-    <p>This section is password protected.</p>
-    <input type="password" id="ql-pwd" placeholder="Enter password" />
-    <button onclick="qlUnlock()">Enter</button>
-    <p id="ql-err" style="color:red;display:none">Wrong password</p>
-  </div>
-</div>
-
-<div id="ql-index-content" style="display:none">
-  <p>Quantitative strategies and pricing models implemented in Python, C++ and C#.</p>
-  <ul class="ql-project-list">
-    {% assign projects = site.quant_lab | sort: 'date' | reverse %}
-    {% for project in projects %}
-      <li>
-        <a href="{{ project.url | relative_url }}">{{ project.title }}</a>
-        {% if project.description %}<span class="ql-desc"> — {{ project.description }}</span>{% endif %}
-        {% if project.tags.size > 0 %}<span class="ql-tags">{{ project.tags | join: " · " }}</span>{% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-</div>
+<p>Quantitative strategies and pricing models implemented in Python, C++ and C#.</p>
+<ul class="ql-project-list">
+  {% assign projects = site.quant_lab | sort: 'date' | reverse %}
+  {% for project in projects %}
+    <li>
+      <a href="{{ project.url | relative_url }}">{{ project.title }}</a>
+      {% if project.description %}<span class="ql-desc"> — {{ project.description }}</span>{% endif %}
+      {% if project.tags.size > 0 %}<span class="ql-tags">{{ project.tags | join: " · " }}</span>{% endif %}
+    </li>
+  {% endfor %}
+</ul>
 
 <style>
-.ql-gate {
-  max-width: 360px;
-  margin: 80px auto;
-  text-align: center;
-}
-.ql-gate input {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  margin: 12px 0;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-.ql-gate button {
-  width: 100%;
-  padding: 8px;
-  background: #2a7ae2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-}
 .ql-project-list {
   list-style: none;
   padding: 0;
@@ -78,22 +41,3 @@ permalink: /quant-lab/
   margin-top: 4px;
 }
 </style>
-
-<script>
-const QL_PASSWORD = 'MyPassw0rd1*';
-
-function qlUnlock() {
-  if (document.getElementById('ql-pwd').value === QL_PASSWORD) {
-    document.getElementById('ql-index-lock').style.display = 'none';
-    document.getElementById('ql-index-content').style.display = 'block';
-    sessionStorage.setItem('ql_unlocked', 'true');
-  } else {
-    document.getElementById('ql-err').style.display = 'block';
-  }
-}
-
-if (sessionStorage.getItem('ql_unlocked') === 'true') {
-  document.getElementById('ql-index-lock').style.display = 'none';
-  document.getElementById('ql-index-content').style.display = 'block';
-}
-</script>
