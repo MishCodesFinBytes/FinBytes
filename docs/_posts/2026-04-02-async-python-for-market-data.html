@@ -1,0 +1,127 @@
+---
+layout: post
+title: "Async Python for Market Data"
+date: 2026-04-02
+tags: [async, asyncio, aiohttp, python, finance, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/02/async-python-for-market-data/"
+---
+
+<h2>Why Async Matters for Financial Data</h2>
+
+<p>Imagine you need to fetch prices for 50 tickers. With synchronous code, each HTTP request blocks until it returns &mdash; 50 requests at 200ms each means 10 seconds of waiting. With async, all 50 requests fire at once. Total time: ~200ms. Same single thread, same machine, 50x faster.</p>
+
+<p>Async doesn't make individual requests faster. It eliminates the waiting between them. For financial services that pull data from multiple sources, this is the difference between a responsive API and a sluggish one.</p>
+
+<h2>The Event Loop Mental Model</h2>
+
+<p>Think of the event loop as a single waiter serving multiple tables. When table 1 orders food, the waiter doesn't stand there waiting for the kitchen &mdash; they go take table 2's order. When the kitchen rings the bell, the waiter delivers the food.</p>
+
+<p><code>async def</code> defines a coroutine &mdash; a function that can pause and resume. At each <code>await</code>, the function says "I'm waiting for something &mdash; go do other work." The event loop switches to another coroutine. When the awaited operation completes, the original function resumes exactly where it left off.</p>
+
+<p><strong>Key insight:</strong> async is faster for <strong>I/O-bound</strong> work (network calls, file reads, database queries). For <strong>CPU-bound</strong> work (number crunching), async doesn't help &mdash; use <code>multiprocessing</code> instead.</p>
+
+<h2>Fetching a Single Price with aiohttp</h2>
+
+<pre><code class="language-python">import aiohttp
+
+async def fetch_price(ticker: str) -> float:
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return float(data["chart"]["result"][0]["meta"]["regularMarketPrice"])
+</code></pre>
+
+<p>Two levels of <code>async with</code> here:</p>
+
+<ul>
+  <li><strong><code>aiohttp.ClientSession()</code></strong> &mdash; manages a connection pool. Creating one per request is wasteful; in production you'd share a session across calls.</li>
+  <li><strong><code>session.get(url)</code></strong> &mdash; sends the request and streams the response. The <code>async with</code> ensures the response body is properly closed even if an error occurs.</li>
+</ul>
+
+<p><code>await response.json()</code> is where the magic happens &mdash; the function pauses here while the response body is read from the network, and the event loop is free to run other coroutines in the meantime.</p>
+
+<h2>Fetching Many Prices Concurrently</h2>
+
+<pre><code class="language-python">import asyncio
+
+async def fetch_many_prices(tickers: list[str]) -> dict[str, float]:
+    async def safe_fetch(ticker: str) -> tuple[str, float | None]:
+        try:
+            price = await fetch_price(ticker)
+            return ticker, price
+        except Exception:
+            return ticker, None
+
+    tasks = [safe_fetch(t) for t in tickers]
+    results = await asyncio.gather(*tasks)
+    return {ticker: price for ticker, price in results if price is not None}
+</code></pre>
+
+<p><code>asyncio.gather</code> takes multiple coroutines and runs them concurrently on the same event loop. All start immediately. Results come back in the same order as the input, even if some finish faster.</p>
+
+<p>The <code>safe_fetch</code> wrapper is a graceful failure pattern: if one ticker fails (network error, invalid symbol), the others still return successfully. You don't want to lose 49 good results because ticker #37 had a hiccup. The failed ticker is simply excluded from the output.</p>
+
+<h2>aiohttp vs requests</h2>
+
+<table>
+  <thead><tr><th></th><th>requests</th><th>aiohttp</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Style</strong></td><td>Synchronous</td><td>Asynchronous</td></tr>
+    <tr><td><strong>Use when</strong></td><td>Scripts, one-off calls</td><td>Services, concurrent fetching</td></tr>
+    <tr><td><strong>Session</strong></td><td><code>requests.Session()</code></td><td><code>aiohttp.ClientSession()</code></td></tr>
+    <tr><td><strong>Context manager</strong></td><td><code>with</code></td><td><code>async with</code></td></tr>
+  </tbody>
+</table>
+
+<p><strong>Critical rule:</strong> never call <code>requests.get()</code> inside an async function. It blocks the entire event loop &mdash; all other concurrent tasks freeze until the HTTP response arrives. Always use <code>aiohttp</code> (or <code>httpx</code> with async) inside async functions.</p>
+
+<h2>Testing Async Code</h2>
+
+<pre><code class="language-python">import pytest
+from unittest.mock import AsyncMock, patch, MagicMock
+
+class TestFetchPrice:
+    async def test_returns_float(self):
+        mock_response = AsyncMock()
+        mock_response.json = AsyncMock(return_value={
+            "chart": {"result": [{"meta": {"regularMarketPrice": 150.25}}]}
+        })
+        mock_response.raise_for_status = MagicMock()
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=False)
+
+        mock_session = AsyncMock()
+        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("async_prices.aiohttp.ClientSession", return_value=mock_session):
+            price = await fetch_price("AAPL")
+            assert price == 150.25
+</code></pre>
+
+<p>Mocking async code is more involved than sync code. You need to mock the async context manager protocol (<code>__aenter__</code>/<code>__aexit__</code>) for both the session and the response. <code>AsyncMock</code> handles <code>await</code>-able return values; <code>MagicMock</code> is used for sync methods like <code>raise_for_status</code> and for <code>session.get</code> (which returns a context manager, not a coroutine).</p>
+
+<p>With <code>pytest-asyncio</code> and <code>asyncio_mode = "auto"</code> in your config, test functions can be <code>async def</code> directly &mdash; no <code>@pytest.mark.asyncio</code> decorator needed.</p>
+
+<h2>How FastAPI Uses Async</h2>
+
+<p>FastAPI runs on Starlette, which runs on <code>asyncio</code>. When you write <code>async def</code> endpoints, the server handles other requests while yours is waiting for I/O:</p>
+
+<pre><code class="language-python">@app.get("/prices/{ticker}")
+async def get_price(ticker: str):
+    price = await fetch_price(ticker)  # non-blocking
+    return {"ticker": ticker, "price": price}
+</code></pre>
+
+<p>With sync <code>def</code>, FastAPI runs your endpoint in a thread pool &mdash; still concurrent, but less efficient. For I/O-heavy endpoints (database queries, external API calls), <code>async def</code> is the way to go.</p>
+
+<h2>Try It Yourself</h2>
+
+<p>The full exercise code is in the <a href="https://github.com/MishCodesFinBytes/quant_lab/tree/master/exercises/04-async">quant_lab repo</a>. Clone it, run <code>pip install -e ".[dev]"</code>, and try <code>pytest -v</code> to see all 3 tests pass.</p>
+
+<p>The concurrency test is the most interesting one &mdash; it proves that three 50ms fetches complete in ~50ms total (concurrent), not ~150ms (sequential). That's async in action.</p>
