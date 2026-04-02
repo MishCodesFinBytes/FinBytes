@@ -1,0 +1,187 @@
+---
+layout: post
+title: "PostgreSQL + SQLAlchemy — Async Database for Financial Data"
+date: 2026-04-02
+tags: [postgresql, sqlalchemy, async, python, database, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/02/postgresql-sqlalchemy-async/"
+---
+
+<h2>What We're Building</h2>
+
+<p>A <code>ScanRecord</code> model that stores risk scan results (tickers, VaR, narrative) using async SQLAlchemy 2.0. We'll write two functions &mdash; <code>save_scan</code> and <code>get_recent_scans</code> &mdash; test them with SQLite in-memory, and run PostgreSQL via Docker Compose.</p>
+
+<h2>SQLAlchemy 2.0 Style</h2>
+
+<p>SQLAlchemy 2.0 introduced a modern way to define models using Python type hints:</p>
+
+<pre><code class="language-python">from datetime import datetime, UTC
+from sqlalchemy import String, Float, DateTime
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class ScanRecord(Base):
+    __tablename__ = "scan_records"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tickers: Mapped[str] = mapped_column(String(200))
+    var_pct: Mapped[float] = mapped_column(Float)
+    narrative: Mapped[str] = mapped_column(String(2000))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )</code></pre>
+
+<p>The key difference from legacy SQLAlchemy: <code>Mapped[int]</code> tells both Python and SQLAlchemy the column type. Your IDE now understands that <code>record.var_pct</code> is a float &mdash; autocomplete, type checking, and refactoring all work properly.</p>
+
+<h2>Async Functions</h2>
+
+<p>Every database call uses <code>await</code> because queries go over the network. While waiting for a response, Python can handle other requests instead of blocking.</p>
+
+<pre><code class="language-python">from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.models import ScanRecord
+
+
+async def save_scan(
+    session: AsyncSession,
+    tickers: list[str],
+    var_pct: float,
+    narrative: str,
+) -> ScanRecord:
+    record = ScanRecord(
+        tickers=",".join(tickers),
+        var_pct=var_pct,
+        narrative=narrative,
+    )
+    session.add(record)
+    await session.commit()
+    await session.refresh(record)
+    return record
+
+
+async def get_recent_scans(session: AsyncSession, limit: int = 10) -> list[ScanRecord]:
+    stmt = (
+        select(ScanRecord)
+        .order_by(ScanRecord.created_at.desc(), ScanRecord.id.desc())
+        .limit(limit)
+    )
+    result = await session.execute(stmt)
+    return list(result.scalars().all())</code></pre>
+
+<p><code>save_scan</code> joins the ticker list with commas, creates the record, commits it, and refreshes to get the auto-generated <code>id</code> and <code>created_at</code>. <code>get_recent_scans</code> returns the most recent records, newest first, with a secondary sort on <code>id</code> to break ties when timestamps match.</p>
+
+<h2>Testing with SQLite In-Memory</h2>
+
+<p>Tests run against an in-memory SQLite database &mdash; no Docker, no setup, millisecond-fast. This works because SQLAlchemy abstracts the database: the same model and queries run on SQLite, PostgreSQL, or MySQL.</p>
+
+<pre><code class="language-python">import pytest
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+
+
+@pytest.fixture
+async def session():
+    from src.models import Base
+
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    async_session = async_sessionmaker(engine, expire_on_commit=False)
+    async with async_session() as session:
+        yield session
+    await engine.dispose()</code></pre>
+
+<p>The fixture creates a fresh database for each test, runs <code>Base.metadata.create_all</code> to create the tables, yields a session, then cleans up. Each test gets an isolated, empty database.</p>
+
+<pre><code class="language-python">class TestScanRecord:
+    async def test_save_and_retrieve(self, session):
+        from src.db import save_scan, get_recent_scans
+
+        await save_scan(session, tickers=["AAPL", "MSFT"], var_pct=-2.15, narrative="Test narrative")
+        scans = await get_recent_scans(session, limit=10)
+        assert len(scans) == 1
+        assert scans[0].tickers == "AAPL,MSFT"
+        assert scans[0].var_pct == pytest.approx(-2.15)
+
+    async def test_recent_scans_ordered_by_date(self, session):
+        from src.db import save_scan, get_recent_scans
+
+        await save_scan(session, tickers=["AAPL"], var_pct=-1.0, narrative="First")
+        await save_scan(session, tickers=["MSFT"], var_pct=-2.0, narrative="Second")
+        scans = await get_recent_scans(session, limit=10)
+        assert scans[0].narrative == "Second"  # most recent first
+
+    async def test_limit_works(self, session):
+        from src.db import save_scan, get_recent_scans
+
+        for i in range(5):
+            await save_scan(session, tickers=[f"T{i}"], var_pct=-float(i), narrative=f"Scan {i}")
+        scans = await get_recent_scans(session, limit=3)
+        assert len(scans) == 3</code></pre>
+
+<p>Three tests, all async, all passing in under a second. The <code>asyncio_mode = "auto"</code> setting in <code>pyproject.toml</code> means pytest handles the async event loop automatically.</p>
+
+<h2>Docker Compose for PostgreSQL</h2>
+
+<p>For real-world use, we run PostgreSQL via Docker Compose with a named volume for data persistence:</p>
+
+<pre><code class="language-yaml">services:
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: quantlab
+      POSTGRES_PASSWORD: quantlab_dev
+      POSTGRES_DB: quantlab
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:</code></pre>
+
+<p>The named volume <code>pgdata</code> means your data survives <code>docker compose down</code> and <code>docker compose up</code> cycles. Without it, you'd lose your entire database every restart. To start it:</p>
+
+<pre><code class="language-bash">docker compose up -d
+docker compose exec db psql -U quantlab -c "SELECT 1;"
+# Verify it's running, then stop:
+docker compose down</code></pre>
+
+<h2>What Is Alembic?</h2>
+
+<p>Right now, tests create tables with <code>Base.metadata.create_all()</code> &mdash; it reads your models and creates matching tables from scratch. This works for fresh databases but breaks in production.</p>
+
+<p>The problem: you deploy with a <code>ScanRecord</code> table. Next week, you add a <code>sharpe_ratio</code> column. <code>create_all()</code> won't modify existing tables &mdash; it only creates missing ones. Your production database is stuck with the old schema.</p>
+
+<p><strong>Alembic</strong> solves this with <strong>migrations</strong> &mdash; versioned scripts that describe schema changes step by step. It compares your SQLAlchemy models to the actual database, figures out the difference, and generates a migration script:</p>
+
+<pre><code class="language-bash"># Set up Alembic in your project
+alembic init alembic
+
+# Compare models to DB, generate migration
+alembic revision --autogenerate -m "add sharpe ratio"
+
+# Apply all pending migrations
+alembic upgrade head
+
+# Roll back the last migration
+alembic downgrade -1</code></pre>
+
+<p>The <code>--autogenerate</code> flag is the key feature: Alembic reads your models, compares them to the database, and writes the migration for you. You review it, then apply it. Think of it as git for your database schema &mdash; every change is tracked, reversible, and shareable.</p>
+
+<p><strong>Rule of thumb:</strong> <code>create_all()</code> is for tests. Alembic is for real databases.</p>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+    <li><strong>SQLAlchemy 2.0</strong> &mdash; use <code>Mapped</code>, <code>mapped_column</code>, and <code>DeclarativeBase</code> for type-safe models.</li>
+    <li><strong>Async SQLAlchemy</strong> &mdash; <code>create_async_engine</code> + <code>async_sessionmaker</code> + <code>await</code> on every DB call. Non-blocking under load.</li>
+    <li><strong>Test with SQLite</strong> &mdash; fast, no setup, good enough for standard SQL. Use PostgreSQL integration tests for database-specific features.</li>
+    <li><strong>Docker Compose</strong> &mdash; run PostgreSQL with one command. Named volumes persist data across restarts.</li>
+    <li><strong>Connection pooling</strong> &mdash; SQLAlchemy pools connections by default (5 ready, 10 overflow). Reuses connections instead of opening new ones per request.</li>
+    <li><strong>Alembic</strong> &mdash; version-controlled migrations for production databases. Autogenerates from your models.</li>
+</ul>
