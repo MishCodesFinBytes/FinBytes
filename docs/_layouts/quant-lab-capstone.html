@@ -1,86 +1,49 @@
 ---
 layout: default
 ---
-<div id="ql-lock">
-  <div class="ql-gate">
-    <h2>QuantLab</h2>
-    <p>This section is password protected.</p>
-    <input type="password" id="ql-pwd" placeholder="Enter password" />
-    <button onclick="qlUnlock()">Enter</button>
-    <p id="ql-err" style="color:red;display:none">Wrong password</p>
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">{{ page.title }}</h1>
+    {% if page.description %}
+      <p class="post-description">{{ page.description }}</p>
+    {% endif %}
+    <p class="post-meta">
+      {% if page.date %}<time>{{ page.date | date: "%B %d, %Y" }}</time>{% endif %}
+      {% if page.tags.size > 0 %} &middot; {{ page.tags | join: ", " }}{% endif %}
+    </p>
+  </header>
+
+  <div class="ql-tabs">
+    <button class="ql-tab-btn active" onclick="showTab('brief', this)">Project Brief</button>
+    <button class="ql-tab-btn" onclick="showTab('exercises', this)">Exercises</button>
+    <button class="ql-tab-btn" onclick="showTab('math', this)">Math Concepts</button>
+    <button class="ql-tab-btn" onclick="showTab('core', this)">Sub-project A</button>
+    <button class="ql-tab-btn" onclick="showTab('infra', this)">Infrastructure</button>
+    <button class="ql-tab-btn" onclick="showTab('run', this)">How to Run</button>
   </div>
-</div>
 
-<div id="ql-content" style="display:none">
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">{{ page.title }}</h1>
-      {% if page.description %}
-        <p class="post-description">{{ page.description }}</p>
-      {% endif %}
-      <p class="post-meta">
-        {% if page.date %}<time>{{ page.date | date: "%B %d, %Y" }}</time>{% endif %}
-        {% if page.tags.size > 0 %} &middot; {{ page.tags | join: ", " }}{% endif %}
-      </p>
-    </header>
+  <div id="tab-brief" class="ql-tab-content active">
+    {{ page.brief_content }}
+  </div>
+  <div id="tab-exercises" class="ql-tab-content" style="display:none">
+    {{ page.exercises_content }}
+  </div>
+  <div id="tab-math" class="ql-tab-content" style="display:none">
+    {{ page.math_content }}
+  </div>
+  <div id="tab-core" class="ql-tab-content" style="display:none">
+    {{ page.core_content }}
+  </div>
+  <div id="tab-infra" class="ql-tab-content" style="display:none">
+    {{ page.infra_content }}
+  </div>
+  <div id="tab-run" class="ql-tab-content" style="display:none">
+    {{ page.run_content }}
+  </div>
 
-    <div class="ql-tabs">
-      <button class="ql-tab-btn active" onclick="showTab('brief', this)">Project Brief</button>
-      <button class="ql-tab-btn" onclick="showTab('exercises', this)">Exercises</button>
-      <button class="ql-tab-btn" onclick="showTab('math', this)">Math Concepts</button>
-      <button class="ql-tab-btn" onclick="showTab('core', this)">Sub-project A</button>
-      <button class="ql-tab-btn" onclick="showTab('infra', this)">Infrastructure</button>
-      <button class="ql-tab-btn" onclick="showTab('run', this)">How to Run</button>
-    </div>
-
-    <div id="tab-brief" class="ql-tab-content active">
-      {{ page.brief_content }}
-    </div>
-    <div id="tab-exercises" class="ql-tab-content" style="display:none">
-      {{ page.exercises_content }}
-    </div>
-    <div id="tab-math" class="ql-tab-content" style="display:none">
-      {{ page.math_content }}
-    </div>
-    <div id="tab-core" class="ql-tab-content" style="display:none">
-      {{ page.core_content }}
-    </div>
-    <div id="tab-infra" class="ql-tab-content" style="display:none">
-      {{ page.infra_content }}
-    </div>
-    <div id="tab-run" class="ql-tab-content" style="display:none">
-      {{ page.run_content }}
-    </div>
-
-  </article>
-</div>
+</article>
 
 <style>
-.ql-gate {
-  max-width: 360px;
-  margin: 80px auto;
-  text-align: center;
-}
-.ql-gate input {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  margin: 12px 0;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-.ql-gate button {
-  width: 100%;
-  padding: 8px;
-  background: #2a7ae2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-}
 .ql-tabs {
   display: flex;
   gap: 4px;
@@ -109,23 +72,6 @@ layout: default
 </style>
 
 <script>
-const QL_PASSWORD = 'MyPassw0rd1*';
-
-function qlUnlock() {
-  if (document.getElementById('ql-pwd').value === QL_PASSWORD) {
-    document.getElementById('ql-lock').style.display = 'none';
-    document.getElementById('ql-content').style.display = 'block';
-    sessionStorage.setItem('ql_unlocked', 'true');
-  } else {
-    document.getElementById('ql-err').style.display = 'block';
-  }
-}
-
-if (sessionStorage.getItem('ql_unlocked') === 'true') {
-  document.getElementById('ql-lock').style.display = 'none';
-  document.getElementById('ql-content').style.display = 'block';
-}
-
 function showTab(name, btn) {
   document.querySelectorAll('.ql-tab-content').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.ql-tab-btn').forEach(el => el.classList.remove('active'));
