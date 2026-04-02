@@ -1,0 +1,181 @@
+---
+layout: post
+title: "Docker for Python Services"
+date: 2026-04-02
+tags: [docker, containers, fastapi, python, devops, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/02/docker-for-python-services/"
+---
+
+<h2>What We're Building</h2>
+
+<p>A minimal FastAPI app containerized with Docker. We'll write a multi-stage Dockerfile, a docker-compose file, and a <code>.dockerignore</code> &mdash; the core building blocks for running any Python service in a container.</p>
+
+<h2>Installing Docker Desktop on Windows</h2>
+
+<p>Before we can build containers, we need Docker installed. On Windows, Docker runs inside WSL 2 (Windows Subsystem for Linux).</p>
+
+<h3>Step 1: Install WSL 2</h3>
+
+<p>Open PowerShell as Administrator and run:</p>
+
+<pre><code class="language-bash">wsl --install</code></pre>
+
+<p>This installs WSL 2 with Ubuntu as the default distribution. <strong>Restart your computer</strong> when prompted. After the restart, a terminal window will open asking you to create a Unix username and password for Ubuntu &mdash; pick something you'll remember.</p>
+
+<h3>Step 2: Install Docker Desktop</h3>
+
+<p>Open a terminal and run:</p>
+
+<pre><code class="language-bash">winget install Docker.DockerDesktop</code></pre>
+
+<p><strong>Restart your computer again.</strong> Docker Desktop needs a fresh start to finish setup.</p>
+
+<h3>Step 3: Verify</h3>
+
+<p>After restarting, open a terminal and check both are installed:</p>
+
+<pre><code class="language-bash">docker --version
+# Docker version 29.x.x
+
+docker compose version
+# Docker Compose version v5.x.x</code></pre>
+
+<p>If both commands return version numbers, you're good to go.</p>
+
+<h2>What Is Docker and Why Use It</h2>
+
+<p>Docker packages your application and all its dependencies into a <strong>container</strong> &mdash; a lightweight, isolated environment that runs the same way everywhere. Unlike virtual machines, containers share the host OS kernel, so they start in seconds and use a fraction of the resources.</p>
+
+<p>For financial services, this matters because:</p>
+
+<ul>
+    <li><strong>Reproducibility</strong> &mdash; the same image runs identically on your laptop, in CI, and in production. No "works on my machine" surprises.</li>
+    <li><strong>Consistent environments</strong> &mdash; every team member runs the exact same stack, down to the Python version and package versions.</li>
+    <li><strong>Deployment confidence</strong> &mdash; you test the container, you ship the container. What you tested is what runs in prod.</li>
+</ul>
+
+<h2>The FastAPI App</h2>
+
+<p>We start with a tiny app &mdash; two endpoints, no external dependencies beyond FastAPI and Uvicorn. The goal is to learn Docker, not build a complex API.</p>
+
+<pre><code class="language-python">import os
+from fastapi import FastAPI
+
+app = FastAPI(title="Dockerized API")
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "environment": os.getenv("APP_ENV", "development")}
+
+
+@app.get("/")
+def root():
+    return {"message": "Hello from Docker!"}</code></pre>
+
+<p>The <code>/health</code> endpoint reads <code>APP_ENV</code> from the environment. Locally it defaults to <code>"development"</code>. Inside Docker, we'll set it to <code>"docker"</code> &mdash; a quick way to confirm you're actually running in a container.</p>
+
+<h2>The Dockerfile</h2>
+
+<p>A Dockerfile is a recipe for building a container image. Each instruction creates a layer.</p>
+
+<pre><code class="language-dockerfile"># Stage 1: Build
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+COPY pyproject.toml .
+RUN pip install --no-cache-dir .
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
+COPY src/ src/
+
+EXPOSE 8000
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+
+<h3>Line by line</h3>
+
+<ul>
+    <li><code>FROM python:3.11-slim AS builder</code> &mdash; start from a minimal Python image. <code>AS builder</code> names this stage so we can reference it later.</li>
+    <li><code>WORKDIR /app</code> &mdash; set the working directory inside the container (creates it if it doesn't exist).</li>
+    <li><code>COPY pyproject.toml .</code> &mdash; copy just the project config first. Dependencies change rarely, so this layer gets cached.</li>
+    <li><code>RUN pip install --no-cache-dir .</code> &mdash; install dependencies. <code>--no-cache-dir</code> keeps the layer smaller.</li>
+    <li>Second <code>FROM python:3.11-slim</code> &mdash; start a fresh image for the runtime stage. None of the build tools carry over.</li>
+    <li><code>COPY --from=builder</code> &mdash; cherry-pick only the installed packages and the uvicorn binary from the builder stage.</li>
+    <li><code>COPY src/ src/</code> &mdash; add the application code.</li>
+    <li><code>EXPOSE 8000</code> &mdash; documents the port (doesn't actually open it &mdash; that's what <code>ports:</code> does in compose).</li>
+    <li><code>CMD</code> &mdash; the default command when the container starts.</li>
+</ul>
+
+<h3>Why multi-stage?</h3>
+
+<p>The builder stage has pip, build tools, and wheel caches. The runtime stage has none of that &mdash; just Python, your packages, and your code. Result: a smaller, faster, more secure image.</p>
+
+<h2>docker-compose.yml</h2>
+
+<p>Instead of typing a long <code>docker run</code> command with flags, we declare the configuration in YAML:</p>
+
+<pre><code class="language-yaml">services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=docker
+    restart: unless-stopped</code></pre>
+
+<ul>
+    <li><code>build: .</code> &mdash; build the image from the Dockerfile in the current directory.</li>
+    <li><code>ports: "8000:8000"</code> &mdash; map host port 8000 to container port 8000 (left is host, right is container).</li>
+    <li><code>environment: APP_ENV=docker</code> &mdash; inject an environment variable. This is how <code>/health</code> knows it's running in Docker.</li>
+    <li><code>restart: unless-stopped</code> &mdash; auto-restart on crash, but not if you manually stop it.</li>
+</ul>
+
+<h2>.dockerignore</h2>
+
+<p>When you run <code>docker build</code>, your entire project folder gets sent to the Docker daemon. A <code>.dockerignore</code> file filters out files you don't need in the image:</p>
+
+<pre><code>__pycache__
+*.pyc
+.git
+.env
+.venv</code></pre>
+
+<p>This keeps builds faster (less data to transfer), images smaller (no junk files), and more secure (no <code>.env</code> secrets baked into the image).</p>
+
+<h2>Running It</h2>
+
+<p>Build and start:</p>
+
+<pre><code class="language-bash">cd exercises/07-docker
+docker compose up --build -d</code></pre>
+
+<p>Verify:</p>
+
+<pre><code class="language-bash">curl http://localhost:8000/health
+# {"status":"ok","environment":"docker"}
+
+curl http://localhost:8000/
+# {"message":"Hello from Docker!"}</code></pre>
+
+<p>The <code>environment</code> field says <code>"docker"</code> instead of <code>"development"</code> &mdash; proof that the compose env var is being injected.</p>
+
+<p>Stop:</p>
+
+<pre><code class="language-bash">docker compose down</code></pre>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+    <li><strong>Dockerfile</strong> &mdash; a recipe for building an image. Each instruction is a cached layer.</li>
+    <li><strong>Multi-stage builds</strong> &mdash; separate build dependencies from runtime. Smaller, safer images.</li>
+    <li><strong>docker-compose</strong> &mdash; declarative config for running services. One command to start everything.</li>
+    <li><strong>.dockerignore</strong> &mdash; keep builds fast and images clean. Never bake secrets into images.</li>
+    <li><strong>Environment variables</strong> &mdash; configure containers at runtime, not build time. Same image, different behavior.</li>
+</ul>
