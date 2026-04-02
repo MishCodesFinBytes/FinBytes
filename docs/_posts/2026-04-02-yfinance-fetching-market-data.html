@@ -1,0 +1,121 @@
+---
+layout: post
+title: "yfinance — Fetching & Wrangling Market Data"
+date: 2026-04-02
+tags: [yfinance, pandas, numpy, market-data, finance, python, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/02/yfinance-fetching-market-data/"
+---
+
+<h2>What yfinance Does</h2>
+
+<p>yfinance is a Python library that pulls historical and real-time market data from Yahoo Finance. It's free, requires no API key, and returns pandas DataFrames. It's not suitable for production trading systems (rate limits, no SLA), but it's perfect for learning, prototyping, and backtesting.</p>
+
+<p>In this exercise we build a three-stage pipeline: fetch closing prices, clean the data, and compute daily returns.</p>
+
+<h2>Fetching Closing Prices</h2>
+
+<pre><code class="language-python">import yfinance as yf
+
+def fetch_closing_prices(tickers: list[str], period: str = "1y") -> pd.DataFrame:
+    data = yf.download(tickers, period=period, auto_adjust=True, progress=False)
+
+    if data.empty:
+        raise ValueError(f"No data returned for tickers: {tickers}")
+
+    # yfinance returns MultiIndex for multiple tickers
+    if isinstance(data.columns, pd.MultiIndex):
+        data = data["Close"]
+    elif "Close" in data.columns:
+        data = data[["Close"]]
+        data.columns = tickers
+
+    return data
+</code></pre>
+
+<p>Three things to notice:</p>
+
+<ul>
+  <li><strong><code>auto_adjust=True</code></strong> &mdash; returns adjusted closing prices that account for stock splits and dividends. For returns calculations, you always want adjusted prices. Without this, a 2:1 stock split looks like a 50% crash.</li>
+  <li><strong>MultiIndex handling</strong> &mdash; when downloading multiple tickers, yfinance returns columns like <code>("Close", "AAPL")</code>, <code>("Open", "AAPL")</code>, etc. We extract just the "Close" level to get a clean DataFrame with ticker names as columns.</li>
+  <li><strong>Fail on empty</strong> &mdash; if the ticker doesn't exist or the API fails silently, we raise immediately rather than passing empty data downstream.</li>
+</ul>
+
+<h2>Data Quality Issues in Real Market Data</h2>
+
+<p>Real market data is messy. Download a year of prices for any ticker and you'll likely find:</p>
+
+<ul>
+  <li><strong>NaN values</strong> &mdash; the stock was halted, the exchange had a holiday, or the data provider has a gap</li>
+  <li><strong>Leading NaN</strong> &mdash; the ticker IPO'd partway through your date range, so early dates have no data</li>
+  <li><strong>Splits</strong> &mdash; a $200 stock becomes $100 overnight (handled by <code>auto_adjust</code>)</li>
+</ul>
+
+<p>Our <code>validate_data</code> function handles these:</p>
+
+<pre><code class="language-python">def validate_data(prices: pd.DataFrame) -> pd.DataFrame:
+    # Drop rows where ALL values are NaN
+    prices = prices.dropna(how="all")
+
+    # Drop leading rows with any NaN (ticker didn't exist yet)
+    first_valid = prices.apply(lambda col: col.first_valid_index()).max()
+    if first_valid is not None:
+        prices = prices.loc[first_valid:]
+
+    # Forward-fill remaining gaps
+    prices = prices.ffill()
+
+    return prices
+</code></pre>
+
+<h2>Why Forward-Fill, Not Interpolation?</h2>
+
+<p>If a stock was $100 on Monday and $110 on Wednesday with no data for Tuesday, there are two approaches:</p>
+
+<ul>
+  <li><strong>Interpolation</strong> would say $105 on Tuesday &mdash; drawing a line between known points</li>
+  <li><strong>Forward-fill</strong> says $100 on Tuesday &mdash; using the last known price</li>
+</ul>
+
+<p>Forward-fill is the correct choice for financial data. Maybe Tuesday was a trading halt because of a merger announcement. There WAS no price on Tuesday. The last known price ($100) is the best available information until the market opens again. Interpolation would fabricate a price that never existed.</p>
+
+<h2>Computing Returns</h2>
+
+<pre><code class="language-python">import numpy as np
+
+def compute_returns(prices: pd.DataFrame) -> np.ndarray:
+    values = prices.values
+    returns = np.diff(values, axis=0) / values[:-1]
+    return np.nan_to_num(returns, nan=0.0)
+</code></pre>
+
+<p>This converts a price DataFrame into a numpy array of daily percentage returns. Five prices become four returns. The formula is <code>(price_today - price_yesterday) / price_yesterday</code>, which <code>np.diff / values[:-1]</code> computes in one vectorized operation.</p>
+
+<p><code>np.nan_to_num</code> is a safety net &mdash; if any NaN slips through (a zero price, for example), it becomes 0.0 rather than poisoning downstream calculations.</p>
+
+<h2>Pandas vs Numpy &mdash; When to Use Which</h2>
+
+<table>
+  <thead><tr><th>Stage</th><th>Tool</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Fetch &amp; clean</td><td>pandas</td><td>Date indices, column names, <code>ffill()</code>, <code>dropna()</code> &mdash; data wrangling needs labels</td></tr>
+    <tr><td>Compute returns</td><td>numpy</td><td>Pure numerical computation, no labels needed, faster</td></tr>
+  </tbody>
+</table>
+
+<p><code>prices.values</code> is the bridge &mdash; it converts a pandas DataFrame to a numpy array, stripping away the index and column names. From there, <code>np.diff</code> and array division are pure vectorized math. This is the standard pattern in quantitative finance: pandas for data management, numpy for computation.</p>
+
+<h2>Market Data Gotchas</h2>
+
+<p>Two biases worth knowing about, even though they don't appear in this exercise:</p>
+
+<p><strong>Survivorship bias</strong> &mdash; if you download "S&amp;P 500 companies" today and backtest over 10 years, you're only looking at companies that survived. The ones that went bankrupt aren't in your dataset. Your backtest will look better than reality.</p>
+
+<p><strong>Look-ahead bias</strong> &mdash; using future information to make past decisions. Cleaning data by removing bad tickers after downloading everything is fine for learning. In a real trading system, you'd need to handle bad data in real-time without knowing the future.</p>
+
+<h2>Try It Yourself</h2>
+
+<p>The full exercise code is in the <a href="https://github.com/MishCodesFinBytes/quant_lab/tree/master/exercises/05-yfinance">quant_lab repo</a>. Clone it, run <code>pip install -e ".[dev]"</code>, and try <code>pytest -v</code> to see all 7 tests pass.</p>
+
+<p>The tests mock <code>yf.download</code> so they run instantly without hitting the network. Try removing the mock and calling <code>fetch_closing_prices(["AAPL", "MSFT"], period="1mo")</code> in a Python shell to see real data come back.</p>
