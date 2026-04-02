@@ -1,0 +1,155 @@
+---
+layout: post
+title: "FastAPI — Your First Financial API"
+date: 2026-04-02
+tags: [fastapi, api, python, finance, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/02/fastapi-your-first-financial-api/"
+---
+
+<h2>Why FastAPI for Financial Services?</h2>
+
+<p>Financial applications need three things from an API framework: <strong>speed</strong> (market data waits for no one), <strong>validation</strong> (bad input means bad trades), and <strong>documentation</strong> (other teams need to integrate with you). FastAPI delivers all three out of the box.</p>
+
+<p>FastAPI is built on Starlette (async HTTP) and Pydantic (data validation). Type hints aren't optional decoration &mdash; they power automatic request validation, response serialization, and OpenAPI documentation. You write Python type annotations and get a validated, documented API for free.</p>
+
+<h2>A Health Check &mdash; The Simplest Endpoint</h2>
+
+<pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI(title="Portfolio API", version="0.1.0")
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+</code></pre>
+
+<p>That's a complete endpoint. <code>@app.get("/health")</code> registers a GET route. The return dict is automatically serialized to JSON. Hit <code>/docs</code> in your browser and you'll see auto-generated Swagger documentation &mdash; no extra configuration needed.</p>
+
+<h2>Watchlist CRUD &mdash; Status Codes and Error Handling</h2>
+
+<p>A watchlist lets users track tickers they're interested in. This gives us a chance to use the full range of HTTP status codes.</p>
+
+<pre><code class="language-python">from fastapi import HTTPException, status
+from pydantic import BaseModel, Field
+
+_watchlist: dict[str, dict] = {}
+
+class TickerIn(BaseModel):
+    ticker: str = Field(..., min_length=1, max_length=10)
+
+class TickerOut(BaseModel):
+    ticker: str
+
+
+@app.get("/watchlist", response_model=list[TickerOut])
+def list_watchlist():
+    return list(_watchlist.values())
+
+
+@app.post("/watchlist", response_model=TickerOut, status_code=status.HTTP_201_CREATED)
+def add_to_watchlist(body: TickerIn):
+    ticker = body.ticker.upper()
+    if ticker in _watchlist:
+        raise HTTPException(status_code=409, detail=f"{ticker} already in watchlist")
+    _watchlist[ticker] = {"ticker": ticker}
+    return _watchlist[ticker]
+
+
+@app.delete("/watchlist/{ticker}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_from_watchlist(ticker: str):
+    ticker = ticker.upper()
+    if ticker not in _watchlist:
+        raise HTTPException(status_code=404, detail=f"{ticker} not in watchlist")
+    del _watchlist[ticker]
+</code></pre>
+
+<p>Key things to notice:</p>
+
+<ul>
+  <li><strong><code>response_model=list[TickerOut]</code></strong> &mdash; FastAPI serializes the response through this Pydantic model, stripping any extra fields. This is your API contract.</li>
+  <li><strong><code>status_code=status.HTTP_201_CREATED</code></strong> &mdash; POST returns 201 (created), not 200. DELETE returns 204 (no content). Using the right status codes isn't pedantic &mdash; clients depend on them.</li>
+  <li><strong><code>HTTPException(status_code=409)</code></strong> &mdash; 409 Conflict for duplicate tickers, 404 Not Found for missing ones. FastAPI converts these to proper JSON error responses automatically.</li>
+  <li><strong><code>{ticker}</code> in the path</strong> &mdash; <code>/watchlist/{ticker}</code> extracts the ticker from the URL as a path parameter. FastAPI passes it to your function as an argument.</li>
+</ul>
+
+<h2>Portfolio Analysis &mdash; Request Validation with Pydantic</h2>
+
+<pre><code class="language-python">from pydantic import model_validator
+
+class PortfolioIn(BaseModel):
+    tickers: list[str] = Field(..., min_length=1)
+    weights: list[float] = Field(..., min_length=1)
+    period: str = Field(default="1y")
+
+    @model_validator(mode="after")
+    def validate_lengths(self):
+        if len(self.tickers) != len(self.weights):
+            raise ValueError("tickers and weights must have the same length")
+        return self
+
+class AnalysisOut(BaseModel):
+    tickers: list[str]
+    weights: list[float]
+    period: str
+    message: str
+
+
+@app.post("/analyze", response_model=AnalysisOut)
+def analyze_portfolio(body: PortfolioIn):
+    return AnalysisOut(
+        tickers=body.tickers,
+        weights=body.weights,
+        period=body.period,
+        message=f"Analysis stub for {len(body.tickers)} tickers over {body.period}",
+    )
+</code></pre>
+
+<p>If a client sends <code>{"tickers": ["AAPL", "MSFT"], "weights": [0.5]}</code>, FastAPI returns a <strong>422 Unprocessable Entity</strong> with a detailed error message &mdash; and your endpoint function never runs. The Pydantic model_validator catches the mismatch before your code sees the data. This is the same pattern from the <a href="/FinBytes/2026/04/02/pydantic-models-trading-data/">Pydantic exercise</a>, now integrated into an API.</p>
+
+<p>The <code>/analyze</code> endpoint returns a stub for now. Real market data analysis comes in later exercises (yfinance for data, Claude API for narrative). The endpoint shape is ready &mdash; we just swap the stub for real logic.</p>
+
+<h2>Testing with TestClient</h2>
+
+<pre><code class="language-python">from fastapi.testclient import TestClient
+from app import app, _watchlist
+
+@pytest.fixture(autouse=True)
+def clear_watchlist():
+    _watchlist.clear()
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+class TestWatchlist:
+    def test_add_ticker(self, client):
+        resp = client.post("/watchlist", json={"ticker": "AAPL"})
+        assert resp.status_code == 201
+        assert resp.json()["ticker"] == "AAPL"
+</code></pre>
+
+<p><code>TestClient</code> runs your FastAPI app in-process &mdash; no server, no port, no network. It uses ASGI directly, so tests run in milliseconds. Under the hood it's powered by <code>httpx</code>.</p>
+
+<p>The <code>autouse=True</code> fixture is critical: it clears the in-memory watchlist before every test. Without it, tests share state &mdash; <code>test_add_ticker</code> adds "AAPL", and later <code>test_get_empty_watchlist</code> fails because the dict isn't empty. State isolation prevents flaky tests.</p>
+
+<h2>Status Codes Cheat Sheet</h2>
+
+<table>
+  <thead><tr><th>Code</th><th>Meaning</th><th>When to Use</th></tr></thead>
+  <tbody>
+    <tr><td><strong>200</strong></td><td>OK</td><td>Successful GET or POST that returns data</td></tr>
+    <tr><td><strong>201</strong></td><td>Created</td><td>Resource successfully created (POST)</td></tr>
+    <tr><td><strong>204</strong></td><td>No Content</td><td>Successful DELETE (nothing to return)</td></tr>
+    <tr><td><strong>404</strong></td><td>Not Found</td><td>Resource doesn't exist</td></tr>
+    <tr><td><strong>409</strong></td><td>Conflict</td><td>Duplicate resource (e.g., ticker already in watchlist)</td></tr>
+    <tr><td><strong>422</strong></td><td>Unprocessable Entity</td><td>Validation failed (Pydantic handles this automatically)</td></tr>
+  </tbody>
+</table>
+
+<h2>Try It Yourself</h2>
+
+<p>The full exercise code is in the <a href="https://github.com/MishCodesFinBytes/quant_lab/tree/master/exercises/03-fastapi">quant_lab repo</a>. Clone it, run <code>pip install -e ".[dev]"</code>, and try <code>pytest -v</code> to see all 9 tests pass.</p>
+
+<p>To see the auto-generated docs, start the server with <code>uvicorn app:app --reload</code> and open <code>http://localhost:8000/docs</code>. Try adding tickers, listing the watchlist, and sending analysis requests &mdash; all from the browser.</p>
