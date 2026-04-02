@@ -1,0 +1,141 @@
+---
+layout: post
+title: "Claude API — AI-Powered Risk Analysis"
+date: 2026-04-02
+tags: [claude, anthropic, ai, risk-analysis, finance, python, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/02/claude-api-ai-risk-analysis/"
+---
+
+<h2>What We're Building</h2>
+
+<p>A <code>RiskAnalyst</code> class that takes portfolio metrics (VaR, volatility, Sharpe ratio) and calls the Claude API to produce a plain-English risk summary. Think of it as automating the "so what does this mean?" conversation that happens after every risk report.</p>
+
+<h2>The Anthropic SDK</h2>
+
+<pre><code class="language-python">import anthropic
+
+client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=300,
+    system="You are a senior risk analyst...",
+    messages=[{"role": "user", "content": "Portfolio: AAPL, MSFT\nVaR: -2.15%..."}],
+)
+text = response.content[0].text
+</code></pre>
+
+<p><code>Anthropic()</code> picks up the API key from the <code>ANTHROPIC_API_KEY</code> environment variable automatically &mdash; no need to pass it in code, and no reason to ever hardcode it. The <code>messages.create()</code> call is the core API. Everything else is configuration.</p>
+
+<h2>System Prompt vs User Prompt</h2>
+
+<p>The API separates two concerns:</p>
+
+<table>
+  <thead><tr><th></th><th>System Prompt</th><th>User Prompt</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Purpose</strong></td><td>Sets the persona and constraints</td><td>Contains the actual request and data</td></tr>
+    <tr><td><strong>Passed as</strong></td><td><code>system=</code> parameter</td><td><code>messages=[{"role": "user", "content": ...}]</code></td></tr>
+    <tr><td><strong>Changes between calls?</strong></td><td>Usually no &mdash; same persona</td><td>Yes &mdash; different data each time</td></tr>
+  </tbody>
+</table>
+
+<p>Our system prompt does four things:</p>
+
+<pre><code class="language-python">system_prompt = (
+    "You are a senior risk analyst at an investment bank. "   # role
+    "Summarize portfolio risk in 3-4 sentences for a trader. " # length
+    "Be direct, specific, and flag any concerning metrics. "   # style
+    "Use plain English, not jargon."                           # constraint
+)
+</code></pre>
+
+<p>The user prompt formats the actual metrics with clear labels. Claude can read <code>VaR (95%): -2.15%</code> and understand exactly what it means. Structured input leads to structured thinking and better output.</p>
+
+<h2>Building the RiskAnalyst Class</h2>
+
+<pre><code class="language-python">class RiskAnalyst:
+    def __init__(self, model: str = "claude-sonnet-4-6"):
+        self.model = model
+
+    def analyze(self, tickers: list[str], metrics: dict) -> str:
+        user_prompt = (
+            f"Portfolio: {', '.join(tickers)}\n"
+            f"VaR (95%): {metrics['var_pct']:.2f}%\n"
+            f"CVaR (Expected Shortfall): {metrics['cvar_pct']:.2f}%\n"
+            f"Max Drawdown: {metrics['max_drawdown_pct']:.2f}%\n"
+            f"Annualized Volatility: {metrics['annualized_vol']:.2f}%\n"
+            f"Sharpe Ratio: {metrics['sharpe_ratio']:.2f}"
+        )
+
+        try:
+            client = anthropic.Anthropic()
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=300,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            return response.content[0].text
+        except Exception:
+            return (
+                f"Unable to generate AI analysis. Key metrics — "
+                f"VaR: {metrics['var_pct']:.2f}%, "
+                f"CVaR: {metrics['cvar_pct']:.2f}%, "
+                f"Max Drawdown: {metrics['max_drawdown_pct']:.2f}%."
+            )
+</code></pre>
+
+<p>The constructor takes a model name so you can swap between Sonnet (default, good balance) and Haiku (faster, cheaper for high-volume use). The <code>try/except</code> provides graceful degradation &mdash; if the API is down, you still get the raw metrics in a readable format.</p>
+
+<h2>Model Selection: Opus vs Sonnet vs Haiku</h2>
+
+<table>
+  <thead><tr><th>Model</th><th>Speed</th><th>Cost</th><th>Quality</th><th>Use Case</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Opus</strong></td><td>Slowest</td><td>Highest</td><td>Best</td><td>Complex reasoning, research</td></tr>
+    <tr><td><strong>Sonnet</strong></td><td>Medium</td><td>Medium</td><td>Great</td><td>Most production tasks</td></tr>
+    <tr><td><strong>Haiku</strong></td><td>Fastest</td><td>Lowest</td><td>Good</td><td>High-volume, simple tasks</td></tr>
+  </tbody>
+</table>
+
+<p>For risk commentary, Sonnet is the sweet spot &mdash; good enough quality for financial narrative, fast enough for real-time use. If you're generating summaries for thousands of portfolios in batch, switch to Haiku. If you need deep analysis of a complex position, use Opus.</p>
+
+<h2>Graceful Degradation</h2>
+
+<p>APIs fail. Timeouts happen. Rate limits get hit. The <code>except Exception</code> block catches all of these and returns a fallback string with the key metrics. Your service stays up even when Claude is down. In production, you'd log the error, increment a metric, and maybe retry once &mdash; but the user always gets something useful.</p>
+
+<h2>Testing Without an API Key</h2>
+
+<pre><code class="language-python">@pytest.fixture
+def mock_anthropic():
+    with patch("analyst.anthropic.Anthropic") as mock_cls:
+        mock_client = MagicMock()
+        mock_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="The portfolio shows elevated risk.")]
+        mock_client.messages.create.return_value = mock_response
+        yield mock_client
+</code></pre>
+
+<p>All tests mock the Anthropic client. No API key needed, no network calls, tests run in milliseconds. The mock fixture patches <code>anthropic.Anthropic</code> so the constructor returns a mock client with a canned response. Tests verify the right arguments are passed (system prompt, model, metrics in user message) without ever calling the real API.</p>
+
+<p>This means your CI/CD pipeline can run all tests without API credentials &mdash; a requirement for most enterprise environments.</p>
+
+<h2>API Key Management</h2>
+
+<p>Rules for API keys:</p>
+
+<ul>
+  <li><strong>Never in code</strong> &mdash; no <code>api_key="sk-..."</code> in source files</li>
+  <li><strong>Environment variable</strong> &mdash; <code>export ANTHROPIC_API_KEY=sk-...</code> or use a <code>.env</code> file</li>
+  <li><strong>.gitignore</strong> &mdash; always include <code>.env</code> in your gitignore</li>
+  <li><strong>Tests don't need keys</strong> &mdash; mock everything, CI works without credentials</li>
+</ul>
+
+<h2>Try It Yourself</h2>
+
+<p>The full exercise code is in the <a href="https://github.com/MishCodesFinBytes/quant_lab/tree/master/exercises/06-claude-api">quant_lab repo</a>. Clone it, run <code>pip install -e ".[dev]"</code>, and try <code>pytest -v</code> to see all 5 tests pass &mdash; no API key required.</p>
+
+<p>To see real output, set your <code>ANTHROPIC_API_KEY</code> and try calling <code>analyst.analyze()</code> with real metrics in a Python shell. The quality of the risk commentary is surprisingly good.</p>
