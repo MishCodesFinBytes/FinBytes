@@ -4,24 +4,25 @@ title: "Stock Risk Scanner"
 description: "Capstone project — a full-stack portfolio risk analysis service integrating FastAPI, PostgreSQL, Docker, CI, and the Claude AI API."
 date: 2026-04-02
 tags: [Python, FastAPI, PostgreSQL, Docker, Claude API, Risk Analysis]
+---
 
-brief_content: |
+<div id="tab-brief" class="ql-tab-content active">
   <h2>What is the Stock Risk Scanner?</h2>
   <p>
     The Stock Risk Scanner is a production-style portfolio risk analysis service. Given a list of stock tickers and
     portfolio weights, it fetches historical market data, calculates a suite of risk metrics, generates an AI-powered
-    narrative explanation via the Claude API, and persists every result to a PostgreSQL database — all surfaced through
+    narrative explanation via the Claude API, and persists every result to a PostgreSQL database &mdash; all surfaced through
     a clean FastAPI REST interface.
   </p>
 
   <h3>Request Flow</h3>
   <ol>
-    <li><strong>Request arrives</strong> — <code>POST /api/scan</code> validates the payload with Pydantic.</li>
-    <li><strong>Fetch prices</strong> — <code>market_data.py</code> calls <code>yfinance.download</code> for the requested period.</li>
-    <li><strong>Calculate risk</strong> — <code>risk.py</code> computes VaR, CVaR, max drawdown, volatility, and Sharpe Ratio using NumPy.</li>
-    <li><strong>Generate narrative</strong> — <code>narrative.py</code> calls the Claude API (with a formatted fallback if no API key is set).</li>
-    <li><strong>Persist result</strong> — <code>scanner.py</code> writes a <code>ScanRecord</code> to PostgreSQL via SQLAlchemy 2.0 async.</li>
-    <li><strong>Return result</strong> — the caller polls <code>GET /api/scans/{id}</code> until status is <code>complete</code>.</li>
+    <li><strong>Request arrives</strong> &mdash; <code>POST /api/scan</code> validates the payload with Pydantic.</li>
+    <li><strong>Fetch prices</strong> &mdash; <code>market_data.py</code> calls <code>yfinance.download</code> for the requested period.</li>
+    <li><strong>Calculate risk</strong> &mdash; <code>risk.py</code> computes VaR, CVaR, max drawdown, volatility, and Sharpe Ratio using NumPy.</li>
+    <li><strong>Generate narrative</strong> &mdash; <code>narrative.py</code> calls the Claude API (with a formatted fallback if no API key is set).</li>
+    <li><strong>Persist result</strong> &mdash; <code>scanner.py</code> writes a <code>ScanRecord</code> to PostgreSQL via SQLAlchemy 2.0 async.</li>
+    <li><strong>Return result</strong> &mdash; the caller polls <code>GET /api/scans/{id}</code> until status is <code>complete</code>.</li>
   </ol>
 
   <h3>Tech Stack</h3>
@@ -42,8 +43,9 @@ brief_content: |
       <tr><td>CI</td><td>GitHub Actions</td></tr>
     </tbody>
   </table>
+</div>
 
-exercises_content: |
+<div id="tab-exercises" class="ql-tab-content" style="display:none">
   <h2>Exercises That Built This Project</h2>
   <p>
     Each exercise in the QuantLab curriculum contributed a concrete piece of the capstone. The table below maps every
@@ -51,75 +53,30 @@ exercises_content: |
   </p>
   <table>
     <thead>
-      <tr>
-        <th>#</th>
-        <th>Topic</th>
-        <th>Key Concepts</th>
-        <th>Capstone Role</th>
-      </tr>
+      <tr><th>#</th><th>Topic</th><th>Key Concepts</th><th>Capstone Role</th></tr>
     </thead>
     <tbody>
-      <tr>
-        <td>01</td>
-        <td>pytest &amp; TDD</td>
-        <td>Fixtures, parametrize, approx</td>
-        <td>Test foundation — 26 tests covering every module</td>
-      </tr>
-      <tr>
-        <td>02</td>
-        <td>Pydantic</td>
-        <td>Validators, computed fields</td>
-        <td>Request/response models: <code>ScanRequest</code>, <code>RiskMetrics</code>, <code>ScanResult</code></td>
-      </tr>
-      <tr>
-        <td>03</td>
-        <td>FastAPI</td>
-        <td>Routes, status codes, TestClient</td>
-        <td>API endpoints — 4 routes: health, scan, scan by ID, scans list</td>
-      </tr>
-      <tr>
-        <td>04</td>
-        <td>Async Python</td>
-        <td>async/await, asyncio.gather</td>
-        <td>Async DB operations and background scan task</td>
-      </tr>
-      <tr>
-        <td>05</td>
-        <td>yfinance</td>
-        <td>Market data, pandas DataFrames</td>
-        <td>Price fetching in <code>market_data.py</code></td>
-      </tr>
-      <tr>
-        <td>06</td>
-        <td>Claude API</td>
-        <td>Anthropic SDK, prompt engineering</td>
-        <td>AI narrative generation in <code>narrative.py</code></td>
-      </tr>
-      <tr>
-        <td>07</td>
-        <td>Docker</td>
-        <td>Dockerfile, compose, multi-stage builds</td>
-        <td>Containerisation — app + PostgreSQL services</td>
-      </tr>
-      <tr>
-        <td>08</td>
-        <td>PostgreSQL + SQLAlchemy</td>
-        <td>Async ORM, Alembic migrations</td>
-        <td>Scan persistence via <code>ScanRecord</code> model</td>
-      </tr>
+      <tr><td>01</td><td>pytest &amp; TDD</td><td>Fixtures, parametrize, approx</td><td>Test foundation &mdash; 26 tests covering every module</td></tr>
+      <tr><td>02</td><td>Pydantic</td><td>Validators, computed fields</td><td>Request/response models</td></tr>
+      <tr><td>03</td><td>FastAPI</td><td>Routes, status codes, TestClient</td><td>API endpoints &mdash; 4 routes</td></tr>
+      <tr><td>04</td><td>Async Python</td><td>async/await, asyncio.gather</td><td>Async DB operations and background scan task</td></tr>
+      <tr><td>05</td><td>yfinance</td><td>Market data, pandas DataFrames</td><td>Price fetching in market_data.py</td></tr>
+      <tr><td>06</td><td>Claude API</td><td>Anthropic SDK, prompt engineering</td><td>AI narrative generation in narrative.py</td></tr>
+      <tr><td>07</td><td>Docker</td><td>Dockerfile, compose, multi-stage builds</td><td>Containerisation &mdash; app + PostgreSQL services</td></tr>
+      <tr><td>08</td><td>PostgreSQL + SQLAlchemy</td><td>Async ORM, Alembic migrations</td><td>Scan persistence via ScanRecord model</td></tr>
     </tbody>
   </table>
+</div>
 
-math_content: |
-  <h2>Risk Metrics — The Mathematics</h2>
+<div id="tab-math" class="ql-tab-content" style="display:none">
+  <h2>Risk Metrics &mdash; The Mathematics</h2>
   <p>Every metric the scanner produces is grounded in standard quantitative finance. Here is what each one means, how it is calculated, and why it matters.</p>
 
   <h3>Portfolio Returns</h3>
   <p><em>The daily profit-or-loss of the blended portfolio.</em></p>
-  <p><strong>Formula:</strong></p>
-  <pre><code>R_p = &sum;(w_i &times; ln(P_i,t / P_i,t&minus;1))</code></pre>
+  <pre><code>R_p = sum(w_i * ln(P_i,t / P_i,t-1))</code></pre>
   <p>
-    For each stock, we compute the <strong>log return</strong> — the natural log of today's price divided by yesterday's price.
+    For each stock, we compute the <strong>log return</strong> &mdash; the natural log of today's price divided by yesterday's price.
     We then take a weighted sum using the portfolio weights. Log returns are preferred because they are additive across time
     and better behaved statistically than simple percentage returns.
   </p>
@@ -130,7 +87,7 @@ math_content: |
   <p>
     VaR at the 95% confidence level is the 5th percentile of the portfolio's daily return distribution.
     In plain English: <strong>on 95% of days, your portfolio will not lose more than this amount</strong>.
-    If VaR is &minus;1.8%, you should expect a loss exceeding 1.8% only about one trading day in twenty.
+    If VaR is -1.8%, you should expect a loss exceeding 1.8% only about one trading day in twenty.
   </p>
 
   <h3>Conditional VaR (CVaR / Expected Shortfall)</h3>
@@ -144,21 +101,21 @@ math_content: |
 
   <h3>Maximum Drawdown</h3>
   <p><em>The worst peak-to-trough decline over the period.</em></p>
-  <pre><code>Drawdown_t = (cumulative_return_t &minus; running_max_t) / running_max_t
+  <pre><code>Drawdown_t = (cumulative_t - running_max_t) / running_max_t
 Max Drawdown = min(Drawdown_t)</code></pre>
   <p>
     We track the portfolio's cumulative value over time and record the largest percentage drop from any peak to any
     subsequent trough. <strong>This is the worst loss you would have experienced if you bought at a local high and held
-    through the low.</strong> A drawdown of &minus;15% means the portfolio fell 15% from its peak before recovering.
+    through the low.</strong> A drawdown of -15% means the portfolio fell 15% from its peak before recovering.
   </p>
 
   <h3>Volatility (Annualised)</h3>
   <p><em>How much does the portfolio bounce around?</em></p>
-  <pre><code>Volatility = std(R_p) &times; &radic;252</code></pre>
+  <pre><code>Volatility = std(R_p) * sqrt(252)</code></pre>
   <p>
-    Volatility is the annualised standard deviation of daily portfolio returns. We multiply by &radic;252 because there
+    Volatility is the annualised standard deviation of daily portfolio returns. We multiply by sqrt(252) because there
     are approximately 252 trading days per year and variance scales linearly with time (so standard deviation scales
-    with the square root). <strong>Higher volatility means more uncertainty — the portfolio can swing further in either
+    with the square root). <strong>Higher volatility means more uncertainty &mdash; the portfolio can swing further in either
     direction on any given day.</strong>
   </p>
 
@@ -166,153 +123,101 @@ Max Drawdown = min(Drawdown_t)</code></pre>
   <p><em>Return per unit of risk.</em></p>
   <pre><code>Sharpe = annualised_return / volatility</code></pre>
   <p>
-    The Sharpe Ratio normalises return by risk. A portfolio that returns 10% with 5% volatility has a Sharpe of 2.0 —
+    The Sharpe Ratio normalises return by risk. A portfolio that returns 10% with 5% volatility has a Sharpe of 2.0 &mdash;
     better than one returning 15% with 12% volatility (Sharpe 1.25). <strong>Above 1 is considered good; above 2 is
-    excellent.</strong> Note: the scanner uses a simplified version without subtracting the risk-free rate, which is
+    excellent.</strong> The scanner uses a simplified version without subtracting the risk-free rate, which is
     appropriate for relative comparisons between scans.
   </p>
+</div>
 
-core_content: |
+<div id="tab-core" class="ql-tab-content" style="display:none">
   <h2>Core Module Walkthrough</h2>
   <p>The scanner's business logic lives in five Python modules under <code>projects/stock-risk-scanner/src/scanner/</code>.</p>
 
-  <h3>models.py — Data Contracts</h3>
+  <h3>models.py &mdash; Data Contracts</h3>
   <p>All inputs and outputs are defined as Pydantic v2 models, giving automatic validation and serialisation.</p>
   <ul>
-    <li>
-      <strong>ScanRequest</strong> — tickers (list of uppercase strings), weights (must sum to 1.0, each between 0 and 1),
-      period (default <code>"1y"</code>, validated against yfinance-accepted strings). A custom validator ensures
-      <code>len(tickers) == len(weights)</code>.
-    </li>
-    <li>
-      <strong>RiskMetrics</strong> — five <code>float</code> fields: <code>var_95</code>, <code>cvar_95</code>,
-      <code>max_drawdown</code>, <code>volatility</code>, <code>sharpe_ratio</code>. All produced by <code>risk.py</code>.
-    </li>
-    <li>
-      <strong>ScanResult</strong> — combines tickers, weights, a <code>RiskMetrics</code> instance, an AI-generated
-      <code>narrative</code> string, and an ISO-format <code>timestamp</code>. This is the final API response body.
-    </li>
+    <li><strong>ScanRequest</strong> &mdash; tickers (list of uppercase strings), weights (must sum to 1.0), period (default "1y"). A custom validator ensures len(tickers) == len(weights).</li>
+    <li><strong>RiskMetrics</strong> &mdash; five float fields: var_pct, cvar_pct, max_drawdown_pct, volatility_pct, sharpe_ratio.</li>
+    <li><strong>ScanResult</strong> &mdash; combines tickers, weights, a RiskMetrics instance, an AI-generated narrative string, and a timestamp.</li>
   </ul>
 
-  <h3>risk.py — Metric Calculation</h3>
-  <p><code>calculate_risk_metrics(prices: pd.DataFrame, weights: list[float]) -&gt; RiskMetrics</code></p>
+  <h3>risk.py &mdash; Metric Calculation</h3>
+  <p><code>calculate_risk_metrics(prices, weights) -&gt; RiskMetrics</code></p>
   <ol>
     <li>Compute log returns: <code>np.log(prices / prices.shift(1)).dropna()</code></li>
-    <li>Weight the returns: <code>returns @ np.array(weights)</code> (matrix multiply)</li>
+    <li>Weight the returns: <code>returns @ np.array(weights)</code></li>
     <li>VaR: <code>np.percentile(portfolio_returns, 5)</code></li>
-    <li>CVaR: <code>portfolio_returns[portfolio_returns &lt;= var].mean()</code></li>
-    <li>Max drawdown: cumulative product of <code>(1 + returns)</code>, then track running max and minimum ratio</li>
-    <li>Volatility: <code>portfolio_returns.std() * np.sqrt(252)</code></li>
-    <li>Sharpe: <code>portfolio_returns.mean() * 252 / volatility</code></li>
+    <li>CVaR: mean of returns below VaR</li>
+    <li>Max drawdown: <code>np.exp(np.cumsum(...))</code> then track running max</li>
+    <li>Volatility: <code>std * sqrt(252)</code></li>
+    <li>Sharpe: <code>mean * 252 / volatility</code></li>
   </ol>
 
-  <h3>market_data.py — Price Fetching</h3>
-  <p><code>fetch_prices(tickers: list[str], period: str) -&gt; pd.DataFrame</code></p>
+  <h3>market_data.py &mdash; Price Fetching</h3>
+  <p><code>fetch_prices(tickers, period) -&gt; pd.DataFrame</code></p>
   <p>
-    Wraps <code>yfinance.download(tickers, period=period, auto_adjust=True)</code>. When multiple tickers are requested,
-    yfinance returns a MultiIndex DataFrame; the module slices the <code>Close</code> column and renames columns to plain
-    ticker names. Missing values (trading halts, newly listed stocks) are forward-filled with <code>.ffill()</code> and
-    any remaining NaNs dropped, ensuring a clean price matrix for <code>risk.py</code>.
+    Wraps <code>yfinance.download()</code>. Handles MultiIndex columns for multiple tickers,
+    forward-fills missing values, and raises ValueError for empty data.
   </p>
 
-  <h3>narrative.py — AI Commentary</h3>
-  <p>The <code>RiskNarrator</code> class has a single public method: <code>generate(metrics: RiskMetrics, tickers: list[str]) -&gt; str</code>.</p>
+  <h3>narrative.py &mdash; AI Commentary</h3>
+  <p>The <code>RiskNarrator</code> class generates plain-English risk summaries.</p>
   <ul>
-    <li>
-      <strong>With API key</strong>: sends a <code>messages.create</code> call to Claude with a system prompt that sets the
-      persona as a senior risk analyst, and a user message containing the formatted metrics. The response is the natural-language
-      narrative returned in the API.
-    </li>
-    <li>
-      <strong>Without API key (fallback)</strong>: returns a deterministic, template-formatted string that summarises the five
-      metrics in plain English — ensuring the service works end-to-end without an Anthropic subscription.
-    </li>
+    <li><strong>With API key</strong>: calls Claude with a senior risk analyst system prompt and formatted metrics.</li>
+    <li><strong>Without API key</strong>: returns a deterministic fallback string summarising the five metrics.</li>
   </ul>
 
-  <h3>scanner.py — Orchestrator</h3>
-  <p><code>scan(request: ScanRequest) -&gt; ScanResult</code></p>
+  <h3>scanner.py &mdash; Orchestrator</h3>
+  <p><code>scan(request) -&gt; ScanResult</code></p>
   <p>
-    This is the single entry point for a complete scan. It calls <code>fetch_prices</code>, passes the result to
-    <code>calculate_risk_metrics</code>, passes metrics to <code>RiskNarrator.generate</code>, assembles a
-    <code>ScanResult</code>, and returns it. The FastAPI background task calls this function and then writes the result
-    (or any exception) to the database.
+    Calls fetch_prices, then calculate_risk_metrics, then RiskNarrator.generate, assembles a ScanResult and returns it.
+    The FastAPI background task calls this function and writes the result to the database.
   </p>
+</div>
 
-infra_content: |
+<div id="tab-infra" class="ql-tab-content" style="display:none">
   <h2>Infrastructure</h2>
 
   <h3>API Endpoints</h3>
   <table>
     <thead><tr><th>Method</th><th>Path</th><th>Status</th><th>Description</th></tr></thead>
     <tbody>
-      <tr><td>GET</td><td><code>/health</code></td><td>200</td><td>Liveness check — returns <code>{"status": "ok"}</code></td></tr>
-      <tr><td>POST</td><td><code>/api/scan</code></td><td>202</td><td>Accepts a scan request, creates a pending DB record, fires background task</td></tr>
-      <tr><td>GET</td><td><code>/api/scans/{id}</code></td><td>200 / 404</td><td>Retrieve a single scan result by integer ID</td></tr>
-      <tr><td>GET</td><td><code>/api/scans</code></td><td>200</td><td>List all scan records (most recent first)</td></tr>
+      <tr><td>GET</td><td>/health</td><td>200</td><td>Liveness check</td></tr>
+      <tr><td>POST</td><td>/api/scan</td><td>202</td><td>Accepts scan request, fires background task</td></tr>
+      <tr><td>GET</td><td>/api/scans/{id}</td><td>200/404</td><td>Retrieve a single scan result</td></tr>
+      <tr><td>GET</td><td>/api/scans</td><td>200</td><td>List recent completed scans</td></tr>
     </tbody>
   </table>
   <p>
-    The POST endpoint returns immediately with HTTP 202 Accepted and the scan <code>id</code>. The actual scan runs
-    asynchronously via <code>asyncio.ensure_future</code>, so the caller polls the GET endpoint until
-    <code>status</code> transitions from <code>pending</code> to <code>complete</code> (or <code>failed</code>).
+    POST returns immediately with HTTP 202 and the scan ID. The scan runs asynchronously via asyncio.ensure_future,
+    so the caller polls GET until status transitions from pending to complete (or failed).
   </p>
 
-  <h3>Database — ScanRecord</h3>
-  <p>A single SQLAlchemy 2.0 async mapped class with 14 columns:</p>
-  <table>
-    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
-    <tbody>
-      <tr><td>id</td><td>Integer PK</td><td>Auto-increment</td></tr>
-      <tr><td>tickers</td><td>JSON</td><td>List of ticker strings</td></tr>
-      <tr><td>weights</td><td>JSON</td><td>List of floats</td></tr>
-      <tr><td>period</td><td>String</td><td>yfinance period string</td></tr>
-      <tr><td>status</td><td>String</td><td><code>pending</code> | <code>complete</code> | <code>failed</code></td></tr>
-      <tr><td>var_95</td><td>Float (nullable)</td><td>Set on completion</td></tr>
-      <tr><td>cvar_95</td><td>Float (nullable)</td><td>Set on completion</td></tr>
-      <tr><td>max_drawdown</td><td>Float (nullable)</td><td>Set on completion</td></tr>
-      <tr><td>volatility</td><td>Float (nullable)</td><td>Set on completion</td></tr>
-      <tr><td>sharpe_ratio</td><td>Float (nullable)</td><td>Set on completion</td></tr>
-      <tr><td>narrative</td><td>Text (nullable)</td><td>AI or fallback narrative</td></tr>
-      <tr><td>error_message</td><td>Text (nullable)</td><td>Set on failure</td></tr>
-      <tr><td>created_at</td><td>DateTime</td><td>UTC, set on insert</td></tr>
-      <tr><td>completed_at</td><td>DateTime (nullable)</td><td>UTC, set when scan finishes</td></tr>
-    </tbody>
-  </table>
+  <h3>Database &mdash; ScanRecord</h3>
+  <p>A SQLAlchemy 2.0 async model with 14 columns tracking tickers, weights, period, status, five risk metrics, narrative, error message, and timestamps.</p>
+  <p>Status flow: <strong>pending</strong> &rarr; <strong>complete</strong> (with metrics + narrative) or <strong>failed</strong> (with error message).</p>
 
   <h3>Alembic Migrations</h3>
   <p>
-    The project uses Alembic with an <strong>async-compatible <code>env.py</code></strong> — it imports the async engine
-    and uses <code>run_sync</code> inside an async context so Alembic's synchronous migration runner can drive the async
-    SQLAlchemy engine. A single autogenerated initial migration creates the <code>scan_records</code> table.
+    Async-compatible env.py using run_sync inside an async context. A single autogenerated initial migration creates the scan_records table.
   </p>
 
   <h3>Docker</h3>
-  <p>The <strong>multi-stage Dockerfile</strong> has two stages:</p>
-  <ol>
-    <li><strong>builder</strong> — installs all Python dependencies into a virtual environment.</li>
-    <li><strong>runtime</strong> — copies only the venv and application source from the builder, keeping the image lean.</li>
-  </ol>
-  <p>
-    <strong>docker-compose.yml</strong> defines two services: <code>scanner</code> (the FastAPI app, port 8000 exposed)
-    and <code>postgres</code> (postgres:16 image, port 5432 exposed to the host for migrations). A named Docker volume
-    preserves PostgreSQL data across container restarts.
-  </p>
+  <p>Multi-stage Dockerfile: builder installs dependencies, runtime copies only installed packages + app code. docker-compose defines two services: scanner (port 8000) and postgres:16 (port 5432) with a named volume for data persistence.</p>
 
-  <h3>CI — GitHub Actions</h3>
+  <h3>CI &mdash; GitHub Actions</h3>
   <p>
-    A workflow file triggers on <strong>push to the <code>working</code> branch</strong> and on
-    <strong>pull requests to <code>master</code></strong>. Steps: checkout, set up Python 3.11, install dependencies
-    (<code>pip install -e ".[dev]"</code>), run <code>pytest</code>. All 26 tests must pass for the job to succeed.
+    Triggers on push to working branch and PRs to master. Steps: checkout, Python 3.11, pip install, pytest. All 26 tests must pass.
   </p>
 
   <h3>Logging</h3>
   <p>
-    The application uses <strong>structlog</strong> configured with JSON output and ISO-8601 timestamps. Every request,
-    background task start/finish, and exception is logged as a structured JSON line — making logs easy to ingest into any
-    log aggregation tool (e.g., Datadog, CloudWatch, Grafana Loki).
+    structlog configured with JSON output and ISO-8601 timestamps. Every scan request, completion, and failure is logged as structured JSON.
   </p>
+</div>
 
-run_content: |
+<div id="tab-run" class="ql-tab-content" style="display:none">
   <h2>How to Run the Stock Risk Scanner</h2>
 
   <h3>Prerequisites</h3>
@@ -322,35 +227,31 @@ run_content: |
     <li>git</li>
   </ul>
 
-  <h3>Step 1 — Clone the repository</h3>
+  <h3>Step 1 &mdash; Clone the repository</h3>
   <pre><code>git clone https://github.com/MishCodesFinBytes/QuantLab.git
 cd QuantLab</code></pre>
 
-  <h3>Step 2 — Start the services</h3>
+  <h3>Step 2 &mdash; Start the services</h3>
   <pre><code>cd projects/stock-risk-scanner
 docker compose up --build -d</code></pre>
   <p>This builds the scanner image and starts both the FastAPI app (port 8000) and PostgreSQL (port 5432).</p>
 
-  <h3>Step 3 — Run the database migration</h3>
+  <h3>Step 3 &mdash; Run the database migration</h3>
   <pre><code>python -m alembic upgrade head</code></pre>
-  <p>
-    Run this from the <code>projects/stock-risk-scanner</code> directory on the host (not inside the container).
-    The <code>DATABASE_URL</code> in <code>.env</code> points to <code>localhost:5432</code>, which Docker exposes.
-  </p>
+  <p>Run from the projects/stock-risk-scanner directory on the host (not inside the container).</p>
 
-  <h3>Step 4 — Verify the service is healthy</h3>
+  <h3>Step 4 &mdash; Verify the service</h3>
   <pre><code>curl http://localhost:8000/health</code></pre>
-  <p>Expected response: <code>{"status": "ok"}</code></p>
+  <p>Expected: <code>{"status": "ok"}</code></p>
 
-  <h3>Step 5 — Submit a scan</h3>
+  <h3>Step 5 &mdash; Submit a scan</h3>
   <pre><code>curl -X POST http://localhost:8000/api/scan \
   -H "Content-Type: application/json" \
   -d '{"tickers": ["AAPL", "MSFT"], "weights": [0.6, 0.4]}'</code></pre>
-  <p>The API returns HTTP 202 immediately with the scan ID:</p>
-  <pre><code>{"id": 1, "status": "pending"}</code></pre>
+  <p>Returns: <code>{"id": 1, "status": "pending"}</code></p>
 
-  <h3>Step 6 — Poll for the result</h3>
-  <p>Wait approximately 10 seconds for the background task to complete, then:</p>
+  <h3>Step 6 &mdash; Poll for the result</h3>
+  <p>Wait about 10 seconds, then:</p>
   <pre><code>curl http://localhost:8000/api/scans/1</code></pre>
 
   <h3>Sample Output</h3>
@@ -360,22 +261,21 @@ docker compose up --build -d</code></pre>
   "tickers": ["AAPL", "MSFT"],
   "weights": [0.6, 0.4],
   "period": "1y",
-  "var_95": -0.0182,
-  "cvar_95": -0.0271,
-  "max_drawdown": -0.1543,
-  "volatility": 0.2134,
-  "sharpe_ratio": 1.47,
-  "narrative": "Portfolio Risk Summary for AAPL, MSFT:\n\nValue at Risk (95%): -1.82% — on 95% of trading days, losses will not exceed this threshold.\nConditional VaR: -2.71% — average loss on the worst 5% of days.\nMax Drawdown: -15.43% — the largest peak-to-trough decline over the period.\nAnnualised Volatility: 21.34% — a moderately volatile portfolio.\nSharpe Ratio: 1.47 — solid risk-adjusted return, above the 1.0 threshold.",
-  "created_at": "2026-04-02T09:15:00Z",
-  "completed_at": "2026-04-02T09:15:08Z"
+  "var_pct": -2.14,
+  "cvar_pct": -3.19,
+  "max_drawdown_pct": -19.37,
+  "volatility_pct": 23.89,
+  "sharpe_ratio": 0.61,
+  "narrative": "Portfolio AAPL, MSFT: VaR -2.14%, CVaR -3.19%, ...",
+  "created_at": "2026-04-02T20:39:48Z",
+  "completed_at": "2026-04-02T20:39:49Z"
 }</code></pre>
 
-  <h3>Step 7 — Run the test suite</h3>
+  <h3>Step 7 &mdash; Run the test suite</h3>
   <pre><code>pip install -e ".[dev]"
 pytest -v</code></pre>
   <p>All 26 tests should pass.</p>
 
-  <h3>Step 8 — Stop the services</h3>
+  <h3>Step 8 &mdash; Stop the services</h3>
   <pre><code>docker compose down</code></pre>
-  <p>Add <code>-v</code> to also remove the PostgreSQL data volume: <code>docker compose down -v</code></p>
----
+</div>

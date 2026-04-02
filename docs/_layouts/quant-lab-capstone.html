@@ -22,24 +22,7 @@ layout: default
     <button class="ql-tab-btn" onclick="showTab('run', this)">How to Run</button>
   </div>
 
-  <div id="tab-brief" class="ql-tab-content active">
-    {{ page.brief_content }}
-  </div>
-  <div id="tab-exercises" class="ql-tab-content" style="display:none">
-    {{ page.exercises_content }}
-  </div>
-  <div id="tab-math" class="ql-tab-content" style="display:none">
-    {{ page.math_content }}
-  </div>
-  <div id="tab-core" class="ql-tab-content" style="display:none">
-    {{ page.core_content }}
-  </div>
-  <div id="tab-infra" class="ql-tab-content" style="display:none">
-    {{ page.infra_content }}
-  </div>
-  <div id="tab-run" class="ql-tab-content" style="display:none">
-    {{ page.run_content }}
-  </div>
+  {{ content }}
 
 </article>
 
