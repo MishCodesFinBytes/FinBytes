@@ -1,0 +1,161 @@
+---
+layout: post
+title: "Pydantic v2 Models for Trading Data"
+date: 2026-04-02
+tags: [pydantic, validation, models, finance, python, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/02/pydantic-models-trading-data/"
+---
+
+<h2>Why Pydantic for Financial Data?</h2>
+
+<p>Financial data is full of constraints. A trade quantity can't be negative. A ticker must exist. Weights in a portfolio must sum to 1.0. You can enforce these rules with manual <code>if</code> statements scattered through your code, or you can declare them once in a model and let Pydantic validate automatically.</p>
+
+<p>Pydantic v2 is a data validation library built on a Rust core. You define Python classes with type annotations, and Pydantic handles parsing, validation, and serialization. It's also the foundation of FastAPI &mdash; every request body and response model in FastAPI is a Pydantic model.</p>
+
+<h2>Three Models for Trading</h2>
+
+<p>We'll build three models that represent a real trading workflow: a single trade, an aggregated position, and a portfolio analysis request.</p>
+
+<h2>Model 1: Trade &mdash; Field Validators and Computed Fields</h2>
+
+<pre><code class="language-python">from datetime import date
+from typing import Literal
+from pydantic import BaseModel, Field, field_validator, computed_field
+
+
+class Trade(BaseModel):
+    ticker: str = Field(..., min_length=1, max_length=10)
+    side: Literal["buy", "sell"]
+    quantity: int = Field(..., gt=0)
+    price: float = Field(..., gt=0)
+    trade_date: date
+
+    @field_validator("ticker")
+    @classmethod
+    def uppercase_ticker(cls, v: str) -> str:
+        return v.upper()
+
+    @field_validator("trade_date")
+    @classmethod
+    def not_future(cls, v: date) -> date:
+        if v > date.today():
+            raise ValueError("trade_date cannot be in the future")
+        return v
+
+    @computed_field
+    @property
+    def notional(self) -> float:
+        return self.quantity * self.price
+</code></pre>
+
+<p>Several things happening here:</p>
+
+<ul>
+  <li><strong><code>Literal["buy", "sell"]</code></strong> &mdash; constrains <code>side</code> to exactly two values. Passing <code>"hold"</code> raises a <code>ValidationError</code>. This is better than a plain <code>str</code> because you get validation, documentation, and IDE autocomplete in one declaration.</li>
+  <li><strong><code>Field(..., gt=0)</code></strong> &mdash; the <code>gt</code> (greater than) constraint rejects zero or negative quantities at the model level. No manual checks needed.</li>
+  <li><strong><code>@field_validator</code></strong> &mdash; runs on a single field. The ticker validator transforms input (<code>"aapl"</code> becomes <code>"AAPL"</code>). The date validator rejects future dates. Both run automatically on construction.</li>
+  <li><strong><code>@computed_field</code></strong> &mdash; <code>notional</code> (quantity &times; price) is derived, not stored. It appears in <code>model_dump()</code> output but can't be passed as input. Perfect for derived financial values you don't want anyone manually overriding.</li>
+</ul>
+
+<h2>Model 2: Position &mdash; Nested Models</h2>
+
+<pre><code class="language-python">class Position(BaseModel):
+    ticker: str
+    trades: list[Trade]
+
+    @computed_field
+    @property
+    def net_quantity(self) -> int:
+        total = 0
+        for t in self.trades:
+            total += t.quantity if t.side == "buy" else -t.quantity
+        return total
+
+    @computed_field
+    @property
+    def avg_price(self) -> float:
+        buys = [t for t in self.trades if t.side == "buy"]
+        if not buys:
+            return 0.0
+        total_cost = sum(t.quantity * t.price for t in buys)
+        total_qty = sum(t.quantity for t in buys)
+        return total_cost / total_qty
+</code></pre>
+
+<p><code>trades: list[Trade]</code> is a nested model &mdash; Pydantic validates each trade in the list against the Trade model. If any trade has a negative quantity or invalid side, the entire Position construction fails with a clear error pointing to the exact trade and field.</p>
+
+<p>The computed fields aggregate across child data: <code>net_quantity</code> sums buys and subtracts sells, <code>avg_price</code> calculates the weighted average of buy prices. These update automatically whenever you access them.</p>
+
+<h2>Model 3: PortfolioRequest &mdash; Model Validators</h2>
+
+<pre><code class="language-python">from pydantic import model_validator
+
+class PortfolioRequest(BaseModel):
+    tickers: list[str] = Field(..., min_length=1, max_length=10)
+    weights: list[float] = Field(..., min_length=1, max_length=10)
+    period: str = Field(default="1y", pattern=r"^\d+(d|mo|y)$")
+    confidence: float = Field(default=0.95, ge=0.9, le=0.99)
+
+    @model_validator(mode="after")
+    def validate_portfolio(self):
+        if len(self.tickers) != len(self.weights):
+            raise ValueError(
+                f"tickers length ({len(self.tickers)}) must match "
+                f"weights length ({len(self.weights)})"
+            )
+        if abs(sum(self.weights) - 1.0) > 0.01:
+            raise ValueError(
+                f"weights must sum to 1.0, got {sum(self.weights):.4f}"
+            )
+        return self
+</code></pre>
+
+<p><strong><code>@model_validator(mode="after")</code></strong> is the key difference from <code>@field_validator</code>. Field validators see one field at a time. Model validators see the entire model after all fields are validated, so you can check relationships between fields.</p>
+
+<p>Here we enforce two cross-field rules: tickers and weights must have the same length, and weights must sum to 1.0. These constraints can't be expressed with field-level validation alone.</p>
+
+<p>The <code>period</code> field shows <code>Field(default=..., pattern=...)</code> &mdash; a default value with a regex constraint. Valid periods look like <code>"30d"</code>, <code>"6mo"</code>, or <code>"1y"</code>.</p>
+
+<h2>Serialization: model_dump and model_validate_json</h2>
+
+<p>Pydantic models convert to and from dicts and JSON:</p>
+
+<pre><code class="language-python"># Model → dict (includes computed fields)
+data = trade.model_dump()
+# {'ticker': 'AAPL', 'side': 'buy', 'quantity': 100,
+#  'price': 150.25, 'trade_date': datetime.date(2026, 4, 1),
+#  'notional': 15025.0}
+
+# Dict → model (re-validates)
+trade2 = Trade(**data)
+
+# JSON string → model (what APIs actually receive)
+trade3 = Trade.model_validate_json(
+    '{"ticker":"AAPL","side":"buy","quantity":100,"price":150.25,"trade_date":"2026-04-01"}'
+)
+</code></pre>
+
+<p>This is the bridge to web APIs. When FastAPI receives a JSON request body, it calls <code>model_validate_json()</code> under the hood. When it sends a response, it calls <code>model_dump()</code>. The PortfolioRequest model we wrote here will become the FastAPI request body in the next exercise &mdash; zero extra work needed.</p>
+
+<h2>v2 vs v1: What Changed</h2>
+
+<p>If you've used Pydantic v1, the main changes:</p>
+
+<ul>
+  <li><code>@validator</code> &rarr; <code>@field_validator</code> (plus <code>@classmethod</code> decorator)</li>
+  <li><code>@root_validator</code> &rarr; <code>@model_validator(mode="after")</code></li>
+  <li><code>.dict()</code> &rarr; <code>.model_dump()</code></li>
+  <li><code>.json()</code> &rarr; <code>.model_dump_json()</code></li>
+  <li><code>parse_raw()</code> &rarr; <code>model_validate_json()</code></li>
+  <li>Validation core rewritten in Rust &mdash; 5-50x faster</li>
+</ul>
+
+<p>The naming is more consistent and the <code>model_</code> prefix avoids clashing with your own method names.</p>
+
+<h2>Try It Yourself</h2>
+
+<p>The full exercise code is in the <a href="https://github.com/MishCodesFinBytes/quant_lab/tree/master/exercises/02-pydantic">quant_lab repo</a>. Clone it, run <code>pip install -e ".[dev]"</code>, and try <code>pytest -v</code> to see all 12 tests pass.</p>
+
+<p>Try breaking things: pass a negative quantity, a future date, weights that don't sum to 1. Read the <code>ValidationError</code> messages &mdash; Pydantic tells you exactly which field failed and why.</p>
