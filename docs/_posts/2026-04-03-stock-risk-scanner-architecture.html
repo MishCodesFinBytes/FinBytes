@@ -1,0 +1,195 @@
+---
+layout: post
+title: "Stock Risk Scanner — Architecture Deep Dive"
+date: 2026-04-03
+tags: [architecture, system-design, python, fastapi, docker, quant-lab]
+categories:
+- Python fundamentals
+permalink: "/2026/04/03/stock-risk-scanner-architecture/"
+---
+
+<h2>System Overview</h2>
+
+<p>The Stock Risk Scanner is a production-style portfolio risk analysis service. It combines a Streamlit dashboard, a FastAPI backend, a PostgreSQL database, and the Claude API into a single deployable system. Here is how all the pieces fit together.</p>
+
+<div class="mermaid">
+graph LR
+    A[User Browser] --> B[Streamlit Cloud\nfinbytes.streamlit.app]
+    B -->|POST /api/scan\nGET /api/scans/id| C[Render API\nfinbytes-scanner.onrender.com]
+    B -->|chart data| D[yfinance\nexternal]
+    C -->|persist scan records| E[PostgreSQL\nRender managed]
+    C -->|generate narrative| F[Claude API\nAnthropic]
+    F -->|fallback if unavailable| C
+    G[GitHub Repo] -->|CI on push| H[GitHub Actions CI]
+    G -->|auto-deploy| B
+    G -->|auto-deploy| C
+</div>
+
+<p>A few things worth noting about this topology:</p>
+<ul>
+  <li><strong>yfinance is called from both Streamlit and the API</strong> &mdash; deliberately. The API fetches prices for risk calculations; Streamlit fetches prices separately for chart rendering. This keeps the API clean: no chart-data endpoints needed.</li>
+  <li><strong>Claude API has a fallback path</strong> &mdash; if the API key is missing or the service is down, the scanner returns a deterministic text summary of the raw metrics. The service never fails silently.</li>
+  <li><strong>Both hosting targets auto-deploy from <code>master</code></strong> &mdash; merge a PR and both the API and the dashboard are updated within minutes, no manual deploys.</li>
+</ul>
+
+<hr/>
+
+<h2>Request Flow</h2>
+
+<p>The most important design decision in this system is the async scan pattern: the HTTP POST returns immediately, and the heavy work runs in the background. Here is the full sequence from button click to rendered charts.</p>
+
+<div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant ST as Streamlit
+    participant API as Render API
+    participant DB as PostgreSQL
+    participant YF as yfinance
+    participant CL as Claude API
+
+    U->>ST: Enter tickers + weights, click Scan
+    ST->>API: POST /api/scan {tickers, weights, period}
+    API->>DB: INSERT ScanRecord (status: pending)
+    API-->>ST: HTTP 202 {id: 42, status: "pending"}
+    Note over API: Background task starts
+    API->>YF: fetch_prices(tickers, period)
+    YF-->>API: DataFrame of close prices
+    API->>API: calculate_risk_metrics(prices, weights)
+    API->>CL: generate narrative (or fallback)
+    CL-->>API: plain-English risk summary
+    API->>DB: UPDATE ScanRecord (status: complete, metrics, narrative)
+    loop Poll every 2 seconds
+        ST->>API: GET /api/scans/42
+        API-->>ST: {status: "pending"} or {status: "complete", ...}
+    end
+    ST->>YF: fetch_prices(tickers, period) for charts
+    YF-->>ST: DataFrame of close prices
+    ST->>U: Render metrics, narrative, Plotly charts
+</div>
+
+<p><strong>Why return HTTP 202 immediately?</strong> A scan takes 5&ndash;10 seconds: yfinance fetches data over the network, NumPy crunches the risk metrics, and the Claude API generates a narrative. Holding the HTTP connection open for 10 seconds would be bad UX and bad practice. Instead, the API creates a <code>ScanRecord</code> with status <code>pending</code>, fires a background task via <code>asyncio.ensure_future</code>, and returns the scan ID. The client polls until the status flips to <code>complete</code>.</p>
+
+<hr/>
+
+<h2>Code Module Map</h2>
+
+<p>The backend is split into eight modules, each with a single responsibility. The split matters: it makes the code testable in isolation and makes it obvious where to look when something breaks.</p>
+
+<div class="mermaid">
+graph TD
+    M[models.py\nScanRequest · RiskMetrics · ScanResult]
+    MD[market_data.py\nfetch_prices]
+    R[risk.py\ncalculate_risk_metrics]
+    N[narrative.py\nRiskNarrator]
+    S[scanner.py\nscan orchestrator]
+    MAIN[main.py\nFastAPI endpoints]
+    DBM[db_models.py\nSQLAlchemy ScanRecord]
+    DB[db.py\nCRUD operations]
+
+    M --> MD
+    M --> R
+    M --> N
+    M --> S
+    MD --> S
+    R --> S
+    N --> S
+    S --> MAIN
+    DBM --> DB
+    DB --> MAIN
+</div>
+
+<p>Reading the diagram top-down:</p>
+<ul>
+  <li><strong>models.py</strong> defines the data contracts &mdash; <code>ScanRequest</code> (input), <code>RiskMetrics</code> (computed numbers), <code>ScanResult</code> (full output). Every module imports from here, nothing else imports between modules.</li>
+  <li><strong>market_data.py, risk.py, narrative.py</strong> are pure functions &mdash; take data in, return data out. No database, no FastAPI, easy to unit test in isolation.</li>
+  <li><strong>scanner.py</strong> is the orchestrator &mdash; it chains the three pure modules together and returns a <code>ScanResult</code>. The FastAPI layer calls this in a background task.</li>
+  <li><strong>db_models.py + db.py</strong> are the persistence layer &mdash; SQLAlchemy <code>ScanRecord</code> ORM model and the async CRUD functions that read and write it. <code>main.py</code> is the only consumer.</li>
+</ul>
+
+<hr/>
+
+<h2>Infrastructure</h2>
+
+<h3>Docker Multi-Stage Build</h3>
+
+<p>The Dockerfile uses two stages to keep the production image lean:</p>
+
+<ul>
+  <li><strong>builder stage</strong> &mdash; installs all dependencies (including build tools for compiled packages). This stage is large and disposable.</li>
+  <li><strong>runtime stage</strong> &mdash; copies only the installed site-packages and the application code from the builder. No build tools, no pip cache, smaller attack surface.</li>
+</ul>
+
+<p><code>docker-compose.yml</code> defines two services: <code>scanner</code> (FastAPI on port 8000) and <code>postgres:16</code> (port 5432, with a named volume for data persistence). Running <code>docker compose up --build -d</code> gives you the full stack locally in one command.</p>
+
+<h3>Deployment Pipeline</h3>
+
+<div class="mermaid">
+graph LR
+    A[git push\nworking branch] --> B[GitHub Actions CI\npytest 26 tests]
+    B -->|all tests pass| C[Pull Request\nworking → master]
+    C -->|merged| D[master branch]
+    D -->|webhook| E[Render\nauto-deploy API]
+    D -->|webhook| F[Streamlit Cloud\nauto-deploy dashboard]
+</div>
+
+<p>The discipline here is: <strong>nothing lands on <code>master</code> without passing CI</strong>. The GitHub Actions workflow triggers on every push to <code>working</code> and on every PR to <code>master</code>. It checks out the code, installs dependencies, and runs <code>pytest</code>. If any test fails, the PR cannot merge. Once the PR merges to <code>master</code>, both Render and Streamlit Cloud pick up the change automatically via their GitHub integration &mdash; no manual <code>git push</code> to a hosting remote, no deploy scripts.</p>
+
+<hr/>
+
+<h2>Repo Structure</h2>
+
+<pre><code>quant_lab/
+├── exercises/           # 01-08: standalone learning exercises
+│   ├── 01-pytest-tdd/
+│   ├── 02-pydantic/
+│   ├── ...
+│   └── 08-postgresql-sqlalchemy/
+├── projects/            # self-contained production backends
+│   └── stock-risk-scanner/
+│       ├── src/scanner/ # Python modules (models, risk, market_data, ...)
+│       ├── tests/       # 26 pytest tests
+│       ├── alembic/     # DB migrations
+│       ├── Dockerfile
+│       └── docker-compose.yml
+├── dashboard/           # Streamlit frontend (shared, repo root)
+│   └── pages/
+│       └── Stock_Risk_Scanner.py
+└── docs/superpowers/    # specs and plans for each exercise + project
+    └── plans/
+</code></pre>
+
+<p>The layout reflects how the project evolved:</p>
+<ul>
+  <li><strong>exercises/</strong> are sandboxes &mdash; each one teaches a single concept (async, Pydantic, yfinance) and has its own <code>pyproject.toml</code> and tests. They exist to build up to the capstone, and each maps directly to a module in the scanner.</li>
+  <li><strong>projects/</strong> are production-grade services with Dockerfiles, compose files, and database migrations. The scanner lives here. Future projects (options pricer, portfolio optimiser) will add sibling directories.</li>
+  <li><strong>dashboard/</strong> sits at the repo root because Streamlit Cloud expects a specific file layout. It is the shared frontend for all projects &mdash; adding a new project means adding a new page, not a new repo.</li>
+  <li><strong>docs/superpowers/</strong> captures specs and plans before any code is written. Every exercise and project has a plan file &mdash; useful for interviews and for understanding why decisions were made.</li>
+</ul>
+
+<hr/>
+
+<h2>Tech Decisions &mdash; Interview-Ready</h2>
+
+<h3>Q: Why FastAPI over Flask?</h3>
+<p>FastAPI is async-native from the ground up. Flask can handle async routes, but it is bolted on rather than built in. FastAPI also generates OpenAPI documentation automatically from your route signatures and Pydantic models &mdash; no separate swagger setup. And Pydantic validation is integrated: request bodies are validated before your function even runs, and if validation fails you get a structured 422 response automatically. For I/O-bound financial data work where you are waiting on yfinance, PostgreSQL, and an external AI API simultaneously, async matters.</p>
+
+<h3>Q: Why async SQLAlchemy?</h3>
+<p>The scanner fetches market data from yfinance and calls the Claude API &mdash; both are I/O-bound network operations that can take seconds. With sync SQLAlchemy, the entire server thread blocks during a database query. With <code>AsyncSession</code>, the server can handle other requests while waiting for the database. In a service that might receive multiple concurrent scan requests, this is the difference between a responsive API and one that queues up behind itself.</p>
+
+<h3>Q: Why background tasks instead of synchronous endpoints?</h3>
+<p>A scan takes 5&ndash;10 seconds end-to-end. Holding an HTTP connection open for 10 seconds is a poor user experience and makes the API fragile under load. The POST-202-poll pattern is standard for slow operations: the server returns a scan ID immediately, the client polls for the result. This also means the server can process multiple scans concurrently &mdash; each one runs as an independent background task.</p>
+
+<h3>Q: Why SQLite for tests but PostgreSQL for production?</h3>
+<p>SQLite in-memory tests run in milliseconds with zero infrastructure dependencies &mdash; no Docker required to run the test suite locally or in CI. SQLAlchemy abstracts the database engine, so the same models and queries work on both. PostgreSQL for production gives strict typing, proper concurrency (SQLite has table-level write locks), and the data persistence and reliability expected of a production service.</p>
+
+<h3>Q: Why Streamlit over React?</h3>
+<p>Python-only &mdash; no JavaScript context switch. Streamlit is purpose-built for data apps: widgets for sliders and text inputs, built-in <code>st.metric</code> for KPIs, native Plotly chart rendering, and free hosting on Streamlit Cloud. The trade-off is less UI customisation: you cannot build a pixel-perfect design system in Streamlit. For a data dashboard where the numbers are the product, that trade-off is entirely acceptable.</p>
+
+<h3>Q: Why separate frontend and backend hosting?</h3>
+<p>Streamlit Cloud is free and runs Streamlit natively. Render is free and runs Docker containers. Combining them on a single host would require a paid tier on one or both platforms, and would mean deploying a Python web framework (FastAPI) inside a Streamlit Cloud app &mdash; which is not what it is designed for. Separate hosting also means independent scaling: if the dashboard gets traffic, the API is not affected, and vice versa. The cost is one extra environment variable (<code>API_URL</code>) in the Streamlit app.</p>
+
+<h3>Q: Why does yfinance get called from both Streamlit and the API?</h3>
+<p>The API fetches prices to calculate risk metrics &mdash; that is the authoritative data. Streamlit fetches prices separately to render historical price charts in the dashboard. If the API were to serve chart data too, you would need new endpoints, new models, and new tests for data that Streamlit can fetch directly from yfinance with three lines of code. The duplication is intentional: it keeps the API focused on risk calculation and keeps the dashboard self-sufficient for display data.</p>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

@@ -286,3 +286,66 @@ pytest -v</code></pre>
   <h3>Step 8 &mdash; Stop the services</h3>
   <pre><code>docker compose down</code></pre>
 </div>
+
+<div id="tab-arch" class="ql-tab-content" style="display:none">
+  <h2>Architecture Deep Dive</h2>
+  <p>
+    For a full walkthrough of the system architecture &mdash; including Mermaid diagrams, request flow,
+    code module map, infrastructure pipeline, and interview-ready tech decisions &mdash; read the dedicated post:
+  </p>
+  <p>
+    <a href="/FinBytes/2026/04/03/stock-risk-scanner-architecture/"
+       style="display:inline-block;padding:10px 24px;background:#2a7ae2;color:white;border-radius:4px;text-decoration:none;font-weight:600;">
+      Read Architecture Deep Dive
+    </a>
+  </p>
+
+  <h3>System Overview</h3>
+  <div class="mermaid">
+  graph LR
+    User([User Browser]) --> SC[Streamlit Cloud<br/>finbytes.streamlit.app]
+    SC -->|POST /api/scan<br/>GET /api/scans| RA[Render API<br/>finbytes-scanner.onrender.com]
+    SC -->|price data for charts| YF[yfinance]
+    RA -->|persist scans| PG[(PostgreSQL<br/>Render Managed)]
+    RA -->|narrative generation| CL[Claude API<br/>Anthropic]
+    RA -->|fallback if no key| FB[Formatted Summary]
+    GH[GitHub Repo] -->|auto-deploy master| SC
+    GH -->|auto-deploy master| RA
+    GH -->|push working / PR master| CI[GitHub Actions CI]
+  </div>
+
+  <h3>Request Flow</h3>
+  <div class="mermaid">
+  sequenceDiagram
+    participant U as User
+    participant S as Streamlit Cloud
+    participant A as Render API
+    participant DB as PostgreSQL
+    participant YF as yfinance
+    participant C as Claude API
+
+    U->>S: Enter tickers + weights, click Scan
+    S->>A: POST /api/scan
+    A->>DB: INSERT pending ScanRecord
+    A-->>S: {id: 1, status: "pending"}
+    Note over A: Background task starts
+    A->>YF: Fetch price history
+    YF-->>A: Price DataFrame
+    Note over A: Calculate risk metrics
+    A->>C: Generate narrative (or fallback)
+    C-->>A: Risk narrative text
+    A->>DB: UPDATE ScanRecord → complete
+    loop Poll every 2s
+      S->>A: GET /api/scans/1
+      A-->>S: {status: "pending"}
+    end
+    S->>A: GET /api/scans/1
+    A-->>S: {status: "complete", metrics...}
+    S->>YF: Fetch prices for charts
+    Note over S: Render metrics + charts
+    S-->>U: Display results
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true});</script>
