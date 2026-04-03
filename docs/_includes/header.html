@@ -37,16 +37,22 @@ a.nav-dropdown-item{display:block}
 .nav-submenu{display:none!important;position:absolute;top:-6px;left:100%;overflow:visible;background:#fff;border:1px solid #e8e8e8;border-radius:6px;min-width:220px;padding:6px 0;box-shadow:0 4px 16px rgba(0,0,0,.08);z-index:1001;line-height:1.5}.nav-has-sub:hover>.nav-submenu,.nav-has-sub:focus-within>.nav-submenu{display:block!important}.nav-submenu-left{left:auto!important;right:100%!important}
 
 @media screen and (max-width:600px){
+  .site-header > .wrapper { flex-wrap: wrap; }
+  .site-nav .trigger { display: none !important; flex-direction: column; width: 100%; }
+  .site-nav input:checked ~ .trigger { display: flex !important; }
   .nav-dropdown{display:block;position:static;margin-right:0;line-height:1}
-  .nav-dropdown-toggle{display:block;margin-left:20px;padding:5px 10px}
+  .nav-dropdown-toggle{display:block;padding:8px 0;font-size:14px}
   .nav-caret,.nav-sub-caret{display:none}
-  .nav-dropdown-menu{display:block!important;position:static!important;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0}
-  .nav-dropdown-header{margin-left:20px;padding:8px 10px 2px;font-size:10px;color:#bbb}
-  .nav-dropdown-item,a.nav-dropdown-item{display:block;margin-left:30px;padding:4px 10px;font-size:13px;color:#666}
-  .nav-has-sub{display:block;margin-left:30px;padding:4px 10px;font-size:13px;color:#666}
-  .nav-submenu{display:block!important;position:static!important;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0;margin-left:10px}
-  .nav-dropdown-sep{margin:4px 20px}
+  .nav-dropdown-menu{display:none!important;position:static!important;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0}
+  .nav-dropdown.open>.nav-dropdown-menu{display:block!important}
+  .nav-dropdown-header{padding:6px 0 2px 12px;font-size:10px;color:#bbb}
+  .nav-dropdown-item,a.nav-dropdown-item{display:block;padding:4px 12px;font-size:13px;color:#666}
+  .nav-has-sub{display:block;padding:4px 12px;font-size:13px;color:#666}
+  .nav-submenu{display:none!important;position:static!important;border:none;border-radius:0;box-shadow:none;padding:0;min-width:0;margin-left:10px}
+  .nav-has-sub.open>.nav-submenu{display:block!important}
+  .nav-dropdown-sep{margin:4px 0}
   .nav-badge{display:none}
+  .page-link{padding:8px 0;font-size:14px}
 }
 </style>
 
@@ -222,3 +228,22 @@ a.nav-dropdown-item{display:block}
     </nav>
   </div>
 </header>
+
+<script>
+// Mobile: toggle dropdowns on tap instead of expanding all
+if (window.innerWidth <= 600) {
+  document.querySelectorAll('.nav-dropdown-toggle').forEach(function(toggle) {
+    toggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      this.parentElement.classList.toggle('open');
+    });
+  });
+  document.querySelectorAll('.nav-has-sub').forEach(function(sub) {
+    sub.addEventListener('click', function(e) {
+      if (e.target.closest('a.nav-dropdown-item')) return;
+      e.preventDefault();
+      this.classList.toggle('open');
+    });
+  });
+}
+</script>
