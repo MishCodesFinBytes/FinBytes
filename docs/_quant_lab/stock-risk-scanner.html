@@ -128,10 +128,44 @@ Max Drawdown = min(Drawdown_t)</code></pre>
     excellent.</strong> The scanner uses a simplified version without subtracting the risk-free rate, which is
     appropriate for relative comparisons between scans.
   </p>
+
+  <h2>Business Context &mdash; What These Numbers Mean</h2>
+
+  <h3>VaR &mdash; "How much could I lose on a bad day?"</h3>
+  <p>If VaR is -2.14%, it means: <em>on 19 out of 20 trading days, your portfolio won't drop more than 2.14%.</em> For a $100,000 portfolio, that's a maximum expected daily loss of $2,140 under normal conditions. Risk managers use this to set position limits and determine how much capital to hold in reserve.</p>
+
+  <h3>CVaR &mdash; "When things go really wrong, how bad?"</h3>
+  <p>CVaR looks at the worst 5% of days and averages them. This matters more than VaR for tail risk &mdash; it answers: <em>"If we breach the VaR threshold, what should we actually expect?"</em> Regulators increasingly prefer CVaR over VaR because it captures the severity of extreme losses, not just the threshold.</p>
+
+  <h3>Max Drawdown &mdash; "What's the worst drop I'd have sat through?"</h3>
+  <p>A drawdown of -19.37% means at some point the portfolio fell nearly a fifth from its peak before recovering. This is the <em>emotional</em> risk metric &mdash; even if long-term returns are positive, can you stomach watching your portfolio drop 20%? Fund managers track this because clients often panic-sell at the bottom of a drawdown.</p>
+
+  <h3>Volatility &mdash; "How bumpy is the ride?"</h3>
+  <p>At 24% annualised volatility, this portfolio swings about 1.5% per day. A conservative pension fund might target 8-12%. A tech-heavy portfolio at 24% is moderately aggressive. Volatility isn't inherently bad &mdash; it's the price you pay for higher expected returns.</p>
+
+  <h3>Sharpe Ratio &mdash; "Am I being paid for the risk?"</h3>
+  <p>Think of it as <em>bang-for-your-buck</em>. Above 1.0 is good &mdash; you're being adequately compensated for the volatility. Below 0.5 suggests you could get similar returns with less risk. A Sharpe of 0.61 is mediocre &mdash; the tech concentration is adding volatility without proportionally higher returns.</p>
+
+  <h2>Reading the Charts</h2>
+
+  <h3>Price History</h3>
+  <p>Each coloured line shows one stock. Look for: <strong>divergence</strong> (one drops while others rise = diversification working), <strong>correlation</strong> (all move together = not truly diversified), <strong>trends</strong> (slope direction).</p>
+
+  <h3>Cumulative Return</h3>
+  <p>Your blended portfolio value over time. Above 1.0 = gained value. The slope tells you momentum. This is the chart to show a client: <em>"Here's how your money grew."</em></p>
+
+  <h3>Drawdown</h3>
+  <p>The red area shows how far the portfolio dropped from its peak at every point. Look for: <strong>depth</strong> (how far down), <strong>duration</strong> (how long the red lasts), <strong>frequency</strong> (many dips or one big one).</p>
+
+  <h3>Allocation Pie</h3>
+  <p>Your weight split. If one slice dominates, a single stock's bad day becomes the portfolio's bad day.</p>
+
+  <h3>Putting It Together</h3>
+  <p>Start with Sharpe (is risk worth it?) &rarr; check drawdown (can you tolerate the worst dip?) &rarr; look at the price chart (are stocks correlated?) &rarr; read the AI narrative.</p>
 </div>
 
 <div id="tab-core" class="ql-tab-content" style="display:none">
-  <h2>Core Module Walkthrough</h2>
+  <h2>Code Walkthrough</h2>
   <p>The scanner's business logic lives in five Python modules under <code>projects/stock-risk-scanner/src/scanner/</code>.</p>
 
   <h3>models.py &mdash; Data Contracts</h3>
@@ -399,75 +433,7 @@ pytest -v</code></pre>
   </table>
 </div>
 
-<div id="tab-biz" class="ql-tab-content" style="display:none">
-  <h2>Business Insights &mdash; Reading the Dashboard</h2>
-  <p>This tab explains what each chart and metric on the dashboard means in plain business language &mdash; no formulas, just what matters for decision-making.</p>
-
-  <h3>The Metrics</h3>
-
-  <h4>VaR (95%) &mdash; "How much could I lose on a bad day?"</h4>
-  <p>If VaR is -2.14%, it means: <em>on 19 out of 20 trading days, your portfolio won't drop more than 2.14%.</em> For a $100,000 portfolio, that's a maximum expected daily loss of $2,140 under normal conditions. Risk managers use this to set position limits and determine how much capital to hold in reserve.</p>
-
-  <h4>CVaR &mdash; "When things go really wrong, how bad?"</h4>
-  <p>CVaR looks at the worst 5% of days and averages them. If CVaR is -3.19%, your average loss on those truly bad days is 3.19%. This matters more than VaR for tail risk &mdash; it answers: <em>"If we breach the VaR threshold, what should we actually expect?"</em> Regulators increasingly prefer CVaR over VaR because it captures the severity of extreme losses, not just the threshold.</p>
-
-  <h4>Max Drawdown &mdash; "What's the worst drop I'd have sat through?"</h4>
-  <p>A drawdown of -19.37% means at some point during the year, the portfolio fell nearly a fifth from its peak before recovering. This is the <em>emotional</em> risk metric &mdash; even if long-term returns are positive, can you stomach watching your portfolio drop 20%? Fund managers track this because clients often panic-sell at the bottom of a drawdown, locking in losses.</p>
-
-  <h4>Volatility &mdash; "How bumpy is the ride?"</h4>
-  <p>At 23.89% annualised volatility, this portfolio swings about 1.5% per day. Higher volatility means more uncertainty &mdash; your portfolio can move further in either direction on any given day. A conservative pension fund might target 8-12% volatility. A tech-heavy growth portfolio at 24% is moderately aggressive. Volatility isn't inherently bad &mdash; it's the price you pay for higher expected returns.</p>
-
-  <h4>Sharpe Ratio &mdash; "Am I being paid for the risk?"</h4>
-  <p>Sharpe of 0.61 means the portfolio earns 0.61 units of return for every unit of risk. Think of it as a <em>bang-for-your-buck</em> measure. Above 1.0 is considered good &mdash; you're being adequately compensated for the volatility. Below 0.5 suggests you could get similar returns with less risk. A Sharpe of 0.61 is mediocre &mdash; the tech concentration is adding volatility without proportionally higher returns.</p>
-
-  <h3>The Charts</h3>
-
-  <h4>Price History &mdash; "What did each stock actually do?"</h4>
-  <p>Each coloured line shows one stock's closing price over the period. Use this to spot:</p>
-  <ul>
-    <li><strong>Divergence</strong> &mdash; if one stock drops while others rise, diversification is working</li>
-    <li><strong>Correlation</strong> &mdash; if all lines move together, your "diversified" portfolio isn't actually diversified</li>
-    <li><strong>Trends</strong> &mdash; upward slope = growth, flat = stagnation, downward = decline</li>
-  </ul>
-  <p>For the Tech Giants preset, you'll notice AAPL, MSFT, and GOOG tend to move together &mdash; they're all driven by the same macro factors (interest rates, tech sentiment). This is why the "Safe Haven" preset with JNJ, PG, KO exists as a contrast.</p>
-
-  <h4>Portfolio Cumulative Return &mdash; "How is my blended portfolio performing?"</h4>
-  <p>This single line shows the combined portfolio value over time, weighted by your allocation. Starting at 1.0:</p>
-  <ul>
-    <li><strong>Above 1.0</strong> = portfolio has gained value since the start</li>
-    <li><strong>Below 1.0</strong> = portfolio is down from the start</li>
-    <li><strong>The slope</strong> tells you momentum &mdash; steep up = strong growth, flattening = slowing</li>
-  </ul>
-  <p>This is the chart to show a client: <em>"Here's how your money grew (or didn't) over the period."</em></p>
-
-  <h4>Drawdown Chart &mdash; "How deep were the dips?"</h4>
-  <p>The red area shows how far the portfolio dropped from its peak at every point in time. The deeper the red, the worse the pain. Key things to look for:</p>
-  <ul>
-    <li><strong>Depth</strong> &mdash; how far down does it go? -19% is significant</li>
-    <li><strong>Duration</strong> &mdash; how long does the red last? A quick V-shaped recovery is better than a slow grind</li>
-    <li><strong>Frequency</strong> &mdash; are there many dips or just one big one?</li>
-  </ul>
-  <p>This chart turns the abstract "max drawdown" number into something visual. A risk committee looking at this chart immediately understands the portfolio's vulnerability.</p>
-
-  <h4>Portfolio Allocation Pie &mdash; "Where is my money?"</h4>
-  <p>Shows the weight split across tickers. Use it to check:</p>
-  <ul>
-    <li><strong>Concentration risk</strong> &mdash; if one slice dominates, a single stock's bad day becomes the portfolio's bad day</li>
-    <li><strong>Balance</strong> &mdash; equal weights spread risk, tilted weights express conviction</li>
-  </ul>
-
-  <h3>Putting It Together</h3>
-  <p>When reviewing a scan result, read the metrics and charts together:</p>
-  <ol>
-    <li><strong>Start with Sharpe</strong> &mdash; is the risk-return trade-off acceptable?</li>
-    <li><strong>Check drawdown</strong> &mdash; could you (or your client) tolerate the worst dip?</li>
-    <li><strong>Look at the price chart</strong> &mdash; are the stocks correlated? If yes, diversification isn't helping</li>
-    <li><strong>Read the AI narrative</strong> &mdash; it synthesises all of this into a recommendation</li>
-  </ol>
-  <p>The scanner doesn't tell you what to buy &mdash; it tells you what you're risking by holding what you have.</p>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js">
 <script>
 mermaid.initialize({startOnLoad: true});
 
