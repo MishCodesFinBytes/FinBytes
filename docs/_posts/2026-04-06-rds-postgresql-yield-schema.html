@@ -27,6 +27,49 @@ permalink: "/2026/04/06/rds-postgresql-yield-schema/"
 
 <p>The trade-off is cost per hour once you're past the free tier (about $15/month for a t3.micro running 24/7). One lesson learned: stop or delete the instance when you're not actively using it, especially if you're running multiple RDS databases in parallel.</p>
 
+<h3>A small helper: scripts/rds.py</h3>
+
+<p>"Remember to stop RDS" is one of those things every AWS guide tells you, and that everyone forgets. A tiny Python CLI using boto3 makes it one command:</p>
+
+<pre><code class="language-bash">python scripts/rds.py status         # show current state
+python scripts/rds.py stop --wait    # stop and block until stopped
+python scripts/rds.py start --wait   # start and block until available
+</code></pre>
+
+<p>The script wraps <code>describe_db_instances</code>, <code>stop_db_instance</code>, and <code>start_db_instance</code>. It checks current status before acting (so calling <code>stop</code> on an already-stopped instance is a no-op, not an error), and optionally polls until the target state is reached. Config comes from env vars with sensible defaults &mdash; no command-line flags needed for the normal case.</p>
+
+<pre><code class="language-python">def _describe(rds, instance_id):
+    try:
+        response = rds.describe_db_instances(DBInstanceIdentifier=instance_id)
+        return response["DBInstances"][0]
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "DBInstanceNotFound":
+            return None
+        raise
+
+
+def cmd_stop(args):
+    rds = _client(args.profile, args.region)
+    instance = _describe(rds, args.instance)
+    status = instance["DBInstanceStatus"]
+
+    if status in ("stopped", "stopping"):
+        print(f"Instance is already {status}. No action.")
+        return 0
+    if status != "available":
+        print(f"Cannot stop — current status is {status!r}.")
+        return 1
+
+    rds.stop_db_instance(DBInstanceIdentifier=args.instance)
+    print(f"Stop requested for {args.instance}.")
+    if args.wait:
+        _wait_for_status(rds, args.instance, "stopped", timeout_min=10)
+</code></pre>
+
+<p>Start and stop operations on RDS are asynchronous &mdash; the API returns immediately and the instance transitions through intermediate states (<code>stopping</code> → <code>stopped</code>, <code>starting</code> → <code>available</code>). The <code>--wait</code> flag polls every 15 seconds so scripts can sequence operations without racing.</p>
+
+<p>This feels like a small thing, but at $0.017/hr for a t3.micro, 24 hours of forgetting to stop adds up to $0.40/day. Over a month of on-and-off learning, that's the difference between free-tier and a surprise bill.</p>
+
 <h2>Provisioning via CLI</h2>
 
 <p>The core command to create the instance:</p>
