@@ -1,0 +1,195 @@
+---
+layout: post
+title: "AWS Fundamentals & Treasury Yield Data from FRED"
+date: 2026-04-04
+tags: [aws, iam, fred, treasury, yield-curve, quant-lab, python]
+categories:
+- AWS
+- Quantitative Finance
+permalink: "/2026/04/04/aws-fundamentals-treasury-data/"
+---
+
+<h2>The First Step on an AWS + Quant Journey</h2>
+
+<p>This is the opening exercise of a new learning path: pairing AWS cloud services with deeper quantitative finance. The goal is a Bond Pricing Engine and a Credit Risk Platform, fully deployed on AWS, built up one concept at a time. Each exercise teaches three layers: <strong>business context</strong> (who uses this and why), <strong>math</strong> (the formulas with intuition, not just plug-and-chug), and <strong>code</strong> (Python with TDD, then AWS).</p>
+
+<p>Exercise 09 is the groundwork: get an AWS account set up safely, and start pulling real market data from FRED &mdash; the Federal Reserve's free economic data API that publishes daily US Treasury yields alongside thousands of other series.</p>
+
+<h2>Why AWS IAM Matters From Day One</h2>
+
+<p>When you create an AWS account, you're given a <em>root user</em>. Root can do anything: delete the account, spend unlimited money, revoke other users' access. You should never use root for daily work. Think of it like using <code>sudo</code> for every terminal command &mdash; it works, but it's reckless.</p>
+
+<p>Instead, create an IAM (Identity and Access Management) user with only the permissions it needs. For this learning project, I created a user called <code>finbytes</code> with broad managed policies (S3, RDS, Lambda, etc.) since I'm exploring many services. In production, you'd scope permissions much tighter.</p>
+
+<p>The IAM user gets its own access keys, which you use to configure the AWS CLI:</p>
+
+<pre><code class="language-bash">aws configure --profile quant-lab
+#   Access Key ID:     AKIA...
+#   Secret Access Key: ...
+#   Region:            us-east-1
+#   Output format:     json
+
+aws sts get-caller-identity --profile quant-lab
+</code></pre>
+
+<p>The <code>--profile</code> flag means you can have multiple AWS accounts (personal, work, different projects) on the same machine without stepping on each other.</p>
+
+<h2>The $5 Safety Net</h2>
+
+<p>AWS has a generous free tier, but it's easy to accidentally leave something running. A single NAT Gateway left on for a month is $32. An RDS instance running past the free tier is about $15/month. The cheapest insurance is a CloudWatch billing alarm that emails you when estimated charges cross a threshold.</p>
+
+<p>Setting one up requires an SNS topic (for the notification), a confirmed email subscription, and a CloudWatch alarm on the <code>EstimatedCharges</code> metric. Importantly, billing metrics only exist in <strong>us-east-1</strong>, so the alarm must be created there even if you're using other regions for your actual workloads.</p>
+
+<h2>Enter FRED: Free, Reliable Market Data</h2>
+
+<p>FRED (Federal Reserve Economic Data) is a goldmine. Maintained by the St. Louis Fed, it exposes over 800,000 economic and financial time series through a free API. For fixed income work, it's the cleanest source of daily US Treasury yields across every major maturity.</p>
+
+<p>The series follow a predictable naming convention:</p>
+
+<pre><code class="language-python">TREASURY_SERIES = {
+    "DGS1MO": "1M",   # 1-month T-bill
+    "DGS3MO": "3M",
+    "DGS6MO": "6M",
+    "DGS1": "1Y",
+    "DGS2": "2Y",
+    "DGS3": "3Y",
+    "DGS5": "5Y",
+    "DGS7": "7Y",
+    "DGS10": "10Y",   # the benchmark
+    "DGS20": "20Y",
+    "DGS30": "30Y",
+}
+</code></pre>
+
+<h2>What Par Yields Actually Represent</h2>
+
+<p>When you see "the 10Y Treasury yield is 4.31%", that's the par yield &mdash; the coupon rate at which a newly issued 10-year Treasury bond would price at exactly 100 (face value). Different maturities have different par yields, and together they form the <em>par curve</em> &mdash; the starting point for every other yield curve.</p>
+
+<p>The shape of the curve tells you something about the economy:</p>
+
+<ul>
+  <li><strong>Normal</strong> (upward sloping): long-term rates exceed short-term. Investors demand a premium to lock money up longer. This is the baseline healthy state.</li>
+  <li><strong>Inverted</strong>: short rates exceed long rates. Historically predicts recession &mdash; the market expects the central bank to cut rates ahead, so long rates have priced that in.</li>
+  <li><strong>Flat</strong>: rates similar across maturities. Transition periods, policy uncertainty.</li>
+  <li><strong>Humped</strong>: mid-term peak. Unusual, often reflects specific policy expectations around particular horizons.</li>
+</ul>
+
+<h2>Fetching the Curve in Python</h2>
+
+<p>The <code>fredapi</code> library wraps FRED's REST API. Fetching a single series is one line; fetching the whole curve is a loop:</p>
+
+<pre><code class="language-python">from datetime import date, timedelta
+from fredapi import Fred
+
+
+def fetch_par_yields(api_key: str, as_of: date | None = None) -> dict[str, float]:
+    """Fetch US Treasury par yields from FRED.
+
+    Returns a dict mapping maturity label to yield percent.
+    Maturities with no data (e.g. holidays) are omitted.
+    """
+    fred = Fred(api_key=api_key)
+    target = as_of or date.today()
+    start = target - timedelta(days=7)  # look back for weekends/holidays
+
+    yields = {}
+    for series_id, label in TREASURY_SERIES.items():
+        data = fred.get_series(series_id, observation_start=start, observation_end=target)
+        data = data.dropna()
+        if len(data) > 0:
+            yields[label] = round(float(data.iloc[-1]), 2)
+    return yields
+</code></pre>
+
+<p>The 7-day lookback handles a real data-quality issue: Treasury yields aren't published on weekends or US holidays. Without the buffer, a Monday morning query for "today's yields" would return nothing.</p>
+
+<h2>Classifying the Curve Shape</h2>
+
+<p>Given a yield dict, we can mechanically classify the curve:</p>
+
+<pre><code class="language-python">def classify_curve_shape(yields: dict[str, float]) -> str:
+    ordered = [(label, yields[label]) for label in MATURITY_ORDER if label in yields]
+    if len(ordered) < 3:
+        return "flat"
+
+    short_rate = ordered[0][1]
+    long_rate = ordered[-1][1]
+    mid_rate = ordered[len(ordered) // 2][1]
+    spread = long_rate - short_rate
+
+    # Humped: mid-term rate higher than both short and long ends
+    if mid_rate > short_rate + 0.2 and mid_rate > long_rate + 0.2:
+        return "humped"
+
+    if abs(spread) <= 0.2:
+        return "flat"
+    elif spread > 0:
+        return "normal"
+    else:
+        return "inverted"
+</code></pre>
+
+<p>These thresholds (0.2 percentage points) are arbitrary &mdash; real analysts look at the 2Y-10Y spread specifically, and use historical distributions to judge what's "steep" vs "flat". But for a quick visual classification, this works.</p>
+
+<h2>Testing Without Hitting FRED</h2>
+
+<p>The real FRED API is rate-limited and flaky (I hit a 502 Bad Gateway during development). Tests should never depend on external services. Using <code>unittest.mock</code>, we can mock the Fred client entirely:</p>
+
+<pre><code class="language-python">from unittest.mock import patch, MagicMock
+import pandas as pd
+
+@patch("treasury_yields.Fred")
+def test_returns_dict_of_maturities_and_rates(mock_fred_class):
+    mock_fred = MagicMock()
+    mock_fred_class.return_value = mock_fred
+
+    def mock_get_series(series_id, observation_start, observation_end):
+        rates = {"DGS1MO": 5.25, "DGS10": 4.30, "DGS30": 4.45, ...}
+        return pd.Series([rates[series_id]])
+
+    mock_fred.get_series.side_effect = mock_get_series
+
+    result = fetch_par_yields(api_key="fake-key")
+    assert result["10Y"] == 4.30
+</code></pre>
+
+<p>The <code>@patch</code> decorator replaces <code>Fred</code> inside the module under test with a mock that returns canned data. The test runs in milliseconds, no network required.</p>
+
+<h2>The Live Curve</h2>
+
+<p>Running the live fetcher against FRED gives us something like this:</p>
+
+<pre><code>Maturity   Yield (%)
+--------------------
+1M         3.72
+3M         3.70
+6M         3.72
+1Y         3.68
+2Y         3.79
+3Y         3.82
+5Y         3.94
+7Y         4.12
+10Y        4.31
+20Y        4.88
+30Y        4.88
+
+Curve shape: normal
+</code></pre>
+
+<p>Normal shape, with a 120bp spread between the 1Y and the 30Y. Compared to the inverted curves of 2023 (when recession fears dominated), this looks like a market that expects steady growth.</p>
+
+<h2>What's Next</h2>
+
+<p>This is the foundation for everything that comes next in the bond pricing path:</p>
+
+<ul>
+  <li><strong>Exercise 10</strong>: store these curves in S3 (data lake pattern)</li>
+  <li><strong>Exercise 11</strong>: persist them in RDS PostgreSQL with proper schema</li>
+  <li><strong>Exercise 12</strong>: bootstrap zero-coupon (spot) rates from the par curve &mdash; deployed as a Lambda</li>
+  <li><strong>Exercise 13</strong>: derive forward rates, automated via CI/CD</li>
+  <li><strong>Exercise 14</strong>: Nelson-Siegel and Svensson parametric curve fitting, all infra in Terraform</li>
+</ul>
+
+<p>Each exercise adds one AWS service and one financial concept. The capstone (Bond Pricing Engine) assembles them into a serverless API that can price any bond against a live yield curve.</p>
+
+<p>The code for this exercise is in the <a href="https://github.com/MishCodesFinBytes/quant_lab/tree/master/exercises/09-aws-fundamentals">quant_lab repo</a>.</p>
