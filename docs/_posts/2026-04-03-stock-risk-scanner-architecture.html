@@ -200,5 +200,8 @@ graph LR
 <h3>Q: Why create_all() instead of Alembic in production?</h3>
 <p>Pragmatism. Render&rsquo;s free tier does not provide shell access, so we cannot run <code>alembic upgrade head</code> after deployment. By calling <code>create_all()</code> inside the FastAPI lifespan handler, the tables are created automatically when the app starts &mdash; zero manual steps. For a demo project with a stable schema, this is the right trade-off. If the schema needed frequent changes, we would move to a paid Render tier (which provides shell access) or add an <code>/admin/migrate</code> endpoint protected by an API key.</p>
 
+<h3>Q: How do you test the Streamlit dashboard?</h3>
+<p>Streamlit provides <code>AppTest</code>, a headless testing framework that runs pages without a browser. Tests verify that pages load without errors, titles and tabs render, and all interactive widgets (buttons, sliders) are present. This catches regressions like missing imports, broken layouts, or removed widgets. The 8 dashboard tests run in a separate CI job parallel to the 27 backend tests — total 35 tests across both suites.</p>
+
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad:true});</script>

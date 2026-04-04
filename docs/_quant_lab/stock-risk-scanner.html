@@ -40,6 +40,7 @@ tags: [Python, FastAPI, PostgreSQL, Docker, Claude API, Risk Analysis]
       <tr><td>Containerisation</td><td>Docker + docker-compose</td></tr>
       <tr><td>Database</td><td>PostgreSQL 16</td></tr>
       <tr><td>Testing</td><td>pytest (26 tests passing)</td></tr>
+      <tr><td>Frontend testing</td><td>Streamlit AppTest</td></tr>
       <tr><td>CI</td><td>GitHub Actions</td></tr>
     </tbody>
   </table>
@@ -247,6 +248,9 @@ Max Drawdown = min(Drawdown_t)</code></pre>
   <p>
     Triggers on push to working branch and PRs to master. Steps: checkout, Python 3.11, pip install, pytest. All 26 tests must pass.
   </p>
+
+  <h3>Frontend Testing</h3>
+  <p>The Streamlit dashboard has its own test suite using <strong>Streamlit AppTest</strong> — a headless testing framework that runs Streamlit pages without a browser. Tests verify that pages load, titles render, tabs exist, and all buttons are present. These run in CI alongside the backend tests.</p>
 
   <h3>Logging</h3>
   <p>
