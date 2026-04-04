@@ -208,6 +208,9 @@ Max Drawdown = min(Drawdown_t)</code></pre>
 
   <h3>CI &mdash; GitHub Actions</h3>
   <p>
+    <img src="https://github.com/MishCodesFinBytes/QuantLab/actions/workflows/test.yml/badge.svg?branch=master" alt="Tests" />
+  </p>
+  <p>
     Triggers on push to working branch and PRs to master. Steps: checkout, Python 3.11, pip install, pytest. All 26 tests must pass.
   </p>
 
@@ -347,5 +350,116 @@ pytest -v</code></pre>
   </div>
 </div>
 
+<div id="tab-health" class="ql-tab-content" style="display:none">
+  <h2>System Health</h2>
+  <p>Live status of all services. Click "Run Checks" to test connectivity.</p>
+
+  <button onclick="runHealthChecks()" style="padding:8px 20px;background:#2a7ae2;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.95rem;margin-bottom:16px;">Run Checks</button>
+
+  <table id="health-table">
+    <thead>
+      <tr><th>Service</th><th>Status</th><th>Details</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API</td><td id="hc-api">⬜ Not checked</td><td id="hc-api-detail"></td></tr>
+      <tr><td>Database</td><td id="hc-db">⬜ Not checked</td><td id="hc-db-detail"></td></tr>
+      <tr><td>CI Pipeline</td><td id="hc-ci">⬜ Not checked</td><td id="hc-ci-detail"></td></tr>
+      <tr><td>Dashboard</td><td id="hc-dash">⬜ Not checked</td><td id="hc-dash-detail"></td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:24px;">CI Badge</h3>
+  <p><img src="https://github.com/MishCodesFinBytes/QuantLab/actions/workflows/test.yml/badge.svg" alt="Tests" /></p>
+
+  <h3>Test Suite (27 tests)</h3>
+  <table>
+    <thead><tr><th>Module</th><th>Tests</th><th>What's covered</th></tr></thead>
+    <tbody>
+      <tr><td>models.py</td><td>6</td><td>Validation, uppercase, mismatched lengths, bad weights, RiskMetrics, ScanResult</td></tr>
+      <tr><td>risk.py</td><td>3</td><td>VaR/CVaR values, max drawdown, Sharpe ratio sign</td></tr>
+      <tr><td>market_data.py</td><td>2</td><td>Successful fetch (mocked), empty data error</td></tr>
+      <tr><td>narrative.py</td><td>3</td><td>API success, API error fallback, no key fallback</td></tr>
+      <tr><td>scanner.py</td><td>1</td><td>Full pipeline with mocks</td></tr>
+      <tr><td>db.py</td><td>6</td><td>Create, complete, fail, get by ID, get missing, recent scans</td></tr>
+      <tr><td>main.py (API)</td><td>6</td><td>Health, DB health, create scan, get scan, 404, list scans</td></tr>
+      <tr><td><strong>Total</strong></td><td><strong>27</strong></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Service Details</h3>
+  <table>
+    <thead><tr><th>Service</th><th>URL</th><th>Hosting</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td><a href="https://finbytes.streamlit.app">finbytes.streamlit.app</a></td><td>Streamlit Cloud (free)</td></tr>
+      <tr><td>API</td><td><a href="https://finbytes-scanner.onrender.com">finbytes-scanner.onrender.com</a></td><td>Render Free Tier</td></tr>
+      <tr><td>Database</td><td>Internal</td><td>Render PostgreSQL Free (90-day expiry)</td></tr>
+      <tr><td>CI</td><td><a href="https://github.com/MishCodesFinBytes/QuantLab/actions">GitHub Actions</a></td><td>GitHub Free</td></tr>
+      <tr><td>Blog</td><td><a href="https://mishcodesfinbytes.github.io/FinBytes/">FinBytes</a></td><td>GitHub Pages (free)</td></tr>
+    </tbody>
+  </table>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad: true});</script>
+<script>
+mermaid.initialize({startOnLoad: true});
+
+const API_BASE = 'https://finbytes-scanner.onrender.com';
+const GH_REPO = 'MishCodesFinBytes/QuantLab';
+
+async function runHealthChecks() {
+  // API
+  document.getElementById('hc-api').textContent = '⏳ Checking...';
+  try {
+    const r = await fetch(API_BASE + '/health', {signal: AbortSignal.timeout(15000)});
+    if (r.ok) {
+      document.getElementById('hc-api').textContent = '✅ Online';
+      document.getElementById('hc-api-detail').textContent = 'API is responding';
+    } else {
+      document.getElementById('hc-api').textContent = '❌ Error';
+      document.getElementById('hc-api-detail').textContent = 'HTTP ' + r.status;
+    }
+  } catch(e) {
+    document.getElementById('hc-api').textContent = '❌ Offline';
+    document.getElementById('hc-api-detail').textContent = 'Backend may be sleeping (Render free tier)';
+  }
+
+  // DB
+  document.getElementById('hc-db').textContent = '⏳ Checking...';
+  try {
+    const r = await fetch(API_BASE + '/api/health/db', {signal: AbortSignal.timeout(15000)});
+    const d = await r.json();
+    if (d.status === 'ok') {
+      document.getElementById('hc-db').textContent = '✅ Connected';
+      document.getElementById('hc-db-detail').textContent = 'PostgreSQL responding';
+    } else {
+      document.getElementById('hc-db').textContent = '❌ Disconnected';
+      document.getElementById('hc-db-detail').textContent = d.database || 'Check Render dashboard';
+    }
+  } catch(e) {
+    document.getElementById('hc-db').textContent = '❌ Unknown';
+    document.getElementById('hc-db-detail').textContent = 'Could not reach API';
+  }
+
+  // CI
+  document.getElementById('hc-ci').textContent = '⏳ Checking...';
+  try {
+    const r = await fetch('https://api.github.com/repos/' + GH_REPO + '/actions/runs?per_page=1');
+    const d = await r.json();
+    if (d.workflow_runs && d.workflow_runs.length > 0) {
+      const run = d.workflow_runs[0];
+      const icon = run.conclusion === 'success' ? '✅' : run.conclusion === 'failure' ? '❌' : '⏳';
+      document.getElementById('hc-ci').textContent = icon + ' ' + (run.conclusion || 'in progress');
+      document.getElementById('hc-ci-detail').innerHTML = '<a href="' + run.html_url + '">#' + run.run_number + '</a> — ' + run.created_at.slice(0,10);
+    } else {
+      document.getElementById('hc-ci').textContent = '⬜ No runs';
+    }
+  } catch(e) {
+    document.getElementById('hc-ci').textContent = '⬜ Unknown';
+    document.getElementById('hc-ci-detail').textContent = 'Could not fetch CI status';
+  }
+
+  // Dashboard
+  document.getElementById('hc-dash').textContent = '✅ Running';
+  document.getElementById('hc-dash-detail').textContent = 'You are viewing this page';
+}
+</script>
