@@ -116,6 +116,6 @@ def compute_returns(prices: pd.DataFrame) -> np.ndarray:
 
 <h2>Try It Yourself</h2>
 
-<p>The full exercise code is in the <a href="https://github.com/MishCodesFinBytes/quant_lab/tree/master/exercises/05-yfinance">quant_lab repo</a>. Clone it, run <code>pip install -e ".[dev]"</code>, and try <code>pytest -v</code> to see all 7 tests pass.</p>
+<p>The full exercise code is in the <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/05-yfinance">QuantLab repo</a>. Clone it, run <code>pip install -e ".[dev]"</code>, and try <code>pytest -v</code> to see all 7 tests pass.</p>
 
 <p>The tests mock <code>yf.download</code> so they run instantly without hitting the network. Try removing the mock and calling <code>fetch_closing_prices(["AAPL", "MSFT"], period="1mo")</code> in a Python shell to see real data come back.</p>
