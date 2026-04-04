@@ -1,0 +1,196 @@
+---
+layout: post
+title: "S3 for Financial Data: Par Curve Ingestion Pipeline"
+date: 2026-04-05
+tags: [aws, s3, boto3, fred, treasury, par-curve, data-lake, quant-lab, python]
+categories:
+- AWS
+- Data Engineering
+permalink: "/2026/04/05/s3-par-curve-ingestion/"
+---
+
+<h2>From Local Dict to Data Lake</h2>
+
+<p>In <a href="/2026/04/04/aws-fundamentals-treasury-data/">the previous post</a>, we fetched US Treasury yields from FRED into a Python dictionary. That's fine for one-off analysis, but it doesn't scale: the data disappears when the script ends, there's no audit trail, and two people on the same team can't see the same snapshot.</p>
+
+<p>The answer is a data lake &mdash; raw data stored durably in object storage, with one object per day. S3 is the canonical choice: 11 nines of durability, pennies per GB, no server to manage, and you can point any downstream system at it.</p>
+
+<p>This post builds a small ingestion pipeline: fetch yields from FRED, write them as dated JSON to S3, read them back, and list what's available.</p>
+
+<h2>S3 Mental Model</h2>
+
+<p>S3 isn't a filesystem. There are no directories &mdash; just keys (strings) that map to objects (bytes). The "folder" feeling comes from using <code>/</code> in key names by convention. A key like <code>par-yields/2026-04-04.json</code> shows up as a folder in the Console, but under the hood it's a flat namespace.</p>
+
+<p>Key design matters. We use a simple dated structure:</p>
+
+<pre><code>s3://finbytes-quant-lab-data/
+└── par-yields/
+    ├── 2026-04-01.json
+    ├── 2026-04-02.json
+    ├── 2026-04-03.json
+    └── 2026-04-04.json
+</code></pre>
+
+<p>Predictable keys mean you can reach any day's data with just a date &mdash; no index table, no list call. <code>s3://finbytes-quant-lab-data/par-yields/2026-04-04.json</code> is the only URL you need.</p>
+
+<h2>Versioning: Your Overwrite Insurance</h2>
+
+<p>S3 buckets let you enable versioning, which keeps every historical version of every object. If you accidentally overwrite today's yields with bad data, the previous version is one API call away. Enabled with one command:</p>
+
+<pre><code class="language-bash">aws s3api put-bucket-versioning \
+  --bucket finbytes-quant-lab-data \
+  --versioning-configuration Status=Enabled \
+  --profile quant-lab
+</code></pre>
+
+<p>Cost is minimal for time-series data (each version is a tiny JSON file), and the overwrite protection is worth it.</p>
+
+<h2>Writing the Pipeline</h2>
+
+<p>Each operation is a short boto3 call wrapped in a function. Upload first:</p>
+
+<pre><code class="language-python">import json
+import boto3
+from datetime import date
+
+
+def upload_yields_to_s3(
+    yields: dict[str, float],
+    bucket: str,
+    prefix: str,
+    as_of: date,
+    s3_client=None,
+) -> dict:
+    """Upload par yield data to S3 as a dated JSON object."""
+    s3 = s3_client or boto3.client("s3")
+
+    data = {
+        "date": as_of.isoformat(),
+        "source": "FRED",
+        "num_maturities": len(yields),
+        "yields": yields,
+    }
+
+    key = f"{prefix}/{as_of.isoformat()}.json"
+    s3.put_object(
+        Bucket=bucket,
+        Key=key,
+        Body=json.dumps(data, indent=2),
+        ContentType="application/json",
+    )
+    return data
+</code></pre>
+
+<p>Note the envelope: we don't just write the yield dict. We wrap it with metadata (date, source, count). This becomes invaluable six months later when you're debugging "why does this day look wrong?" &mdash; the envelope tells you where the data came from.</p>
+
+<h2>Download with a Useful Error</h2>
+
+<p>When a caller asks for a date that doesn't exist, they get a <code>FileNotFoundError</code>, not boto3's less intuitive <code>NoSuchKey</code>:</p>
+
+<pre><code class="language-python">def download_yields_from_s3(bucket, prefix, as_of, s3_client=None):
+    s3 = s3_client or boto3.client("s3")
+    key = f"{prefix}/{as_of.isoformat()}.json"
+
+    try:
+        response = s3.get_object(Bucket=bucket, Key=key)
+        return json.loads(response["Body"].read())
+    except s3.exceptions.NoSuchKey:
+        raise FileNotFoundError(f"No yield data for {as_of.isoformat()}")
+</code></pre>
+
+<p>This matters because Python code calling this function shouldn't need to know anything about S3. It should handle <code>FileNotFoundError</code> the same way it would handle missing data from any other source.</p>
+
+<h2>Listing What's There</h2>
+
+<p>S3's <code>list_objects_v2</code> is paginated, but for small datasets we can grab all keys in one call. We extract the date from each filename:</p>
+
+<pre><code class="language-python">def list_available_dates(bucket, prefix, s3_client=None) -> list[date]:
+    s3 = s3_client or boto3.client("s3")
+    response = s3.list_objects_v2(Bucket=bucket, Prefix=f"{prefix}/")
+    if "Contents" not in response:
+        return []
+
+    dates = []
+    for obj in response["Contents"]:
+        filename = obj["Key"].split("/")[-1]
+        if filename.endswith(".json"):
+            date_str = filename.replace(".json", "")
+            try:
+                dates.append(date.fromisoformat(date_str))
+            except ValueError:
+                continue  # skip keys that don't match our naming
+    return sorted(dates)
+</code></pre>
+
+<p>The <code>continue</code> on unparseable dates is defensive &mdash; if someone drops a stray file in the prefix, we skip it instead of crashing.</p>
+
+<h2>Testing Without AWS: moto</h2>
+
+<p>The critical question: how do we test S3 operations without a real AWS account? The answer is <a href="https://docs.getmoto.org/">moto</a>, a library that mocks AWS services in-memory. You wrap your test in a context manager, and boto3 calls are intercepted and fulfilled locally.</p>
+
+<pre><code class="language-python">import pytest
+import boto3
+from moto import mock_aws
+
+@pytest.fixture
+def s3_bucket():
+    """Create a mock S3 bucket for testing."""
+    with mock_aws():
+        s3 = boto3.client("s3", region_name="us-east-1")
+        s3.create_bucket(Bucket="test-quant-lab-data")
+        yield s3
+
+def test_uploads_json_to_correct_key(s3_bucket):
+    yields = {"1M": 5.25, "10Y": 4.30}
+    target_date = date(2026, 4, 4)
+
+    upload_yields_to_s3(
+        yields=yields,
+        bucket="test-quant-lab-data",
+        prefix="par-yields",
+        as_of=target_date,
+        s3_client=s3_bucket,
+    )
+
+    key = "par-yields/2026-04-04.json"
+    response = s3_bucket.get_object(Bucket="test-quant-lab-data", Key=key)
+    body = json.loads(response["Body"].read())
+    assert body["yields"]["10Y"] == 4.30
+</code></pre>
+
+<p>No AWS credentials, no network calls, no cleanup. Tests run in milliseconds. The functions under test don't know they're talking to a mock &mdash; boto3 is patched at the library level.</p>
+
+<p>The <code>s3_client=None</code> parameter pattern is key. In production we let boto3 create its own client; in tests we inject the moto-patched one. Dependency injection with a default value &mdash; zero overhead, maximum testability.</p>
+
+<h2>Tying It Together</h2>
+
+<p>The ingest function chains fetch and upload:</p>
+
+<pre><code class="language-python">def ingest_daily_yields(
+    api_key: str,
+    bucket: str,
+    prefix: str,
+    as_of: date | None = None,
+    s3_client=None,
+) -> dict:
+    target = as_of or date.today()
+    yields = fetch_par_yields(api_key=api_key, as_of=target)
+    return upload_yields_to_s3(
+        yields=yields, bucket=bucket, prefix=prefix,
+        as_of=target, s3_client=s3_client,
+    )
+</code></pre>
+
+<p>In production this runs as a scheduled Lambda or cron job, fetching every weekday after US market close. Each run writes one new object &mdash; idempotent if you re-run for the same date, versioned by S3 automatically.</p>
+
+<h2>Handling Missing Days</h2>
+
+<p>FRED doesn't publish on weekends or US holidays. The 7-day lookback in our FRED fetcher means a Monday fetch uses Friday's data (if Monday isn't published yet) rather than returning nothing. In S3, that means the Monday object contains Friday's yields &mdash; which is honest: "as of Monday, the latest observed curve is Friday's".</p>
+
+<p>An alternative pattern would be to skip uploading when no new data is available. Both are valid &mdash; the key is documenting which you've chosen. Our envelope's <code>date</code> field is the lookup date, not the publication date, which is consistent with the "point-in-time query" pattern we'll use later.</p>
+
+<h2>What's Next</h2>
+
+<p>With yields landing in S3 daily, the next step is getting them into a database for structured queries. In Exercise 11, we'll provision RDS PostgreSQL, design tables for yields and bonds, and write a loader that reads from S3 and writes to the database. That gives us point-in-time queries, range queries, and a proper schema for curves &mdash; the foundation for the bond pricing work to come.</p>
+
+<p>The code for this exercise is in the <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/10-s3-data-ingestion">QuantLab repo</a>.</p>
