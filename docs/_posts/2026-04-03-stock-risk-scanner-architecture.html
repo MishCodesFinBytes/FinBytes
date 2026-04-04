@@ -163,12 +163,12 @@ graph LR
   <li><strong>exercises/</strong> are sandboxes &mdash; each one teaches a single concept (async, Pydantic, yfinance) and has its own <code>pyproject.toml</code> and tests. They exist to build up to the capstone, and each maps directly to a module in the scanner.</li>
   <li><strong>projects/</strong> are production-grade services with Dockerfiles, compose files, and database migrations. The scanner lives here. Future projects (options pricer, portfolio optimiser) will add sibling directories.</li>
   <li><strong>dashboard/</strong> sits at the repo root because Streamlit Cloud expects a specific file layout. It is the shared frontend for all projects &mdash; adding a new project means adding a new page, not a new repo.</li>
-  <li><strong>docs/superpowers/</strong> captures specs and plans before any code is written. Every exercise and project has a plan file &mdash; useful for interviews and for understanding why decisions were made.</li>
+  <li><strong>docs/superpowers/</strong> captures specs and plans before any code is written. Every exercise and project has a plan file &mdash; useful for understanding why decisions were made.</li>
 </ul>
 
 <hr/>
 
-<h2>Tech Decisions &mdash; Interview-Ready</h2>
+<h2>Tech Decisions &mdash; Q&amp;A</h2>
 
 <h3>Q: Why FastAPI over Flask?</h3>
 <p>FastAPI is async-native from the ground up. Flask can handle async routes, but it is bolted on rather than built in. FastAPI also generates OpenAPI documentation automatically from your route signatures and Pydantic models &mdash; no separate swagger setup. And Pydantic validation is integrated: request bodies are validated before your function even runs, and if validation fails you get a structured 422 response automatically. For I/O-bound financial data work where you are waiting on yfinance, PostgreSQL, and an external AI API simultaneously, async matters.</p>
