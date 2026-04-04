@@ -1,0 +1,198 @@
+---
+layout: post
+title: "RDS PostgreSQL: Schema Design for Yield Curves"
+date: 2026-04-06
+tags: [aws, rds, postgresql, sqlalchemy, alembic, yield-curve, quant-lab, python]
+categories:
+- AWS
+- Databases
+permalink: "/2026/04/06/rds-postgresql-yield-schema/"
+---
+
+<h2>Moving Beyond S3 JSON Files</h2>
+
+<p>In <a href="/2026/04/05/s3-par-curve-ingestion/">the previous post</a>, we wrote daily yield curves to S3 as dated JSON objects. That works for immutable snapshots, but it doesn't help when you want to answer questions like "how did the 10Y yield evolve in Q1?" or "give me every curve between two dates". For those, we need a database.</p>
+
+<p>This post covers setting up AWS RDS PostgreSQL, designing the schema for yield curves and bonds, and building async SQLAlchemy models with an in-memory SQLite test suite that runs without AWS.</p>
+
+<h2>Why RDS Over Self-Managed PostgreSQL</h2>
+
+<p>RDS (Relational Database Service) is AWS's managed database service. You still design the schema, write queries, and manage indexes &mdash; but AWS handles patching, backups, monitoring, and failover. For a learning project, the practical benefits are:</p>
+
+<ul>
+  <li><strong>Free tier</strong>: 750 hours/month of <code>db.t3.micro</code> for the first 12 months</li>
+  <li><strong>Automated backups</strong>: daily snapshots retained for 1-35 days</li>
+  <li><strong>One-click scaling</strong>: change instance size without rebuilding</li>
+</ul>
+
+<p>The trade-off is cost per hour once you're past the free tier (about $15/month for a t3.micro running 24/7). One lesson learned: stop or delete the instance when you're not actively using it, especially if you're running multiple RDS databases in parallel.</p>
+
+<h2>Provisioning via CLI</h2>
+
+<p>The core command to create the instance:</p>
+
+<pre><code class="language-bash">aws rds create-db-instance \
+  --db-instance-identifier quant-lab-db \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --engine-version 16.3 \
+  --master-username quantlab \
+  --master-user-password CHANGE_THIS \
+  --allocated-storage 20 \
+  --vpc-security-group-ids sg-XXXX \
+  --publicly-accessible \
+  --backup-retention-period 1 \
+  --no-multi-az \
+  --storage-type gp2 \
+  --profile quant-lab
+</code></pre>
+
+<p>A security group controls who can reach the database on port 5432. For learning, we allow access from a single developer IP; production setups would restrict it to Lambda's VPC or private subnets only.</p>
+
+<h2>Schema Design for Time-Series Financial Data</h2>
+
+<p>Fixed income data has specific characteristics that shape schema decisions:</p>
+
+<ol>
+  <li><strong>Point-in-time queries dominate</strong>: "give me the curve for 2026-04-04"</li>
+  <li><strong>No look-ahead bias</strong>: a query as of April 1 must not see data that only existed on April 5</li>
+  <li><strong>Curves are compound objects</strong>: 11 maturities per day per curve type</li>
+</ol>
+
+<p>The first two points argue strongly for a unique index on the date column. The third raises a design question: do we store one row per (date, maturity), or one row per date with a JSON payload?</p>
+
+<h3>JSON vs Normalised</h3>
+
+<table>
+  <thead>
+    <tr><th>Dimension</th><th>JSON blob</th><th>One row per maturity</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Simplicity</td><td>Win</td><td>Extra join per read</td></tr>
+    <tr><td>Schema evolution</td><td>Add maturities anytime</td><td>Needs migration</td></tr>
+    <tr><td>Aggregations</td><td>Post-process in Python</td><td>Native SQL aggregates</td></tr>
+    <tr><td>Storage</td><td>Slightly larger</td><td>More compact</td></tr>
+  </tbody>
+</table>
+
+<p>For a tiny payload (11 numbers per day), the simplicity of JSON wins. If we were doing cross-maturity aggregations in SQL ("average 10Y yield by month"), the normalised version would be better. For our use case &mdash; point-in-time reads &mdash; JSON is the right call.</p>
+
+<h2>The Models</h2>
+
+<p>Six tables cover the domain: one for each curve type, plus bond definitions and pricing results:</p>
+
+<pre><code class="language-python">from sqlalchemy import String, Float, Integer, Date, DateTime, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class ParYieldRecord(Base):
+    __tablename__ = "par_yields"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    curve_date: Mapped[date] = mapped_column(Date, unique=True, index=True)
+    yields_json: Mapped[str] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(String(20), default="FRED")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC)
+    )
+</code></pre>
+
+<p>The <code>unique=True</code> on <code>curve_date</code> enforces "one curve per day" at the database level &mdash; no ambiguous duplicates. The <code>index=True</code> makes date lookups fast (which is every read).</p>
+
+<p><code>BondRecord</code> is keyed by ISIN (the global 12-character identifier for a security):</p>
+
+<pre><code class="language-python">class BondRecord(Base):
+    __tablename__ = "bonds"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    isin: Mapped[str] = mapped_column(String(12), unique=True, index=True)
+    coupon: Mapped[float] = mapped_column(Float)
+    maturity: Mapped[date] = mapped_column(Date)
+    face_value: Mapped[float] = mapped_column(Float, default=1000.0)
+    issue_date: Mapped[date] = mapped_column(Date)
+    frequency: Mapped[int] = mapped_column(Integer, default=2)  # coupons per year
+    bond_type: Mapped[str] = mapped_column(String(20), default="treasury")
+    is_callable: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC)
+    )
+</code></pre>
+
+<p>Note <code>is_callable</code> rather than <code>callable</code> &mdash; <code>callable()</code> is a Python built-in we don't want to shadow.</p>
+
+<h2>Async CRUD with Upsert</h2>
+
+<p>Saving yields is an <em>upsert</em> &mdash; if the date exists, update; otherwise insert. This matches the real-world workflow where the daily ingestion script might re-run for the same date:</p>
+
+<pre><code class="language-python">async def save_par_yields(
+    session: AsyncSession, curve_date: date, yields: dict[str, float]
+) -> ParYieldRecord:
+    existing = await session.execute(
+        select(ParYieldRecord).where(ParYieldRecord.curve_date == curve_date)
+    )
+    record = existing.scalar_one_or_none()
+
+    if record:
+        record.yields_json = json.dumps(yields)
+    else:
+        record = ParYieldRecord(
+            curve_date=curve_date, yields_json=json.dumps(yields)
+        )
+        session.add(record)
+
+    await session.commit()
+    return record
+</code></pre>
+
+<p>Range queries are a straightforward <code>WHERE</code>-<code>BETWEEN</code> with ordering:</p>
+
+<pre><code class="language-python">async def get_par_yields_range(
+    session: AsyncSession, start: date, end: date
+) -> list[dict]:
+    result = await session.execute(
+        select(ParYieldRecord)
+        .where(ParYieldRecord.curve_date >= start)
+        .where(ParYieldRecord.curve_date <= end)
+        .order_by(ParYieldRecord.curve_date)
+    )
+    records = result.scalars().all()
+    return [
+        {"date": r.curve_date, "yields": json.loads(r.yields_json)}
+        for r in records
+    ]
+</code></pre>
+
+<h2>Testing Without RDS: In-Memory SQLite</h2>
+
+<p>We don't need RDS to test our async SQL code. SQLAlchemy's async engine supports SQLite via <code>aiosqlite</code>, and <code>:memory:</code> gives us a throwaway database per test fixture:</p>
+
+<pre><code class="language-python">@pytest.fixture
+async def session():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with factory() as s:
+        yield s
+    await engine.dispose()
+</code></pre>
+
+<p>Every test gets a fresh database. The schema is created from the same <code>Base.metadata</code> that'd be used in production. The same SQLAlchemy code runs against SQLite in tests and PostgreSQL in production &mdash; the async engine abstracts the difference.</p>
+
+<p>One caveat: SQLite doesn't enforce every constraint PostgreSQL would (e.g. some <code>NOT NULL</code> coercions differ). For most ORM-level tests this is fine; for constraint-specific tests, run against a real PostgreSQL via a Docker container.</p>
+
+<h2>Module Collision Lesson</h2>
+
+<p>Exercise 08 also had <code>models.py</code> and <code>db.py</code> files. Installing both exercises as editable Python packages caused import collisions &mdash; tests from exercise 11 were finding exercise 08's <code>db</code> module first.</p>
+
+<p>The fix: scope each exercise's code under a package with a unique name. Exercise 11 lives at <code>src/yield_store/</code>, so imports become <code>from yield_store.db import save_par_yields</code>. This is a good general principle &mdash; modules named <code>db</code> or <code>models</code> are practically guaranteed to collide in a monorepo.</p>
+
+<h2>What's Next</h2>
+
+<p>We now have a place to persist curves. Exercise 12 plugs the database into a serverless API: a Lambda function that reads par yields from the database, bootstraps zero-coupon (spot) rates, and returns them through API Gateway. That's where the pipeline starts delivering actual analytical value &mdash; turning raw market data into something traders can price bonds against.</p>
+
+<p>The code for this exercise is in the <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/11-rds-postgresql">QuantLab repo</a>.</p>
