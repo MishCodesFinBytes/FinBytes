@@ -191,5 +191,14 @@ graph LR
 <h3>Q: Why does yfinance get called from both Streamlit and the API?</h3>
 <p>The API fetches prices to calculate risk metrics &mdash; that is the authoritative data. Streamlit fetches prices separately to render historical price charts in the dashboard. If the API were to serve chart data too, you would need new endpoints, new models, and new tests for data that Streamlit can fetch directly from yfinance with three lines of code. The duplication is intentional: it keeps the API focused on risk calculation and keeps the dashboard self-sufficient for display data.</p>
 
+<h3>Q: How do Alembic and PostgreSQL fit together?</h3>
+<p>Think of <strong>PostgreSQL</strong> as the database that stores your data, <strong>SQLAlchemy</strong> as the Python code that talks to it, and <strong>Alembic</strong> as version control for the database schema.</p>
+<p>Without Alembic, if you add a column to your Python model, PostgreSQL still has the old schema &mdash; your app crashes. You would have to manually write <code>ALTER TABLE</code> SQL. With Alembic, you run <code>alembic revision --autogenerate</code> and it compares your models to the actual database, generates a migration script, and applies it with <code>alembic upgrade head</code>.</p>
+<p>In the scanner, we use <code>Base.metadata.create_all()</code> on startup instead of Alembic migrations. This works because Render&rsquo;s free tier has no shell access to run Alembic commands, and <code>create_all()</code> is sufficient for a fresh database. The trade-off: <code>create_all()</code> creates missing tables but <strong>will not modify existing ones</strong>. If we ever need to add a column or change a type on a database with live data, we would need Alembic.</p>
+<p><strong>Rule of thumb:</strong> <code>create_all()</code> is fine for greenfield and demos. Alembic is essential when the schema evolves on a database that already has data.</p>
+
+<h3>Q: Why create_all() instead of Alembic in production?</h3>
+<p>Pragmatism. Render&rsquo;s free tier does not provide shell access, so we cannot run <code>alembic upgrade head</code> after deployment. By calling <code>create_all()</code> inside the FastAPI lifespan handler, the tables are created automatically when the app starts &mdash; zero manual steps. For a demo project with a stable schema, this is the right trade-off. If the schema needed frequent changes, we would move to a paid Render tier (which provides shell access) or add an <code>/admin/migrate</code> endpoint protected by an API key.</p>
+
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad:true});</script>
