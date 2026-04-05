@@ -1,0 +1,165 @@
+---
+layout: post
+title: "WebSockets on AWS: Streaming Credit Spreads in Real Time"
+date: 2026-04-11
+tags: [aws, websockets, api-gateway, lambda, dynamodb, credit-spreads, real-time, fixed-income, quant-lab, python]
+categories:
+- AWS
+- Real-Time Systems
+- Credit Risk
+permalink: "/2026/04/11/websockets-realtime-spreads/"
+---
+
+<h2>Why Real-Time Matters on a Credit Desk</h2>
+
+<p>For Treasury curves, "real-time" is often a stretch: FRED updates daily, Treasury auctions are on a calendar, and most of the useful analysis is comfortable with end-of-day data. Credit is different. Spreads can gap 50-100 bps in a single session during a stress event &mdash; the afternoon after the SVB headlines in March 2023, BBB spreads widened 30 bps between lunch and the close. On a trading desk, that's the difference between "interesting" and "call the risk manager."</p>
+
+<p>The messaging from Exercise 15 (SQS + SNS) is pull-based or notification-based: a consumer processes a queue, or a subscriber gets an email. Neither is what you want for a dashboard that needs to reflect live spread movement. For that you want <strong>server-push</strong> &mdash; as soon as new data hits the backend, connected clients see it.</p>
+
+<p>That's the WebSocket story. Exercise 16 builds the WS endpoint on AWS-native infrastructure: API Gateway WebSocket APIs, Lambda handlers, DynamoDB for connection state.</p>
+
+<h2>The AWS WebSocket Model</h2>
+
+<p>API Gateway's WebSocket APIs handle the WS protocol itself &mdash; handshake, framing, ping/pong, close. What you provide are Lambda functions on four route types:</p>
+
+<ul>
+  <li><strong><code>$connect</code></strong>: fires when a client opens the WS. You get a unique <code>connectionId</code>.</li>
+  <li><strong><code>$disconnect</code></strong>: fires on close (client-initiated, server-initiated, or network drop).</li>
+  <li><strong><code>$default</code></strong>: fires on every inbound message that doesn't match a more specific route.</li>
+  <li><strong>Custom routes</strong> (e.g. <code>subscribe</code>, <code>unsubscribe</code>): routed by an <code>action</code> field in the message body.</li>
+</ul>
+
+<p>To push something <em>out</em> to a client &mdash; the whole point of the exercise &mdash; Lambda calls the API Gateway Management API's <code>post_to_connection</code> with the target <code>connectionId</code>. That's what turns this from a bidirectional socket into a fan-out broadcast tool.</p>
+
+<h2>Connection State: Why DynamoDB</h2>
+
+<p>Lambda executions are ephemeral. The container running your <code>$connect</code> handler may be gone by the time the next message arrives, and the message may be served by a different container entirely. There is <em>nowhere inside the Lambda runtime</em> to durably hold "who is currently connected."</p>
+
+<p>So connections go in DynamoDB:</p>
+
+<pre><code class="language-python">def handle_connect(connection_id: str, table=None) -&gt; dict:
+    tbl = table or _get_table()
+    tbl.put_item(Item={
+        "connectionId": connection_id,
+        "connectedAt": datetime.now(UTC).isoformat(),
+        "subscriptions": [],
+    })
+    return {"statusCode": 200}
+
+
+def handle_disconnect(connection_id: str, table=None) -&gt; dict:
+    tbl = table or _get_table()
+    tbl.delete_item(Key={"connectionId": connection_id})
+    return {"statusCode": 200}
+</code></pre>
+
+<p>Pay-per-request mode (<code>BillingMode=PAY_PER_REQUEST</code>) is the right choice for this kind of workload: traffic is spiky (lots of activity during market hours, dead overnight), and you don't want to pay for provisioned capacity you're not using. Reads/writes cost fractions of a cent and the free tier covers 25 GB of storage plus 25 read/write capacity units.</p>
+
+<h2>Per-Client Subscriptions</h2>
+
+<p>A risk dashboard usually doesn't want <em>every</em> spread update &mdash; it wants updates for the ratings it cares about. Adding a subscription model is a single DynamoDB update:</p>
+
+<pre><code class="language-python">def handle_message(connection_id: str, message: dict, table=None) -&gt; dict:
+    tbl = table or _get_table()
+    action = message.get("action")
+
+    if action == "subscribe":
+        rating = message.get("rating", "")
+        tbl.update_item(
+            Key={"connectionId": connection_id},
+            UpdateExpression=(
+                "SET subscriptions = list_append("
+                "if_not_exists(subscriptions, :empty), :rating)"
+            ),
+            ExpressionAttributeValues={":rating": [rating], ":empty": []},
+        )
+        return {"subscribed": rating}
+
+    return {"error": f"Unknown action: {action}"}
+</code></pre>
+
+<p>The DynamoDB update expression there is worth dissecting: <code>if_not_exists(subscriptions, :empty)</code> returns the existing list if it exists, or an empty list if the attribute hasn't been set yet. <code>list_append(..., :rating)</code> then tacks on the new rating. That's how you idempotently grow a list in DynamoDB without a read-modify-write round trip.</p>
+
+<h2>Broadcasting Updates</h2>
+
+<p>When new spread data lands (say, from the SNS topic in Exercise 15), a Lambda fans it out to all subscribed clients:</p>
+
+<pre><code class="language-python">def broadcast_spread_update(spread_data, api_url, table=None) -&gt; int:
+    clients = get_connected_clients(table)
+    apigw = boto3.client("apigatewaymanagementapi", endpoint_url=api_url)
+    sent = 0
+
+    for conn_id in clients:
+        try:
+            apigw.post_to_connection(
+                ConnectionId=conn_id,
+                Data=json.dumps(spread_data).encode(),
+            )
+            sent += 1
+        except Exception:
+            handle_disconnect(conn_id, table)
+
+    return sent
+</code></pre>
+
+<p>Two details matter here:</p>
+
+<ul>
+  <li><strong>Stale-connection pruning.</strong> Clients vanish all the time &mdash; laptop lids close, wifi drops, tabs get killed. API Gateway's <code>GoneException</code> tells you a connection is dead. The handler above treats any exception as "connection gone" and removes it from DynamoDB, so the table doesn't grow unbounded.</li>
+  <li><strong>The <code>endpoint_url</code></strong> for the management API isn't the WS URL (<code>wss://...</code>) &mdash; it's the HTTPS management endpoint, which looks like <code>https://abc123.execute-api.us-east-1.amazonaws.com/prod</code>. The stage matters: if you're posting to <code>prod</code> you need <code>prod</code> in the URL.</li>
+</ul>
+
+<h2>Testing WebSocket Infrastructure Without WebSockets</h2>
+
+<p>The functions above all take DynamoDB tables as optional parameters. That's what makes the test suite small and fast:</p>
+
+<pre><code class="language-python">@pytest.fixture
+def dynamodb_table():
+    with mock_aws():
+        dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+        table = dynamodb.create_table(
+            TableName="ws-connections",
+            KeySchema=[{"AttributeName": "connectionId", "KeyType": "HASH"}],
+            AttributeDefinitions=[{"AttributeName": "connectionId", "AttributeType": "S"}],
+            BillingMode="PAY_PER_REQUEST",
+        )
+        yield table
+
+
+def test_connect_stores_connection(dynamodb_table):
+    handle_connect("conn-123", table=dynamodb_table)
+    clients = get_connected_clients(table=dynamodb_table)
+    assert "conn-123" in clients
+</code></pre>
+
+<p>moto mocks DynamoDB in memory, so the tests run in ~1s, don't touch AWS, and don't cost anything. What they <em>don't</em> test is the WS protocol itself &mdash; the Lambda entry points (<code>lambda_connect</code>, <code>lambda_disconnect</code>, <code>lambda_default</code>) are thin wrappers that extract <code>connectionId</code> from the API Gateway event and delegate. Those are easy to eyeball; the non-trivial logic (connection tracking, subscriptions, broadcast) is all in the tested core.</p>
+
+<h2>Lambda Entry Points</h2>
+
+<p>API Gateway passes WS route events in a well-known shape:</p>
+
+<pre><code class="language-python">def lambda_connect(event, context):
+    connection_id = event["requestContext"]["connectionId"]
+    return handle_connect(connection_id)
+
+
+def lambda_default(event, context):
+    connection_id = event["requestContext"]["connectionId"]
+    body = json.loads(event.get("body", "{}"))
+    result = handle_message(connection_id, body)
+    return {"statusCode": 200, "body": json.dumps(result)}
+</code></pre>
+
+<p>Each route is a separate Lambda invocation (or, more practically, the same Lambda with a route dispatcher). A <code>$connect</code> handler that returns <code>{"statusCode": 200}</code> lets the handshake succeed; return a 4xx and the client's <code>onopen</code> will never fire.</p>
+
+<h2>Cost Reality Check</h2>
+
+<p>API Gateway WebSocket APIs are billed on connection-minutes plus messages: $0.25 per million connection-minutes, $1.00 per million messages. A dashboard with 100 connected users all day, receiving one update per second during a 6.5-hour market session, is ~2.3M messages per day &mdash; about $70/month if you keep it open every trading day. Not free, but not unreasonable for something a team relies on.</p>
+
+<p>DynamoDB on pay-per-request for this workload is effectively free: low row counts (current connections only), tiny items, bursty access.</p>
+
+<h2>What's Next</h2>
+
+<p>Exercise 17 layers ElastiCache/Redis in front of the expensive computations (curve fitting, bond pricing) so a WebSocket broadcast of "the new BBB spread is X" doesn't trigger a fresh Nelder-Mead optimisation for every consumer downstream. Caching is also where we'll learn about VPC configuration for Lambda.</p>
+
+<p>Full code: <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/16-websockets-realtime">exercises/16-websockets-realtime</a>. 4 tests, all green.</p>
