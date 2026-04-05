@@ -1,0 +1,178 @@
+---
+layout: post
+title: "SQS, SNS, and Credit Spreads: Event-Driven Credit Risk"
+date: 2026-04-10
+tags: [aws, sqs, sns, credit-spreads, cds, hazard-rate, default-probability, credit-risk, fixed-income, quant-lab, python]
+categories:
+- AWS
+- Fixed Income
+- Credit Risk
+permalink: "/2026/04/10/sqs-sns-credit-spreads/"
+---
+
+<h2>Switching Lanes: From Curves to Credit</h2>
+
+<p>Exercises 09–14 built out the Treasury-curve side of the stack: ingestion, storage, bootstrapping, forwards, parametric fitting. Exercise 15 shifts to <strong>credit</strong>, and along the way picks up two of AWS's most-used messaging primitives: <strong>SQS</strong> (queues) and <strong>SNS</strong> (pub/sub).</p>
+
+<p>The combination is natural. Credit data arrives as a stream of events &mdash; new quotes, new CDS spreads, rating changes, index updates. Most of those events need to trigger downstream work (recalculate portfolio spreads, re-run VaR, send an alert) that you don't want blocking whatever produced the event in the first place. That's what SQS and SNS are for.</p>
+
+<h2>Credit Spreads in One Line</h2>
+
+<p>A credit spread is the extra yield a corporate bond pays over a Treasury of the same maturity:</p>
+
+<pre><code>spread = y_corp − y_treasury</code></pre>
+
+<p>Measured in basis points. 1% = 100 bps. It's the market's real-time price on credit risk for that issuer (or rating bucket): how much extra yield investors demand to hold a bond that could default.</p>
+
+<p>Spread behaviour follows a hierarchy that tracks the rating scale:</p>
+
+<ul>
+  <li><strong>AAA</strong>: trades tight. 50–80 bps in normal markets. Almost no credit risk priced in.</li>
+  <li><strong>BBB</strong>: the lowest investment-grade bucket. 120–200 bps typically. Sensitive to the cycle.</li>
+  <li><strong>BB/B</strong>: high yield. 300–700 bps in calm markets; can blow out past 1000 bps in a crisis.</li>
+</ul>
+
+<p>When the market gets scared, spreads widen across the board &mdash; investors demand more compensation to hold anything risky. The BBB spread is a classic "fear gauge" for credit. When BBBs blow past 200 bps, something is off.</p>
+
+<p>The calculation itself is trivial:</p>
+
+<pre><code class="language-python">def calculate_credit_spread(corporate_yield: float, treasury_yield: float) -> float:
+    return round(corporate_yield - treasury_yield, 4)
+</code></pre>
+
+<p>The interesting part is where the inputs come from (ICE BofA indices from FRED) and what you do with the output (alerts, re-pricing, stress scenarios).</p>
+
+<h2>CDS and the Hazard-Rate Model</h2>
+
+<p>A <strong>Credit Default Swap</strong> is an insurance contract on a bond. The buyer pays a quarterly premium (the "CDS spread"); if the reference entity defaults, the seller pays out par minus recovery. The CDS spread is therefore a direct market price on default risk, stripped of the complications bond yields carry (coupon, callability, liquidity).</p>
+
+<p>To translate a CDS spread into a probability of default, the standard tool is the <strong>hazard-rate model</strong>. Under a constant hazard λ (the instantaneous probability of defaulting in the next instant, given no default yet), survival and default follow an exponential:</p>
+
+<pre><code>P(survive to T) = exp(−λT)
+P(default by T) = 1 − exp(−λT)</code></pre>
+
+<p>And the CDS spread relates to λ through a simple arbitrage argument:</p>
+
+<pre><code>CDS_spread ≈ λ × (1 − recovery_rate)
+
+       CDS_spread_bps / 10000
+  λ ≈ ─────────────────────────
+            1 − R</code></pre>
+
+<p>Intuition: the protection seller, per unit time, expects to pay out <code>λ × (1 − R)</code> (probability of default times loss given default). To break even, the protection buyer's premium has to equal that. If you observe the premium, you can invert for λ.</p>
+
+<p>In code:</p>
+
+<pre><code class="language-python">def bootstrap_default_probabilities(
+    cds_spreads: dict[str, float],
+    recovery_rate: float = 0.40,
+) -> dict[str, float]:
+    lgd = 1.0 - recovery_rate
+    probs = {}
+    for tenor, spread_bps in cds_spreads.items():
+        years = CDS_TENOR_YEARS.get(tenor, float(tenor.replace("Y", "")))
+        hazard_rate = (spread_bps / 10000.0) / lgd
+        cum_default_prob = 1.0 - np.exp(-hazard_rate * years)
+        probs[tenor] = round(float(cum_default_prob), 6)
+    return probs
+</code></pre>
+
+<p>Quick sanity check with a 100 bps CDS spread and 40% recovery (industry-convention for senior unsecured corporates):</p>
+
+<pre><code>λ = 0.01 / 0.60 ≈ 0.0167   → 1.67% annual hazard
+P(default in 1Y) = 1 − exp(−0.0167 × 1) ≈ 1.65%
+P(default in 5Y) = 1 − exp(−0.0167 × 5) ≈ 8.0%</code></pre>
+
+<p>The feature: default probabilities compound. A 1.67% annual hazard isn't scary; the same hazard sustained over 5 years is.</p>
+
+<h3>Caveats</h3>
+
+<p>The constant-λ approximation is what trading desks use for a quick read. For anything serious you'd want:</p>
+<ul>
+  <li><strong>A term structure of hazards</strong>, bootstrapped from the full CDS curve (1Y, 3Y, 5Y, 7Y, 10Y) &mdash; typically piecewise-constant λ between tenors.</li>
+  <li><strong>Exact cash-flow matching</strong> of the CDS premium leg and protection leg, rather than the <code>s ≈ λ(1−R)</code> shortcut.</li>
+  <li><strong>Risky-discount integration</strong> of the premium accrual and the loss payout.</li>
+</ul>
+
+<p>Exercise 18 will tighten this up. For now, the approximation gets us to a number we can reason about.</p>
+
+<h2>SQS: Decoupling Producers from Consumers</h2>
+
+<p><strong>SQS</strong> is a managed queue. Producers put messages in, consumers pull them out, and AWS handles delivery, retries, and at-least-once semantics. You get two flavours:</p>
+
+<ul>
+  <li><strong>Standard queues</strong>: at-least-once delivery, best-effort ordering, nearly unlimited throughput.</li>
+  <li><strong>FIFO queues</strong>: exactly-once delivery, strict ordering, throughput capped at ~300 msg/s per message-group (3000 with batching).</li>
+</ul>
+
+<p>For a credit-spread recalculation job, standard is fine &mdash; occasional duplicate recomputation isn't a correctness issue, and exact ordering across ratings doesn't matter.</p>
+
+<p>Producing a message is a single boto3 call:</p>
+
+<pre><code class="language-python">def send_to_queue(queue_url: str, message: dict, sqs_client=None) -> dict:
+    sqs = sqs_client or boto3.client("sqs")
+    return sqs.send_message(
+        QueueUrl=queue_url,
+        MessageBody=json.dumps(message),
+    )
+</code></pre>
+
+<p>The consumer side (not in this exercise &mdash; next time with Lambda triggers) polls for messages, processes them, and deletes them on success. Anything that fails repeatedly lands in a <strong>Dead Letter Queue</strong> after <em>maxReceiveCount</em> attempts, so you can investigate without the message clogging the main queue forever.</p>
+
+<h2>SNS: Fan-Out Pub/Sub</h2>
+
+<p><strong>SNS</strong> is the pub/sub counterpart. Publishers push messages to a topic; all subscribers receive them. Subscribers can be email addresses, SMS, HTTP endpoints, SQS queues, Lambdas.</p>
+
+<p>The classic use case is <strong>fan-out</strong>: one event needs to trigger several independent consumers. You publish once to SNS, and SNS delivers to each subscribed SQS queue. Each consumer team owns their own queue, their own retry policy, their own DLQ &mdash; without the publisher knowing anything about them.</p>
+
+<p>For credit-spread alerts, I started simple &mdash; one SNS topic, one email subscription:</p>
+
+<pre><code class="language-python">def publish_alert(topic_arn: str, message: str, sns_client=None) -> dict:
+    sns = sns_client or boto3.client("sns")
+    return sns.publish(
+        TopicArn=topic_arn,
+        Subject="Credit Spread Alert",
+        Message=message,
+    )
+</code></pre>
+
+<p>The threshold check that triggers it is equally terse:</p>
+
+<pre><code class="language-python">def check_spread_threshold(spread_bps: float, threshold: float) -> bool:
+    return spread_bps &gt; threshold
+</code></pre>
+
+<p>Wired together: fetch ICE BofA BBB spread from FRED → compare to threshold (say, 150 bps) → if over, publish to SNS → email lands in my inbox. Later you can add a second SQS subscriber to the same topic for a recalc pipeline, a third for a Slack bot, without touching the publisher.</p>
+
+<h2>Testing Against AWS Without Touching AWS</h2>
+
+<p>One of the best side effects of boto3's client interface is that it mocks cleanly. <a href="https://github.com/getmoto/moto"><code>moto</code></a> patches the underlying HTTP calls so <code>boto3.client("sqs")</code> talks to an in-memory fake instead of real AWS. Tests run in milliseconds, don't need credentials, don't cost anything, and exercise real serialisation paths.</p>
+
+<pre><code class="language-python">from moto import mock_aws
+
+class TestSQS:
+    @mock_aws
+    def test_send_to_queue(self):
+        sqs = boto3.client("sqs", region_name="us-east-1")
+        queue = sqs.create_queue(QueueName="credit-calc-queue")
+        queue_url = queue["QueueUrl"]
+
+        send_to_queue(
+            queue_url=queue_url,
+            message={"rating": "BBB", "spread": 180},
+            sqs_client=sqs,
+        )
+
+        msgs = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=1)
+        body = json.loads(msgs["Messages"][0]["Body"])
+        assert body["rating"] == "BBB"
+        assert body["spread"] == 180
+</code></pre>
+
+<p>The dependency-injection detail matters: <code>send_to_queue</code> accepts an optional <code>sqs_client</code>, defaulting to <code>boto3.client("sqs")</code>. In production nothing changes; in tests, we pass the moto-patched client explicitly so the function and the test agree on which fake they're talking to.</p>
+
+<h2>What's Next</h2>
+
+<p>Exercise 16 moves from pull-based messaging to push: API Gateway WebSockets for streaming spread updates to connected dashboards in real time. And once we have real-time spreads on the wire, Exercise 17 layers ElastiCache in front of it all so the heavy curve computations don't get hammered on every tick.</p>
+
+<p>Full code: <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/15-sqs-sns-credit-spreads">exercises/15-sqs-sns-credit-spreads</a>. 10 tests, all green.</p>
