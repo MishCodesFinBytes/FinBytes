@@ -1,0 +1,153 @@
+---
+layout: post
+title: "Lambda + API Gateway: Spot Curves as a Serverless Endpoint"
+date: 2026-04-07
+tags: [aws, lambda, api-gateway, serverless, bootstrapping, yield-curve, fixed-income, quant-lab, python]
+categories:
+- AWS
+- Fixed Income
+permalink: "/2026/04/07/lambda-spot-curve-bootstrapping/"
+---
+
+<h2>From Par Yields to Spot Rates</h2>
+
+<p>The Treasury publishes par yields &mdash; the coupon rates that make a hypothetical bond price at 100. But for discounting arbitrary cash flows (a coupon at year 7.5, a callable bond's exercise date, an options payoff), you need <em>spot</em> rates: the zero-coupon yield for each future date.</p>
+
+<p>Converting one to the other is called <strong>bootstrapping</strong>, and it's one of the first non-trivial calculations every fixed income quant learns. In this post we implement it, package it as an AWS Lambda function, expose it through API Gateway, and get a live HTTPS endpoint that anyone can POST a par curve to.</p>
+
+<h2>The Bootstrap Math</h2>
+
+<p>A par bond trades at face value (100). For an annual-coupon bond paying coupon <em>c</em> with maturity <em>n</em> years:</p>
+
+<pre><code>100 = c/(1+s₁) + c/(1+s₂)² + ... + (c + 100)/(1+sₙ)ⁿ</code></pre>
+
+<p>The <em>sᵢ</em> are the spot rates we want to solve for. The trick is to do it <strong>sequentially</strong>:</p>
+
+<ol>
+  <li>A 1-year par bond has only one cash flow at year 1, so <em>s₁ = par yield at 1Y</em>.</li>
+  <li>For the 2-year bond, <em>s₁</em> is already known &mdash; we rearrange and solve algebraically for <em>s₂</em>.</li>
+  <li>For the 3-year bond, both <em>s₁</em> and <em>s₂</em> are known, so we solve for <em>s₃</em>. And so on.</li>
+</ol>
+
+<p>At each step:</p>
+
+<pre><code>sₙ = ((c + 1) / (1 - Σ c/(1+sᵢ)ⁱ))^(1/n) − 1</code></pre>
+
+<p>where the sum runs over all prior spot rates and cash flows are scaled to per unit of face value.</p>
+
+<h3>The Gappy Tenor Problem</h3>
+
+<p>Treasury par yields come at 11 tenors: 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 20Y, 30Y. Notice the gaps &mdash; there's no 4Y, no 6Y, no 8Y/9Y/11Y...19Y. But the standard bootstrap formula needs a coupon (and a spot) at <em>every integer year</em> from 1 to <em>n</em>, because that's how the par bond's cash flows are defined.</p>
+
+<p>A naïve implementation that only uses the tenors it was given produces wildly wrong spot rates. For a <em>flat</em> par curve (every tenor at 5%), the correct spot curve is also flat at 5%. Running a gap-skipping bootstrap on that same input gave back a 5Y spot of 2.97% &mdash; clearly broken.</p>
+
+<p>The fix is to <strong>linearly interpolate the par yields onto the dense annual grid</strong> first, then bootstrap year-by-year, then return only the spots at the originally-requested tenors:</p>
+
+<pre><code class="language-python">def bootstrap_spot_curve(par_yields: dict[str, float]) -> dict[str, float]:
+    ordered_labels = [m for m in MATURITY_ORDER if m in par_yields]
+    par_decimal = {m: par_yields[m] / 100.0 for m in ordered_labels}
+    spots: dict[str, float] = {}
+
+    # Sub-year tenors are single-cashflow zeros: spot = par
+    for m in ordered_labels:
+        if MATURITY_YEARS[m] &lt; 1.0:
+            spots[m] = par_decimal[m]
+
+    # Annual tenors: densify par curve, bootstrap year-by-year
+    annual_labels = [m for m in ordered_labels if MATURITY_YEARS[m] &gt;= 1.0]
+    known_years = [int(MATURITY_YEARS[m]) for m in annual_labels]
+    known_rates = [par_decimal[m] for m in annual_labels]
+    dense_par = _interpolate_par_to_annual_grid(known_years, known_rates)
+
+    dense_spots: dict[int, float] = {}
+    for y in range(1, known_years[-1] + 1):
+        c = dense_par[y]
+        if y == 1:
+            dense_spots[1] = c
+            continue
+        pv_coupons = sum(c / ((1 + dense_spots[k]) ** k) for k in range(1, y))
+        dense_spots[y] = ((c + 1.0) / (1.0 - pv_coupons)) ** (1.0 / y) - 1.0
+
+    for m in annual_labels:
+        spots[m] = dense_spots[int(MATURITY_YEARS[m])]
+
+    return {m: round(spots[m] * 100, 4) for m in ordered_labels}
+</code></pre>
+
+<p>This passes every test case: flat curves stay flat, normal upward-sloping curves produce spots slightly above par at the long end (as they should), and sub-year tenors pass through unchanged.</p>
+
+<h2>Wrapping it as a Lambda Function</h2>
+
+<p>The handler is intentionally tiny &mdash; parse JSON, validate, compute, respond:</p>
+
+<pre><code class="language-python">import json
+from bootstrap import bootstrap_spot_curve
+
+def _response(status: int, body: dict) -&gt; dict:
+    return {
+        "statusCode": status,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps(body),
+    }
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event.get("body") or "{}")
+        par_yields = body.get("par_yields")
+        if not isinstance(par_yields, dict) or not par_yields:
+            return _response(400, {"error": "par_yields must be a non-empty object"})
+        return _response(200, {"spot_curve": bootstrap_spot_curve(par_yields)})
+    except json.JSONDecodeError as exc:
+        return _response(500, {"error": f"invalid JSON: {exc}"})
+    except Exception as exc:
+        return _response(500, {"error": str(exc)})
+</code></pre>
+
+<p>No external dependencies &mdash; just standard library and our own module. The deployment zip is about 2.4KB. You could inline this in the Lambda console and it'd still work.</p>
+
+<h2>Deploying via CLI</h2>
+
+<p>The full deployment takes eight AWS CLI calls. In order:</p>
+
+<ol>
+  <li><code>aws lambda create-function</code> &mdash; upload the zip, attach the execution role</li>
+  <li><code>aws apigateway create-rest-api</code> &mdash; a new REST API container</li>
+  <li><code>aws apigateway create-resource</code> x2 &mdash; create <code>/curves</code> then <code>/curves/bootstrap</code></li>
+  <li><code>aws apigateway put-method</code> &mdash; declare the <code>POST</code> method</li>
+  <li><code>aws apigateway put-integration</code> &mdash; wire <code>POST</code> to Lambda via <code>AWS_PROXY</code> integration</li>
+  <li><code>aws lambda add-permission</code> &mdash; let API Gateway invoke the function</li>
+  <li><code>aws apigateway create-deployment</code> &mdash; publish to a <code>/dev</code> stage</li>
+</ol>
+
+<p>Missing step 6 is a classic pitfall: the deployment succeeds, the URL responds, and you get a 500 with "Internal server error" forever because Lambda silently refuses the invocation. The API Gateway test console gives a clearer error. Always add the resource-based permission on the Lambda.</p>
+
+<h2>Testing the Live Endpoint</h2>
+
+<p>Once deployed:</p>
+
+<pre><code class="language-bash">curl -X POST https://&lt;API_ID&gt;.execute-api.us-east-1.amazonaws.com/dev/curves/bootstrap \
+  -H "Content-Type: application/json" \
+  -d '{"par_yields":{"1M":5.25,"3M":5.30,"6M":5.20,"1Y":4.80,"2Y":4.50,"5Y":4.20,"10Y":4.30}}'
+</code></pre>
+
+<p>Response:</p>
+
+<pre><code class="language-json">{
+  "spot_curve": {
+    "1M": 5.25, "3M": 5.30, "6M": 5.20,
+    "1Y": 4.80, "2Y": 4.4933, "5Y": 4.1855, "10Y": 4.3053
+  }
+}
+</code></pre>
+
+<p>The 10Y spot (4.31%) is slightly above the 10Y par (4.30%) &mdash; exactly what theory predicts for an upward-sloping yield curve.</p>
+
+<h2>Cost</h2>
+
+<p>The free tier gives 1 million Lambda requests and 400,000 GB-seconds of compute per month, plus 1 million API Gateway calls. For a learning project that gets curled a few times a day, effective cost is zero &mdash; and there's no "running instance" to remember to turn off. Serverless is a genuinely different cost model from RDS.</p>
+
+<h2>What's Next</h2>
+
+<p>The Lambda computes spot rates on demand but doesn't remember anything. <a href="/2026/04/06/rds-postgresql-yield-schema/">The RDS schema</a> from the last post has a <code>spot_curves</code> table waiting. Exercise 13 will wire the Lambda to pull par yields from S3, compute the spot curve, and write it back to RDS &mdash; one S3-triggered pipeline step.</p>
+
+<p>Full code: <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/12-lambda-api-gateway">exercises/12-lambda-api-gateway</a>.</p>
