@@ -1,0 +1,170 @@
+---
+layout: post
+title: "CI/CD to AWS: Forward Rates and OIDC-Authenticated Deploys"
+date: 2026-04-08
+tags: [aws, lambda, github-actions, oidc, ci-cd, forward-rates, fixed-income, quant-lab, python]
+categories:
+- AWS
+- DevOps
+- Fixed Income
+permalink: "/2026/04/08/cicd-forward-rate-curve/"
+---
+
+<h2>What a Forward Rate Tells You</h2>
+
+<p>A spot rate answers "what yield do I get if I invest for 5 years starting today?" A <em>forward</em> rate answers a different question: "what yield does the market imply I'll get if I invest for 1 year, starting 4 years from now?"</p>
+
+<p>Nobody quotes forward rates directly &mdash; they're derived from observable spot rates via a no-arbitrage argument. If you can lock in a 2Y spot rate of 5% today, or lock in a 1Y spot of 4% and then roll into a 1Y rate one year from now, the two strategies must give the same result. Otherwise you could borrow one way and lend the other for a risk-free profit.</p>
+
+<h2>The Math</h2>
+
+<p>Setting the two strategies equal:</p>
+
+<pre><code>(1 + s₂)² = (1 + s₁) · (1 + f)</code></pre>
+
+<p>Where <em>s₁</em> and <em>s₂</em> are the 1Y and 2Y spot rates, and <em>f</em> is the forward rate between years 1 and 2. Generalising to any two maturities:</p>
+
+<pre><code>(1 + s₂)^t₂ = (1 + s₁)^t₁ · (1 + f)^(t₂ − t₁)</code></pre>
+
+<p>Solving for <em>f</em>:</p>
+
+<pre><code>f = [(1 + s₂)^t₂ / (1 + s₁)^t₁]^(1/(t₂ − t₁)) − 1</code></pre>
+
+<p>Python:</p>
+
+<pre><code class="language-python">def forward_rate_between(spot_short, years_short, spot_long, years_long):
+    s1 = spot_short / 100.0
+    s2 = spot_long / 100.0
+    dt = years_long - years_short
+    forward = ((1 + s2) ** years_long / (1 + s1) ** years_short) ** (1 / dt) - 1
+    return round(forward * 100, 4)
+</code></pre>
+
+<p>And a driver that walks consecutive maturities in the spot curve:</p>
+
+<pre><code class="language-python">def calculate_forward_rates(spot_curve: dict[str, float]) -&gt; dict[str, float]:
+    if len(spot_curve) &lt; 2:
+        return {}
+    ordered = [(m, spot_curve[m]) for m in MATURITY_ORDER if m in spot_curve]
+    forwards = {}
+    for i in range(1, len(ordered)):
+        s_label, s_rate = ordered[i - 1]
+        l_label, l_rate = ordered[i]
+        forwards[f"{s_label}-{l_label}"] = forward_rate_between(
+            s_rate, MATURITY_YEARS[s_label], l_rate, MATURITY_YEARS[l_label]
+        )
+    return forwards
+</code></pre>
+
+<h3>A sanity check</h3>
+
+<p>Input <code>{"1Y": 4.0, "2Y": 5.0}</code>. Expected forward for the 1Y-2Y period:</p>
+
+<pre><code>f = 1.05² / 1.04 − 1 = 1.1025 / 1.04 − 1 ≈ 0.06010 → 6.01%
+</code></pre>
+
+<p>That makes intuitive sense: if the 2Y rate (5%) is higher than the 1Y rate (4%), the market is saying it expects 1Y rates a year from now to be <em>higher</em> than today's 1Y, specifically around 6%, because that's what would make both strategies equivalent.</p>
+
+<p>If the two spots are equal, the forward equals them. If the curve is inverted (long &lt; short), the forward drops below the long spot &mdash; the market is implying future short rates will be lower still.</p>
+
+<h2>Shipping it as a Lambda</h2>
+
+<p>Same pattern as the bootstrapping handler from <a href="/2026/04/07/lambda-spot-curve-bootstrapping/">last post</a>: parse JSON, validate, compute, respond. The handler is ~15 lines and the zip is 1.6KB. Plumbing it into the existing API Gateway takes one new resource (<code>/curves/forwards</code>) plus a POST method, Lambda-proxy integration, invoke permission, and a redeploy.</p>
+
+<pre><code class="language-bash">curl -X POST https://&lt;API_ID&gt;.execute-api.us-east-1.amazonaws.com/dev/curves/forwards \
+  -H "Content-Type: application/json" \
+  -d '{"spot_curve":{"1Y":4.0,"2Y":5.0,"5Y":5.5}}'
+
+{"forward_curve": {"1Y-2Y": 6.0096, "2Y-5Y": 5.8347}}
+</code></pre>
+
+<h2>CI/CD: No Long-Lived Keys in GitHub</h2>
+
+<p>The real point of this exercise wasn't the math &mdash; it was <strong>automating the deploy</strong>. Doing it manually for every code change is untenable: you forget steps, you push untested code, you drift between what's in git and what's running.</p>
+
+<p>The obvious approach is to generate an AWS access key, paste it into GitHub Secrets, and have the workflow use it. That works. But you now have a long-lived credential sitting in GitHub that, if exfiltrated, gives write access to your AWS account until you remember to rotate it.</p>
+
+<h3>OIDC: the modern alternative</h3>
+
+<p>GitHub Actions can present a signed OIDC token for each workflow run. AWS verifies the token, checks that it came from the expected repo and branch, and issues short-lived credentials (typically valid for one hour). No long-lived keys anywhere.</p>
+
+<p>The setup has four pieces:</p>
+
+<ol>
+  <li><strong>IAM Identity Provider</strong> in AWS pointing at <code>token.actions.githubusercontent.com</code></li>
+  <li><strong>IAM Role</strong> with a trust policy that checks the OIDC token's <code>sub</code> claim against a specific repo and branch</li>
+  <li><strong>Inline permission policy</strong> on that role &mdash; scoped to just the Lambda function ARN</li>
+  <li><strong>GitHub secret</strong> containing the role ARN</li>
+</ol>
+
+<p>The trust policy is where the interesting bit happens:</p>
+
+<pre><code class="language-json">{
+  "Effect": "Allow",
+  "Principal": {"Federated": "arn:aws:iam::349348221529:oidc-provider/token.actions.githubusercontent.com"},
+  "Action": "sts:AssumeRoleWithWebIdentity",
+  "Condition": {
+    "StringEquals": {
+      "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+    },
+    "StringLike": {
+      "token.actions.githubusercontent.com:sub": "repo:MishCodesFinBytes/QuantLab:ref:refs/heads/master"
+    }
+  }
+}
+</code></pre>
+
+<p>The <code>sub</code> claim carries the full context: which org, which repo, which branch. A malicious fork or a feature branch can't assume this role &mdash; only pushes to <code>master</code> in this specific repo can. If you wanted to be stricter, you could tie it to a specific environment or tag.</p>
+
+<h3>The workflow</h3>
+
+<pre><code class="language-yaml">name: Deploy forward-rates Lambda
+on:
+  push:
+    branches: [master]
+    paths: ['exercises/13-cicd-github-actions/src/**']
+
+permissions:
+  id-token: write   # issue the OIDC token
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[dev]"
+        working-directory: exercises/13-cicd-github-actions
+      - run: pytest -v --tb=short
+        working-directory: exercises/13-cicd-github-actions
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+      - working-directory: exercises/13-cicd-github-actions/src
+        run: |
+          zip -j deployment.zip forward_rates.py handler.py
+          aws lambda update-function-code \
+            --function-name quant-lab-forward-rates \
+            --zip-file fileb://deployment.zip \
+            --publish
+</code></pre>
+
+<p>The <code>id-token: write</code> permission is the magic &mdash; it's what lets the workflow request an OIDC token. Without it, <code>configure-aws-credentials</code> falls back to looking for keys in env vars and the job fails.</p>
+
+<h2>Why This Matters</h2>
+
+<p>OIDC is a small change with a big security payoff. The "cost of a mistake" drops significantly: if someone exfiltrates your GitHub repo's workflow files, they get no AWS access. A compromised PR from a contributor can't assume the role. The credentials disappear one hour after the job ends.</p>
+
+<p>For a learning project this might seem like overkill &mdash; and it is, a little. But the habits you form in toy projects are the ones you bring to production work. Wiring OIDC once is worth it.</p>
+
+<p>Full code: <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/13-cicd-github-actions">exercises/13-cicd-github-actions</a>. Setup steps: <a href="https://github.com/MishCodesFinBytes/QuantLab/blob/master/docs/github-oidc-setup.md">docs/github-oidc-setup.md</a>.</p>
