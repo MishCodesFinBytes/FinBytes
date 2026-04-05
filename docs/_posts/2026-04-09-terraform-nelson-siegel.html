@@ -124,19 +124,115 @@ resource "aws_apigatewayv2_route" "fit" {
 
 <p>For production I'd probably standardise on one &mdash; mixing HTTP + REST is extra surface area. This project keeps both for learning purposes, which is fine in a lab.</p>
 
-<h2>Packaging scipy for Lambda</h2>
+<h2>Packaging scipy for Lambda (the friction log)</h2>
 
-<p>The one painful bit: scipy's compiled wheels need to match Lambda's runtime (Linux, x86_64, manylinux). If you <code>pip install scipy -t package/</code> on Windows, you'll ship Windows wheels and the Lambda will fail at import time with "invalid ELF".</p>
+<p>The one painful bit: scipy's compiled wheels need to match Lambda's runtime (Linux, x86_64, manylinux). If you <code>pip install scipy -t package/</code> on Windows, you ship Windows wheels and the Lambda crashes at import with "invalid ELF". The clean fix is to package inside the official Lambda Python image &mdash; but actually running that command on a Windows / Git Bash host turned up four gotchas the tutorials never mention.</p>
 
-<p>The clean fix is to package inside the official Lambda Python image:</p>
+<h3>Gotcha 1: The Lambda image has an entrypoint</h3>
 
-<pre><code class="language-bash">docker run --rm -v "$PWD":/out public.ecr.aws/lambda/python:3.11 \
-  bash -c "pip install numpy scipy -t /out/package && \
-           cp /out/handler.py /out/curve_fitting.py /out/package/ && \
-           cd /out/package && zip -r ../deployment.zip ."
+<p><code>public.ecr.aws/lambda/python:3.11</code> expects the Lambda handler name as its first argument. A plain <code>bash -c "..."</code> fails with <em>"entrypoint requires the handler name to be the first argument."</em> You have to override the entrypoint explicitly:</p>
+
+<pre><code class="language-bash">docker run --rm --entrypoint bash -v "$PWD":/out public.ecr.aws/lambda/python:3.11 -c "..."
 </code></pre>
 
-<p>The zip ends up around 50MB &mdash; below Lambda's 250MB limit but heavy enough that an alternative is worth considering: <strong>Lambda layers</strong>. You publish scipy once as a layer and have many functions share it. For a lab project with one scipy-using Lambda, the fat zip is fine.</p>
+<h3>Gotcha 2: Git Bash path translation silently breaks the mount</h3>
+
+<p>On Git Bash for Windows, <code>$PWD</code> returns a POSIX path like <code>/c/codebase/quant_lab/.../src</code>, which MSYS then mangles when passed to Docker. The container starts, the mount "succeeds", and then <code>/out</code> is empty inside the container. No error &mdash; your copies just silently fail.</p>
+
+<p>The fix is two steps: use <code>pwd -W</code> for the Windows-style path, and disable MSYS path conversion:</p>
+
+<pre><code class="language-bash">WINPATH=$(pwd -W)   # C:/codebase/quant_lab/.../src
+MSYS_NO_PATHCONV=1 docker run --rm --entrypoint bash \
+  -v "${WINPATH}:/out" public.ecr.aws/lambda/python:3.11 -c "..."
+</code></pre>
+
+<h3>Gotcha 3: pip will build numpy from source if the version is too new</h3>
+
+<p>The naive <code>pip install numpy scipy</code> grabs the latest numpy, which may not have a cp311 manylinux wheel yet. pip then falls back to building from source, which fails because the Lambda base image has no C compiler. You'll see a Meson error about missing <code>cc</code>, <code>gcc</code>, <code>clang</code>.</p>
+
+<p>Force binary-only installs and pin versions known to have wheels for your runtime:</p>
+
+<pre><code class="language-bash">pip install --only-binary=:all: 'numpy&lt;2' 'scipy&lt;1.14' -t /out/package
+</code></pre>
+
+<p>That lands <code>numpy-1.26.4</code> + <code>scipy-1.13.1</code>, both with manylinux_2_17_x86_64 wheels.</p>
+
+<h3>Gotcha 4: The container has no <code>zip</code> binary</h3>
+
+<p>The Lambda base image is minimal &mdash; no <code>zip</code>. Use Python to create the archive, which is always available:</p>
+
+<pre><code class="language-bash">python -c "import shutil; shutil.make_archive('/out/deployment', 'zip', '.')"
+</code></pre>
+
+<h3>Gotcha 5: 50&#8239;MB is a hard ceiling for direct upload</h3>
+
+<p>First build weighed 66&#8239;MB, which exceeds Lambda's 50&#8239;MB limit for direct zip upload (the 250&#8239;MB limit is for unzipped code, or zips uploaded via S3). Terraform's <code>filename =</code> attribute does a direct upload, so the apply would have failed at the Lambda creation step.</p>
+
+<p>Trimming the usual suspects got it down to 48.3&#8239;MiB:</p>
+
+<pre><code class="language-bash">cd /out/package
+find . -type d -name 'tests' -exec rm -rf {} +
+find . -type d -name '__pycache__' -exec rm -rf {} +
+find . -type d -name '*.dist-info' -exec rm -rf {} +
+find . -name '*.pyc' -delete
+find . -name '*.pyi' -delete
+</code></pre>
+
+<p>scipy's <code>tests/</code> trees alone carry around 15&#8239;MB of fixture data you'll never use at runtime. If a future scipy/numpy bump pushes the zip back over 50&#8239;MB, the next step is switching Terraform to upload via S3 (<code>s3_bucket</code> + <code>s3_key</code> attributes) or moving scipy into a Lambda layer and referencing it from multiple functions.</p>
+
+<h3>The full build command, end to end</h3>
+
+<pre><code class="language-bash">WINPATH=$(pwd -W)
+MSYS_NO_PATHCONV=1 docker run --rm --entrypoint bash \
+  -v "${WINPATH}:/out" public.ecr.aws/lambda/python:3.11 \
+  -c "pip install --only-binary=:all: 'numpy&lt;2' 'scipy&lt;1.14' -t /out/package -q &amp;&amp; \
+      cp /out/handler.py /out/curve_fitting.py /out/package/ &amp;&amp; \
+      cd /out/package &amp;&amp; \
+      find . -type d -name 'tests' -exec rm -rf {} + 2&gt;/dev/null; \
+      find . -type d -name '__pycache__' -exec rm -rf {} + 2&gt;/dev/null; \
+      find . -type d -name '*.dist-info' -exec rm -rf {} + 2&gt;/dev/null; \
+      find . -name '*.pyc' -delete; find . -name '*.pyi' -delete; \
+      python -c \"import shutil; shutil.make_archive('/out/deployment','zip','.')\""
+</code></pre>
+
+<h2>Deployment: terraform apply</h2>
+
+<p>Once the zip exists, the rest is unsurprising:</p>
+
+<pre><code class="language-bash">cd terraform
+terraform init      # pulls hashicorp/aws 5.x provider
+terraform plan      # review: 6 resources to add, 0 to change, 0 to destroy
+terraform apply
+</code></pre>
+
+<p>Six resources come up in about 20 seconds &mdash; the Lambda takes most of the time (zip upload + cold init), the API Gateway v2 resources are nearly instant. Terraform's output block prints the live endpoint:</p>
+
+<pre><code>api_endpoint = "https://rckgnjrj4c.execute-api.us-east-1.amazonaws.com/dev/curves/fit"
+</code></pre>
+
+<p>Smoke-testing the Svensson model on a 10-point US Treasury-shaped curve:</p>
+
+<pre><code class="language-bash">curl -X POST $API_ENDPOINT -H "Content-Type: application/json" -d '{
+  "model":"svensson",
+  "maturities":[0.25,0.5,1.0,2.0,3.0,5.0,7.0,10.0,20.0,30.0],
+  "yields":    [4.80,4.90,5.10,5.20,5.15,4.90,4.70,4.50,4.40,4.45]
+}'
+</code></pre>
+
+<pre><code class="language-json">{
+  "model": "svensson",
+  "params": {
+    "beta0": 5.1174, "beta1": -0.509, "beta2": -2.4821,
+    "beta3": 2.655, "lambda1": 9.0585, "lambda2": 1.4405
+  },
+  "fitted": [4.7872, 4.923, 5.0964, 5.1967, 5.1387, 4.9066, 4.7016, 4.5088, 4.3757, 4.4652],
+  "rmse": 0.0134
+}
+</code></pre>
+
+<p>RMSE of 0.0134 &mdash; 1.34 basis points across the curve. β₀ ≈ 5.12% is the long-run level, β₁ ≈ −0.51% is the (mild) inverted slope at the short end, and the two curvature terms (β₂, β₃) capture the belly dip and the 20s hump. Exactly the sort of summary you'd want to track day-over-day as market expectations shift.</p>
+
+<p>Teardown is one command (<code>terraform destroy</code>), and because Terraform state is scoped only to the six new resources, the existing S3 bucket / shared IAM role / REST API are untouched.</p>
 
 <h2>Testing Pattern: Avoiding Module Collisions</h2>
 
