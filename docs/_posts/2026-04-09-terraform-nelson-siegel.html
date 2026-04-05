@@ -1,0 +1,158 @@
+---
+layout: post
+title: "Terraform and Nelson-Siegel: Fitting Smooth Curves, Declaratively"
+date: 2026-04-09
+tags: [aws, terraform, lambda, nelson-siegel, svensson, yield-curve, fixed-income, scipy, quant-lab, python]
+categories:
+- AWS
+- DevOps
+- Fixed Income
+permalink: "/2026/04/09/terraform-nelson-siegel/"
+---
+
+<h2>Two Things in One Exercise</h2>
+
+<p>This post covers two very different pieces of quant infrastructure, bundled into a single exercise because they come up together in practice: <strong>Terraform</strong> for describing AWS resources as code, and <strong>parametric yield curve fitting</strong> (Nelson-Siegel and Svensson) for smoothing noisy market data into economically interpretable curves.</p>
+
+<p>The underlying theme is the same: replace point-in-time artefacts with reusable, versionable descriptions. Terraform turns one-off AWS CLI commands into a repeatable config. Nelson-Siegel turns a scatter of quoted yields into four or six numbers that describe the entire term structure.</p>
+
+<h2>Nelson-Siegel: Four Parameters, Whole Curve</h2>
+
+<p>The <a href="https://www.sas.upenn.edu/~fdiebold/papers/paper49/Diebold-Li.pdf">Nelson-Siegel model</a> (1987) represents a yield curve as:</p>
+
+<pre><code>y(τ) = β₀ + β₁ · [(1 − e^(−τ/λ)) / (τ/λ)]
+           + β₂ · [(1 − e^(−τ/λ)) / (τ/λ) − e^(−τ/λ)]
+</code></pre>
+
+<p>Every parameter has an economic meaning:</p>
+
+<ul>
+  <li><strong>β₀</strong> — the long-term level. As τ → ∞, y(τ) → β₀. This is the market's long-run inflation + real-rate expectation.</li>
+  <li><strong>β₁</strong> — the slope. As τ → 0, y(τ) → β₀ + β₁. A negative β₁ means a normal (upward) curve.</li>
+  <li><strong>β₂</strong> — the curvature. Creates a hump at intermediate maturities. Driven by uncertainty about medium-term rates.</li>
+  <li><strong>λ</strong> — the decay factor. Controls where the hump peaks. A smaller λ moves the hump to shorter maturities.</li>
+</ul>
+
+<p>You fit it by minimising the sum of squared errors between the model's predicted yields and your observed yields:</p>
+
+<pre><code class="language-python">def fit_nelson_siegel(maturities, yields):
+    def objective(params):
+        b0, b1, b2, lam = params
+        if lam &lt;= 0.01:
+            return 1e10
+        fitted = np.array([nelson_siegel(t, b0, b1, b2, lam) for t in maturities])
+        return np.sum((fitted - yields) ** 2)
+
+    b0_init = float(yields[-1])                # level ≈ long rate
+    b1_init = float(yields[0] - yields[-1])    # slope ≈ short - long
+    x0 = [b0_init, b1_init, 0.0, 1.5]
+
+    result = minimize(objective, x0, method="Nelder-Mead",
+                      options={"maxiter": 10000, "xatol": 1e-8})
+    ...
+</code></pre>
+
+<p>Nelder-Mead is a gradient-free simplex search — slow but robust on noisy four-dimensional objective surfaces. For daily fitting it's fine; for a research codebase doing thousands of fits you'd switch to a faster method with gradients.</p>
+
+<h3>Svensson: One More Hump</h3>
+
+<p>Svensson (1994) adds a second hump term, giving 6 parameters total. The extra flexibility helps fit long-end twists in real Treasury curves:</p>
+
+<pre><code>y(τ) = NS(τ) + β₃ · [(1 − e^(−τ/λ₂)) / (τ/λ₂) − e^(−τ/λ₂)]
+</code></pre>
+
+<p>When β₃ = 0, Svensson reduces to Nelson-Siegel exactly — so fitting Svensson on data where NS is sufficient just pushes β₃ toward 0 and wastes two degrees of freedom. Use NS first; only switch to NSS if the residuals show a systematic long-end pattern.</p>
+
+<p>The ECB and the Bundesbank publish NSS parameters daily for the euro-area yield curve. Analysts track β₀ over time to see long-run rate expectations evolve — something that's hard to do with a raw yield curve.</p>
+
+<h3>Cubic Spline: The Non-Parametric Alternative</h3>
+
+<p>Cubic splines pass <em>exactly</em> through every observed point. No residuals, no fit quality — it just interpolates. Useful when you need "the yield at 7.5 years" without caring about the underlying model:</p>
+
+<pre><code class="language-python">from scipy.interpolate import CubicSpline
+
+def cubic_spline_interpolate(maturities, yields, target_maturities):
+    cs = CubicSpline(maturities, yields)
+    return cs(target_maturities)
+</code></pre>
+
+<p>The trade-off: splines can oscillate between knots, especially with sparse data. Nelson-Siegel smooths through noise because the functional form is constrained. A spline will happily fit every bump and wiggle, including the ones caused by a single thinly-traded bond.</p>
+
+<h2>Terraform: Infrastructure as Code</h2>
+
+<p>Through exercises 10–13 we built AWS resources with the CLI: <code>aws s3 mb</code>, <code>aws lambda create-function</code>, <code>aws apigateway create-rest-api</code>, <code>aws apigateway put-method</code>, etc. Each command was a one-off action &mdash; there's no record in the repo of what was created, what parameters were used, or how to recreate it.</p>
+
+<p>Terraform flips this around. You describe the desired state in <code>.tf</code> files, and Terraform figures out the diff against what exists and makes it happen. The config becomes the source of truth.</p>
+
+<h3>Scoping the blast radius</h3>
+
+<p>A tempting mistake with Terraform on an existing account: import everything. Write <code>.tf</code> files for all existing resources, import them into state, and now Terraform "manages" everything. Sounds clean &mdash; but if you run <code>terraform destroy</code> in the wrong directory, you delete <em>everything</em>, including the database you still care about.</p>
+
+<p>For this exercise I scoped Terraform narrowly: only the <strong>new</strong> curve-fitting Lambda and its HTTP API are Terraform-managed. Existing resources (S3 bucket, shared IAM role, the REST API with bootstrap/forwards routes) stay outside Terraform state. Going forward, all <em>new</em> infrastructure is Terraform-managed.</p>
+
+<p>The config:</p>
+
+<pre><code class="language-hcl">resource "aws_lambda_function" "curve_fitting" {
+  function_name = "${var.project_name}-curve-fitting"
+  runtime       = "python3.11"
+  handler       = "handler.lambda_handler"
+  role          = var.lambda_role_arn   # EXISTING role, referenced by ARN
+  timeout       = 60
+  memory_size   = 512
+
+  filename         = "${path.module}/../src/deployment.zip"
+  source_code_hash = filebase64sha256("${path.module}/../src/deployment.zip")
+}
+
+resource "aws_apigatewayv2_api" "curves" {
+  name          = "${var.project_name}-curves-http"
+  protocol_type = "HTTP"
+}
+
+resource "aws_apigatewayv2_route" "fit" {
+  api_id    = aws_apigatewayv2_api.curves.id
+  route_key = "POST /curves/fit"
+  target    = "integrations/${aws_apigatewayv2_integration.curve_fitting.id}"
+}
+</code></pre>
+
+<p>The <code>source_code_hash</code> is the trick that makes Terraform detect when you've changed the Lambda code &mdash; if the zip changes, the hash changes, and <code>terraform apply</code> pushes the new code.</p>
+
+<h3>HTTP API vs REST API</h3>
+
+<p>I used an HTTP API (apigatewayv2) here rather than the REST API (apigatewayv1) from exercise 12. HTTP APIs are cheaper, simpler, and the default recommendation for new APIs. The only reasons to stick with REST are older features (custom domains with edge-optimised distributions, request validators, AWS WAF integration).</p>
+
+<p>For production I'd probably standardise on one &mdash; mixing HTTP + REST is extra surface area. This project keeps both for learning purposes, which is fine in a lab.</p>
+
+<h2>Packaging scipy for Lambda</h2>
+
+<p>The one painful bit: scipy's compiled wheels need to match Lambda's runtime (Linux, x86_64, manylinux). If you <code>pip install scipy -t package/</code> on Windows, you'll ship Windows wheels and the Lambda will fail at import time with "invalid ELF".</p>
+
+<p>The clean fix is to package inside the official Lambda Python image:</p>
+
+<pre><code class="language-bash">docker run --rm -v "$PWD":/out public.ecr.aws/lambda/python:3.11 \
+  bash -c "pip install numpy scipy -t /out/package && \
+           cp /out/handler.py /out/curve_fitting.py /out/package/ && \
+           cd /out/package && zip -r ../deployment.zip ."
+</code></pre>
+
+<p>The zip ends up around 50MB &mdash; below Lambda's 250MB limit but heavy enough that an alternative is worth considering: <strong>Lambda layers</strong>. You publish scipy once as a layer and have many functions share it. For a lab project with one scipy-using Lambda, the fat zip is fine.</p>
+
+<h2>Testing Pattern: Avoiding Module Collisions</h2>
+
+<p>Small engineering note: exercises 12, 13, and 14 each define a top-level <code>handler</code> module. When all three are installed as editable packages, <code>import handler</code> in test code might resolve to whichever one Python discovers first &mdash; typically not what you want.</p>
+
+<p>The fix is a one-line addition to <code>pyproject.toml</code>:</p>
+
+<pre><code class="language-toml">[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+</code></pre>
+
+<p><code>pythonpath</code> prepends the exercise's own <code>src/</code> directory to <code>sys.path</code> before test collection, so local modules win regardless of install order. Simple, but easy to miss until imports start resolving strangely.</p>
+
+<h2>What's Next</h2>
+
+<p>We now have a fully Terraform-managed curve-fitting endpoint with two different model choices. Exercise 15 shifts focus from curves to credit: SQS + SNS for event-driven processing, and credit spreads + CDS pricing.</p>
+
+<p>Full code: <a href="https://github.com/MishCodesFinBytes/QuantLab/tree/master/exercises/14-terraform-curve-fitting">exercises/14-terraform-curve-fitting</a>. The README walks through the full deploy and teardown.</p>
