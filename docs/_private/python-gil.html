@@ -320,6 +320,12 @@ sys.getswitchinterval()   # -> 0.005   (5 ms time-slice for CPU-bound threads)</
   <p class="gil-step">STEP 3 · CONSEQUENCE FOR I/O</p>
   <h3>Threads — overlap the <code>fetch</code> waits</h3>
   <p>Because <code>fetch</code> releases the GIL inside the blocking read, N threads' waits overlap. While thread A is parked in the syscall, thread B holds the GIL and issues its own request. You get near-linear speedup on Stage 1 despite only one thread ever running Python bytecode at a time.</p>
+  <figure style="margin:16px 0;">
+    <img src="{{ '/assets/images/chk_threads.png' | relative_url }}"
+         alt="CPU-bound score() gets no speedup from threads; I/O-bound fetch() is ~3x faster because the GIL frees during the wait"
+         loading="lazy"
+         style="width:100%;height:auto;border-radius:10px;border:1px solid #252b34;display:block;">
+  </figure>
   <pre><code class="language-python">from concurrent.futures import ThreadPoolExecutor
 with ThreadPoolExecutor(8) as tp:
     pages = list(tp.map(fetch, URLS))   # 8 waits overlap → ~0.1s not 0.8s</code></pre>
@@ -344,6 +350,12 @@ with ProcessPoolExecutor(4) as pp:
   <p class="gil-step">STEP 5 · A DIFFERENT ANSWER FOR I/O</p>
   <h3>asyncio — one thread, thousands of in-flight fetches</h3>
   <p>Threads solve the I/O stage but cost an OS thread and ~5 ms-sliced scheduling per unit. When you need <em>thousands</em> of concurrent fetches, that overhead dominates. asyncio replaces OS-thread concurrency with a single-threaded <strong>event loop</strong> over non-blocking sockets (via <code>epoll</code>/<code>kqueue</code> selectors).</p>
+  <figure style="margin:16px 0;">
+    <img src="{{ '/assets/images/chk_async.png' | relative_url }}"
+         alt="One thread interleaves many tasks; each yields at await and the event loop fills the gap with another"
+         loading="lazy"
+         style="width:100%;height:auto;border-radius:10px;border:1px solid #252b34;display:block;">
+  </figure>
   <p>The mechanics link straight back to Step 2's "released while blocked": instead of the C layer releasing a lock during a blocking syscall, the coroutine <em>suspends itself</em> at <code>await</code> and hands control to the loop, which registers the socket with the selector and resumes the coroutine when data is ready. No GIL contention because there's only one thread; concurrency is cooperative, not preemptive.</p>
   <pre><code class="language-python">import asyncio, aiohttp
 
@@ -363,6 +375,12 @@ result = await loop.run_in_executor(process_pool, score, html)</code></pre>
   <p class="gil-step">STEP 6 · A DIFFERENT AXIS ENTIRELY</p>
   <h3>Caching — eliminate the work instead of parallelizing it</h3>
   <p>Concurrency divides the work across time/cores. A cache <strong>removes</strong> repeated work. If the crawler sees the same page twice, <code>score</code> is a <strong>pure function</strong> of its input — same HTML, same result — so it's a textbook memoization target.</p>
+  <figure style="margin:16px 0;">
+    <img src="{{ '/assets/images/chk_cache.png' | relative_url }}"
+         alt="First call to score(page) computes and stores; the second call is a cache HIT returned instantly"
+         loading="lazy"
+         style="width:100%;height:auto;border-radius:10px;border:1px solid #252b34;display:block;">
+  </figure>
   <pre><code class="language-python">from functools import lru_cache
 
 @lru_cache(maxsize=256)
@@ -391,6 +409,15 @@ score.cache_info()      # CacheInfo(hits=8, misses=8, maxsize=256, currsize=8)</
   <p>Correctness caveats are just the definition of memoization enforced: keys must be <strong>hashable</strong> (they index the dict) and the function must be <strong>pure</strong>. Caching <code>fetch</code> directly would be wrong unless you add a TTL — the page can change under you, so you'd want <code>Cache-Control</code>/ETag semantics rather than an unbounded <code>lru_cache</code>.</p>
 
   <h3>How it all links — one causal chain</h3>
+  <figure style="margin:16px 0;">
+    <img src="{{ '/assets/images/python-gil-infographic.gif' | relative_url }}"
+         alt="Animated walkthrough: threads vs I/O, multiprocessing, asyncio, caching, and the decision card"
+         loading="lazy"
+         style="width:100%;height:auto;border-radius:10px;border:1px solid #252b34;display:block;">
+    <figcaption style="text-align:center;color:#6b7280;font-size:0.82rem;margin-top:8px;">
+      The same chain as an animation: threads vs I/O, multiprocessing, asyncio, caching, and the decision card.
+    </figcaption>
+  </figure>
   <div class="gil-fig-dark">
     <svg viewBox="0 0 820 250" role="img" aria-label="Concept dependency chain">
       <defs>
@@ -456,6 +483,12 @@ score.cache_info()      # CacheInfo(hits=8, misses=8, maxsize=256, currsize=8)</
   </style>
 
   <h3>The one table to remember: same 4 jobs — which tool wins?</h3>
+  <figure style="margin:16px 0;">
+    <img src="{{ '/assets/images/chk_sum.png' | relative_url }}"
+         alt="Decision card: CPU-bound -> multiprocessing; many I/O tasks -> asyncio; a few I/O tasks -> threads; repeated work -> cache it"
+         loading="lazy"
+         style="width:100%;height:auto;border-radius:10px;border:1px solid #252b34;display:block;">
+  </figure>
   <div class="gil-figure">
     <table class="gil-table">
       <tr><th>Tool</th><th>CPU job (busy)</th><th>I/O job (waiting)</th><th>Real parallel?</th></tr>
