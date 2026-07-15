@@ -4,6 +4,15 @@ title: "Python: The GIL and concurrency tradeoffs"
 date: 2026-04-21
 tags: [python, reference]
 permalink: /private/python-gil/
+tabs:
+  - id: concept
+    label: Concept
+  - id: elia12
+    label: ELIA12
+  - id: deepdive
+    label: "Deep dive"
+  - id: cheatsheet
+    label: "Cheat sheet"
 ---
 
 <div id="tab-concept" class="ql-tab-content">
@@ -57,5 +66,273 @@ async def main():
 asyncio.run(main())</code></pre>
 
   <div class="cpp-note"><strong>The trick to remember:</strong> threads share the GIL (take turns), processes bypass it (truly parallel), asyncio ignores it (one thread, cooperative switching).</div>
+
+</div>
+
+<div id="tab-deepdive" class="ql-tab-content" style="display:none">
+
+  <style>
+  /* Self-contained light figures + tables so colours stay readable in either
+     site theme (don't rely on prefers-color-scheme, which fights the toggle). */
+  .gil-figure { background:#fbfbfa; border:1px solid #e5e7eb; border-radius:10px; padding:12px; margin:16px 0; }
+  .gil-figure svg { display:block; margin:0 auto; max-width:100%; height:auto; }
+  .gil-cap { text-align:center; color:#6b7280; font-size:0.82rem; margin:8px 0 0; }
+  .gil-table { width:100%; border-collapse:collapse; background:#fff; color:#1f2328; font-size:0.9rem; }
+  .gil-table th, .gil-table td { border:1px solid #e5e7eb; padding:8px 10px; text-align:left; vertical-align:top; }
+  .gil-table th { background:#f3f4f6; }
+  .gil-win { color:#15803d; font-weight:700; }
+  .gil-lose { color:#b91c1c; font-weight:700; }
+  </style>
+
+  <p>One kitchen story, one tiny problem — every concept solved on top of it. <strong>Python is a kitchen with only one knife.</strong> Lots of cooks (<em>threads</em>) want to chop, but the rule is: you must hold the one knife to chop. That knife is the <strong>GIL</strong>. Only the cook holding it works; everyone else waits. Multiprocessing, asyncio and caches are all just clever ways to cook faster despite the one-knife rule.</p>
+
+  <div class="gil-figure">
+    <svg viewBox="0 0 700 210" role="img" aria-label="Three cooks share one knife">
+      <rect x="20" y="20" width="660" height="170" rx="14" fill="#fff7f2" stroke="#f3c4ad"/>
+      <text x="350" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="#c2410c">THE PYTHON INTERPRETER (one kitchen)</text>
+      <rect x="310" y="66" width="80" height="26" rx="6" fill="#c2410c"/>
+      <text x="350" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">GIL = knife</text>
+      <circle cx="140" cy="150" r="30" fill="#dcfce7" stroke="#15803d"/>
+      <text x="140" y="155" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">Cook 1</text>
+      <text x="140" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">CHOPPING</text>
+      <line x1="170" y1="140" x2="310" y2="86" stroke="#15803d" stroke-width="2" stroke-dasharray="4 3"/>
+      <circle cx="350" cy="152" r="26" fill="#f3f4f6" stroke="#9ca3af"/>
+      <text x="350" y="157" text-anchor="middle" font-size="12" fill="#6b7280">Cook 2</text>
+      <text x="350" y="194" text-anchor="middle" font-size="12" fill="#6b7280">waiting</text>
+      <circle cx="560" cy="152" r="26" fill="#f3f4f6" stroke="#9ca3af"/>
+      <text x="560" y="157" text-anchor="middle" font-size="12" fill="#6b7280">Cook 3</text>
+      <text x="560" y="194" text-anchor="middle" font-size="12" fill="#6b7280">waiting</text>
+    </svg>
+    <p class="gil-cap">Three cooks, one knife. Only the one holding it runs. That's the GIL.</p>
+  </div>
+
+  <h3>Our one tiny problem: do a job 4 times, as fast as possible</h3>
+  <p>Two flavours of job — keep both in your head, because the right tool depends on which one you have:</p>
+  <ul>
+    <li><strong>CPU job</strong> — real thinking work (big maths). The cook is busy the whole time, needs the knife nonstop.</li>
+    <li><strong>I/O job</strong> — waiting work (download a page, read a file). The cook mostly stands around waiting.</li>
+  </ul>
+  <pre><code class="language-python"># CPU job: needs the knife nonstop
+def heavy(n):
+    total = 0
+    for i in range(2_000_000):
+        total += (i * n) % 7
+    return total
+
+# I/O job: mostly just waiting
+import time
+def slow_io():
+    time.sleep(0.2)       # waiting on the web
+    return "done"</code></pre>
+  <p><strong>ELI10 —</strong> a CPU job is like doing hard multiplication in your head — you're working every second. An I/O job is like waiting for the kettle to boil — you're just standing there. That difference decides everything.</p>
+
+  <h3>1 · The GIL — why only one knife?</h3>
+  <p>The kitchen could have handed every cook their own knife. Instead it made <strong>one knife for the whole kitchen</strong>, because sharing safely is hard — and the thing being shared is how Python remembers to clean up (that's refcounting, next).</p>
+  <ul>
+    <li><strong>GIL = Global Interpreter Lock = the one knife.</strong> A mutex — only one holder at a time.</li>
+    <li>To run <em>any</em> Python line, a thread must hold it.</li>
+    <li>Python passes the knife around quickly so everyone gets turns — but never two at once.</li>
+  </ul>
+  <p><strong>ELI10 —</strong> one knife keeps the kitchen from descending into chaos. The downside: even with 8 cooks and 8 chopping boards, only one person actually chops at a time.</p>
+
+  <h3>2 · Refcounting — the reason the knife exists</h3>
+  <p>Every Python object keeps a little tally: <em>how many things point at me right now?</em> When it hits <strong>0</strong>, nobody needs it, so Python frees the memory. That tally is the <strong>reference count</strong>.</p>
+  <pre><code class="language-python">x = []      # the list's count = 1
+y = x       # same list, count = 2
+del x       # count = 1
+del y       # count = 0  -> memory thrown away</code></pre>
+  <p>Adding 1 to the tally is secretly <strong>three</strong> steps: read the number, add one, write it back. If two cooks do this at the same instant, they clobber each other:</p>
+
+  <div class="gil-figure">
+    <svg viewBox="0 0 700 205" role="img" aria-label="Race condition on a reference count">
+      <rect x="20" y="15" width="660" height="180" rx="12" fill="#f2f7ff" stroke="#bcd4ff"/>
+      <circle cx="350" cy="55" r="26" fill="#fff" stroke="#2563eb"/>
+      <text x="350" y="51" text-anchor="middle" font-size="11" fill="#2563eb">bowl</text>
+      <text x="350" y="66" text-anchor="middle" font-size="12" font-weight="700" fill="#2563eb">count 1</text>
+      <rect x="60" y="105" width="250" height="72" rx="8" fill="#fff" stroke="#9ca3af"/>
+      <text x="75" y="127" font-size="12.5" fill="#1f2328">Cook A reads 1</text>
+      <text x="75" y="147" font-size="12.5" fill="#1f2328">A adds one, thinks 2</text>
+      <text x="75" y="167" font-size="12.5" fill="#b91c1c">A writes 2</text>
+      <rect x="390" y="105" width="250" height="72" rx="8" fill="#fff" stroke="#9ca3af"/>
+      <text x="405" y="127" font-size="12.5" fill="#1f2328">Cook B reads 1 (too soon!)</text>
+      <text x="405" y="147" font-size="12.5" fill="#1f2328">B adds one, thinks 2</text>
+      <text x="405" y="167" font-size="12.5" fill="#b91c1c">B writes 2</text>
+      <text x="350" y="98" text-anchor="middle" font-size="12.5" fill="#b91c1c" font-weight="700">Answer should be 3 — but both wrote 2</text>
+    </svg>
+    <p class="gil-cap">A too-low count frees a bowl still in use (crash); too-high never frees it (leak). That mess is a race condition.</p>
+  </div>
+
+  <p><strong>Two ways to prevent it:</strong> (1) give every object its own tiny lock — millions of locks, slow and fiddly; or (2) put one big lock around the whole kitchen so two cooks can never touch a tally at the same moment. Python picked #2. <strong>That one big lock IS the GIL.</strong></p>
+  <p><strong>ELI10 —</strong> rather than give every toy its own guard, Python hires one guard for the whole room. Simple and cheap — but only one kid can play at a time.</p>
+
+  <h3>3 · Threads — many cooks, one knife</h3>
+  <p>Threads are extra cooks in the <em>same</em> kitchen. Because of the one knife they can't chop simultaneously, so:</p>
+  <ul>
+    <li><strong>CPU job → threads don't help.</strong> Everyone wants the knife nonstop; they just queue.</li>
+    <li><strong>I/O job → threads DO help.</strong> A waiting cook hands the knife over while the kettle boils, so another thread grabs it and works.</li>
+  </ul>
+
+  <div class="gil-figure">
+    <svg viewBox="0 0 700 140" role="img" aria-label="Threads release the GIL during I/O waiting">
+      <rect x="20" y="15" width="660" height="110" rx="12" fill="#fff7f2" stroke="#f3c4ad"/>
+      <text x="40" y="40" font-size="12.5" font-weight="700" fill="#6b7280">One thread's I/O job:</text>
+      <rect x="40" y="50" width="70" height="24" fill="#c2410c"/><text x="75" y="67" text-anchor="middle" font-size="11" fill="#fff">work</text>
+      <rect x="112" y="50" width="220" height="24" fill="#e5e7eb"/><text x="222" y="67" text-anchor="middle" font-size="11" fill="#6b7280">waiting — knife is FREE</text>
+      <rect x="334" y="50" width="70" height="24" fill="#c2410c"/><text x="369" y="67" text-anchor="middle" font-size="11" fill="#fff">work</text>
+      <text x="40" y="102" font-size="12.5" font-weight="700" fill="#15803d">Another thread jumps into that free gap — that's the speedup.</text>
+    </svg>
+  </div>
+  <pre><code class="language-python"># I/O work: 4 jobs at once, threads share the free knife during waits
+import threading
+ts = [threading.Thread(target=slow_io) for _ in range(4)]
+[t.start() for t in ts]; [t.join() for t in ts]
+# measured: 0.8s sequential  ->  0.2s with threads  (4x faster)</code></pre>
+  <p><strong>ELI10 —</strong> four kettles boiling at once beats boiling them one after another — even with a single cook — because waiting is free.</p>
+
+  <h3>4 · Multiprocessing — CPU job? Build more kitchens</h3>
+  <p>One knife per kitchen, so for real CPU work don't add cooks — <strong>add whole kitchens.</strong> Each <strong>process</strong> is its own separate Python with its <strong>own knife (its own GIL)</strong>. Four kitchens on a four-core machine chop at the same time for real: <strong>true parallelism.</strong></p>
+
+  <div class="gil-figure">
+    <svg viewBox="0 0 700 130" role="img" aria-label="Four processes each with their own GIL">
+      <rect x="20" y="15" width="660" height="100" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+      <rect x="40" y="35" width="145" height="55" rx="8" fill="#fff" stroke="#15803d"/><text x="112" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">Kitchen 1</text><text x="112" y="78" text-anchor="middle" font-size="10" fill="#6b7280">own knife</text>
+      <rect x="200" y="35" width="145" height="55" rx="8" fill="#fff" stroke="#15803d"/><text x="272" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">Kitchen 2</text><text x="272" y="78" text-anchor="middle" font-size="10" fill="#6b7280">own knife</text>
+      <rect x="360" y="35" width="145" height="55" rx="8" fill="#fff" stroke="#15803d"/><text x="432" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">Kitchen 3</text><text x="432" y="78" text-anchor="middle" font-size="10" fill="#6b7280">own knife</text>
+      <rect x="520" y="35" width="145" height="55" rx="8" fill="#fff" stroke="#15803d"/><text x="592" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">Kitchen 4</text><text x="592" y="78" text-anchor="middle" font-size="10" fill="#6b7280">own knife</text>
+      <text x="350" y="108" text-anchor="middle" font-size="12.5" fill="#15803d" font-weight="700">All four chopping at the SAME time — genuinely parallel</text>
+    </svg>
+  </div>
+  <pre><code class="language-python"># CPU work: give each job its own kitchen (its own GIL)
+import multiprocessing
+with multiprocessing.Pool(4) as pool:
+    pool.map(heavy, range(4))
+# measured: threads gave NO speedup; processes were genuinely faster</code></pre>
+  <p><strong>The catch:</strong> separate kitchens don't share a fridge. Threads share memory for free; processes are isolated, so sending data between them means <strong>copying it</strong> (pickle → send → unpickle) through a queue or shared-memory block. More RAM, slower hand-offs. You trade easy sharing for real parallelism.</p>
+  <p><strong>ELI10 —</strong> two separate kitchens cook twice as fast, but passing a bowl between them means walking it next door, not just reaching over.</p>
+
+  <h3>5 · asyncio — one super-organised cook who never stands idle</h3>
+  <p>asyncio is the odd one out — <strong>it's not about the GIL at all.</strong> One cook, one kitchen, one knife, <strong>zero parallelism.</strong> Its trick is simply never wasting a waiting moment. The cook works until they hit an <code>await</code> ("I've started the kettle"), then says "go do something else" and the <strong>event loop</strong> starts the next job. It's <strong>cooperative</strong>: each job politely steps aside at <code>await</code> points.</p>
+
+  <div class="gil-figure">
+    <svg viewBox="0 0 700 120" role="img" aria-label="asyncio interleaves tasks with no idle gaps">
+      <rect x="20" y="15" width="660" height="90" rx="12" fill="#f5f3ff" stroke="#ddd6fe"/>
+      <text x="40" y="38" font-size="12.5" font-weight="700" fill="#6b7280">One thread, jobs interleaved — no idle gaps:</text>
+      <rect x="40"  y="48" width="120" height="26" fill="#7c3aed"/><text x="100" y="65" text-anchor="middle" font-size="11" fill="#fff">task A, await</text>
+      <rect x="162" y="48" width="120" height="26" fill="#9061f9"/><text x="222" y="65" text-anchor="middle" font-size="11" fill="#fff">task B, await</text>
+      <rect x="284" y="48" width="120" height="26" fill="#a988fb"/><text x="344" y="65" text-anchor="middle" font-size="11" fill="#fff">task C, await</text>
+      <rect x="406" y="48" width="120" height="26" fill="#7c3aed"/><text x="466" y="65" text-anchor="middle" font-size="11" fill="#fff">back to A</text>
+      <text x="40" y="96" font-size="12" fill="#7c3aed">Each task's waiting time is filled by another task. One cook, thousands of jobs.</text>
+    </svg>
+  </div>
+  <pre><code class="language-python"># thousands of I/O jobs, single thread, cooperative
+import asyncio
+async def slow_io_async():
+    await asyncio.sleep(0.2)          # the "start the kettle" moment
+
+async def main():
+    await asyncio.gather(*[slow_io_async() for _ in range(4)])
+asyncio.run(main())
+# measured: 0.2s for all 4 — same win as threads, far lighter</code></pre>
+  <p><strong>ELI10 —</strong> a great short-order cook starts the toast, cracks eggs while it toasts, flips bacon while the eggs cook — one person, never idle. Nothing happens <em>at the same time</em>; no second is wasted.</p>
+
+  <h3>6 · Caches — don't do the same work twice</h3>
+  <p>Totally different axis. Concurrency = doing many things at once. A <strong>cache</strong> = remembering an answer so you never redo it. In the kitchen: write the recipe result on a sticky note; next time someone asks, read the note instead of cooking again. Python's built-in is <code>functools.lru_cache</code>, which <strong>memoizes</strong> a function's output for each set of inputs:</p>
+  <pre><code class="language-python">from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def fib(n):
+    return n if n &lt; 2 else fib(n-1) + fib(n-2)
+
+fib(35)   # without cache: millions of repeats. With cache: instant.</code></pre>
+
+  <div class="gil-figure">
+    <svg viewBox="0 0 700 140" role="img" aria-label="Cache hit vs miss">
+      <rect x="20" y="15" width="660" height="110" rx="12" fill="#fffbeb" stroke="#fde68a"/>
+      <rect x="40" y="55" width="120" height="34" rx="6" fill="#fff" stroke="#b45309"/>
+      <text x="100" y="77" text-anchor="middle" font-size="12" fill="#b45309">call fib(35)</text>
+      <text x="172" y="77" font-size="15">-&gt;</text>
+      <rect x="200" y="55" width="130" height="34" rx="6" fill="#fff" stroke="#b45309"/>
+      <text x="265" y="77" text-anchor="middle" font-size="12" fill="#b45309">seen it before?</text>
+      <text x="350" y="47" font-size="12" fill="#15803d">yes</text>
+      <rect x="395" y="26" width="265" height="30" rx="6" fill="#dcfce7" stroke="#15803d"/>
+      <text x="527" y="46" text-anchor="middle" font-size="12" fill="#15803d">HIT — return saved answer instantly</text>
+      <text x="350" y="100" font-size="12" fill="#b91c1c">no</text>
+      <rect x="395" y="83" width="265" height="30" rx="6" fill="#fee2e2" stroke="#b91c1c"/>
+      <text x="527" y="103" text-anchor="middle" font-size="12" fill="#b91c1c">MISS — compute, then save it</text>
+    </svg>
+  </div>
+
+  <p><strong>Why "LRU"? Least Recently Used.</strong> <code>maxsize=128</code> keeps only the 128 most-recent answers; when full it throws out the one unused longest. That "which one do we throw out?" rule is an <strong>eviction policy</strong>, and there are several:</p>
+
+  <div class="gil-figure">
+    <table class="gil-table">
+      <tr><th>Policy</th><th>ELI10</th><th>Where you meet it</th></tr>
+      <tr><td><strong>LRU</strong> — Least Recently Used</td><td>Toss the note you haven't looked at in longest.</td><td><code>lru_cache</code>, browsers</td></tr>
+      <tr><td><strong>LFU</strong> — Least Frequently Used</td><td>Toss the note you've used <em>fewest</em> times.</td><td>CDNs, DB caches</td></tr>
+      <tr><td><strong>FIFO</strong> — First In First Out</td><td>Toss the oldest note, no matter what.</td><td>simple queues</td></tr>
+      <tr><td><strong>TTL</strong> — Time To Live</td><td>Notes expire after N seconds (stay fresh).</td><td>web/API caches, DNS</td></tr>
+    </table>
+  </div>
+
+  <p><strong>Other kinds of cache you'll hear about:</strong></p>
+  <ul>
+    <li><strong>In-memory</strong> (like <code>lru_cache</code>): fastest, but forgotten when the program stops.</li>
+    <li><strong>Disk cache</strong>: saved to a file, survives restarts, slower.</li>
+    <li><strong>Distributed cache</strong> (Redis / Memcached): one shared note-board many computers read from.</li>
+    <li><strong>CPU cache</strong> (L1/L2/L3): tiny ultra-fast memory inside the chip — the same idea, in hardware.</li>
+  </ul>
+  <p><strong>Two rules for <code>lru_cache</code>:</strong> inputs must be <strong>hashable</strong> (they're the note's label), and the function should be <strong>pure</strong> — same input always gives the same output. Caching something that depends on the time, randomness, or a database gives stale, wrong answers.</p>
+  <p><strong>ELI10 —</strong> if Grandma always asks the same maths question, write the answer on a sticky note once. Just don't cache "what time is it?" — that note goes stale instantly.</p>
+
+</div>
+
+<div id="tab-cheatsheet" class="ql-tab-content" style="display:none">
+
+  <style>
+  .gil-figure { background:#fbfbfa; border:1px solid #e5e7eb; border-radius:10px; padding:12px; margin:16px 0; }
+  .gil-table { width:100%; border-collapse:collapse; background:#fff; color:#1f2328; font-size:0.9rem; }
+  .gil-table th, .gil-table td { border:1px solid #e5e7eb; padding:8px 10px; text-align:left; vertical-align:top; }
+  .gil-table th { background:#f3f4f6; }
+  .gil-win { color:#15803d; font-weight:700; }
+  .gil-lose { color:#b91c1c; font-weight:700; }
+  </style>
+
+  <h3>The one table to remember: same 4 jobs — which tool wins?</h3>
+  <div class="gil-figure">
+    <table class="gil-table">
+      <tr><th>Tool</th><th>CPU job (busy)</th><th>I/O job (waiting)</th><th>Real parallel?</th></tr>
+      <tr><td>Plain (sequential)</td><td>slow</td><td>slow</td><td>no</td></tr>
+      <tr><td><strong>Threads</strong></td><td class="gil-lose">no help (GIL)</td><td class="gil-win">big help</td><td>no (shares 1 knife)</td></tr>
+      <tr><td><strong>asyncio</strong></td><td class="gil-lose">no help</td><td class="gil-win">big help, super light</td><td>no</td></tr>
+      <tr><td><strong>multiprocessing</strong></td><td class="gil-win">real speedup</td><td>works, heavier</td><td class="gil-win">YES (own knives)</td></tr>
+      <tr><td><strong>lru_cache</strong></td><td colspan="2" class="gil-win">skips the work entirely if you've done it before</td><td>—</td></tr>
+    </table>
+  </div>
+  <p><strong>Rule of thumb:</strong> CPU-bound → <strong>multiprocessing</strong>. Many waiting jobs → <strong>asyncio</strong>. A few waiting jobs → <strong>threads</strong>. Repeated work → <strong>cache it</strong>.</p>
+
+  <h3>Actual numbers (measured running the code in Deep dive)</h3>
+  <pre><code class="language-text">CPU sequential: 0.59 s
+CPU threads:    0.60 s   # no speedup — the GIL, exactly as predicted
+CPU processes:  0.46 s   # faster — real parallel kitchens
+IO  sequential: 0.80 s
+IO  threads:    0.20 s   # 4x — knife freed during waits
+IO  asyncio:    0.20 s   # 4x — one cook, never idle
+fib(35) cached: 0.00 s   # instant — never recomputed</code></pre>
+
+  <h3>Nice-to-know extras (bonus points in interviews)</h3>
+  <ul>
+    <li><strong>concurrent.futures</strong> — one tidy interface for both: <code>ThreadPoolExecutor</code> (I/O) and <code>ProcessPoolExecutor</code> (CPU). Swap one word to switch strategies.</li>
+    <li><strong>Mixing async + blocking code:</strong> never call a slow blocking function straight inside a coroutine (it freezes the whole loop). Use <code>loop.run_in_executor()</code> to shove it onto a thread.</li>
+    <li><strong>Locks aren't gone:</strong> the GIL protects Python's internals, not <em>your</em> logic. Your own shared counters still need <code>threading.Lock</code>.</li>
+    <li><strong>The GIL is being removed:</strong> Python <strong>3.13</strong> shipped an experimental <strong>free-threaded ("no-GIL") build</strong> — <strong>PEP 703</strong>. The first real path to true multi-thread parallelism in CPython.</li>
+    <li><strong>Only CPython has it:</strong> the GIL is an <em>implementation</em> detail. Jython and IronPython never had one.</li>
+  </ul>
+
+  <h3>Say-it-out-loud interview lines</h3>
+  <p><strong>What's the GIL?</strong> — "A lock in CPython that lets only one thread run Python code at a time. It exists because reference counting isn't thread-safe, and one lock is simpler than locking every object."</p>
+  <p><strong>Why does it matter?</strong> — "Threads don't give real parallelism for CPU work — they take turns. For CPU work I use multiprocessing; for I/O, threads or asyncio, because the GIL is released while waiting."</p>
+  <p><strong>asyncio vs threads?</strong> — "asyncio is single-threaded cooperative concurrency — best for thousands of I/O tasks. Threads are simpler for a handful."</p>
+  <p><strong>And caching?</strong> — "Different problem — not doing the same work twice. <code>lru_cache</code> memoizes pure functions; LRU evicts the least-recently-used entry when full."</p>
+  <div class="cpp-note"><strong>Interview move:</strong> give the short version, stop, and let them pull more out of you.</div>
 
 </div>
