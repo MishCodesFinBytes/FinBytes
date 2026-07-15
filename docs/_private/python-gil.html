@@ -5,71 +5,15 @@ date: 2026-04-21
 tags: [python, reference]
 permalink: /private/python-gil/
 tabs:
-  - id: concept
-    label: Concept
-  - id: elia12
-    label: ELIA12
-  - id: deepdive
-    label: "Deep dive"
+  - id: eli10
+    label: ELI10
+  - id: technical
+    label: Technical
   - id: cheatsheet
     label: "Cheat sheet"
 ---
 
-<div id="tab-concept" class="ql-tab-content">
-
-  <p>The Global Interpreter Lock is a mutex in CPython that prevents more than one thread from executing Python bytecode at the same time. It exists because CPython's memory management — specifically reference counting — is not thread-safe without it. Rather than lock every individual object, CPython locks the interpreter itself and releases the lock periodically so other threads can run.</p>
-
-  <p>The consequence is that Python threads do not give you parallel CPU execution for pure Python code. Two threads on an eight-core machine still take turns. The GIL is released during I/O operations and by C extensions that opt out (NumPy, for instance), which is why threading still helps for network-bound or I/O-bound work: while one thread blocks waiting for a socket, the GIL is free and another thread runs.</p>
-
-  <p>For CPU-bound work you need <code>multiprocessing</code>. Each process has its own interpreter and its own GIL, so you get true parallelism. The cost is higher memory and slower communication between processes — you pass data via queues or shared memory rather than shared objects.</p>
-
-  <p><code>asyncio</code> is different from both. It is single-threaded, single-process, and achieves concurrency through cooperative scheduling. Coroutines yield control at <code>await</code> points; the event loop runs something else while the coroutine waits. No parallelism, but very efficient for handling thousands of concurrent I/O-bound operations.</p>
-
-  <p>Rule of thumb: many concurrent I/O operations → asyncio. Simple I/O-bound scripts → threads. CPU-bound work → multiprocessing.</p>
-
-  <pre><code class="language-python">import asyncio, threading, multiprocessing
-
-# asyncio: concurrent I/O, single thread, cooperative
-async def fetch(url): ...
-
-# threading: I/O-bound, GIL released during I/O waits
-t = threading.Thread(target=do_io_work)
-
-# multiprocessing: CPU-bound, each process gets its own GIL
-p = multiprocessing.Process(target=crunch_numbers)</code></pre>
-
-  <p>Watch out: mixing asyncio and threads is possible but error-prone — use <code>loop.run_in_executor()</code> to run blocking code in a thread pool from an async context rather than calling blocking functions directly inside a coroutine.</p>
-
-</div>
-
-<div id="tab-elia12" class="ql-tab-content" style="display:none">
-
-  <p>Imagine a kitchen with one knife. Multiple chefs (threads) can all be in the kitchen, but only one can use the knife at a time. The GIL is that knife rule.</p>
-
-  <p>Python's threads don't run truly in parallel for Python code — they take turns. The lock releases when a thread is waiting for something (like a file download or database query), so threading still helps when you're mostly waiting, not computing.</p>
-
-  <p>If you need to actually run things at the same time on multiple CPU cores, you need separate processes — each gets its own kitchen, own knife. The downside is they can't easily share their cutting boards.</p>
-
-  <p><code>asyncio</code> is a third option: one chef, one knife, but the chef switches tasks the moment they're waiting for anything, so they're never standing around idle.</p>
-
-  <pre><code class="language-python">import asyncio
-
-async def fetch(n):
-    print(f"starting task {n}")
-    await asyncio.sleep(1)    # chef puts this task down and picks up another
-    print(f"finished task {n}")
-
-async def main():
-    # all three run "at the same time" — total wait is ~1s, not 3s
-    await asyncio.gather(fetch(1), fetch(2), fetch(3))
-
-asyncio.run(main())</code></pre>
-
-  <div class="cpp-note"><strong>The trick to remember:</strong> threads share the GIL (take turns), processes bypass it (truly parallel), asyncio ignores it (one thread, cooperative switching).</div>
-
-</div>
-
-<div id="tab-deepdive" class="ql-tab-content" style="display:none">
+<div id="tab-eli10" class="ql-tab-content">
 
   <style>
   /* Self-contained light figures + tables so colours stay readable in either
@@ -283,6 +227,220 @@ fib(35)   # without cache: millions of repeats. With cache: instant.</code></pre
   </ul>
   <p><strong>Two rules for <code>lru_cache</code>:</strong> inputs must be <strong>hashable</strong> (they're the note's label), and the function should be <strong>pure</strong> — same input always gives the same output. Caching something that depends on the time, randomness, or a database gives stale, wrong answers.</p>
   <p><strong>ELI10 —</strong> if Grandma always asks the same maths question, write the answer on a sticky note once. Just don't cache "what time is it?" — that note goes stale instantly.</p>
+
+</div>
+
+<div id="tab-technical" class="ql-tab-content" style="display:none">
+
+  <style>
+  .gil-step { font-size:0.72rem; font-weight:700; letter-spacing:0.05em; color:#c2410c; margin:24px 0 2px; }
+  .gil-link { background:#fff7ed; border-left:3px solid #c2410c; color:#1f2328; padding:9px 13px; border-radius:0 8px 8px 0; margin:14px 0; font-size:0.92rem; }
+  .gil-link strong { color:#9a3412; }
+  .gil-measured { display:block; background:#0b0e13; color:#3fb950; border:1px solid #252b34; border-radius:8px; padding:7px 12px; font-family:Menlo,Consolas,monospace; font-size:0.82rem; margin:14px 0; }
+  /* dark, self-contained figure cards for the terminal-style SVGs (theme-independent) */
+  .gil-fig-dark { background:#0f1115; border:1px solid #252b34; border-radius:10px; padding:12px; margin:16px 0; }
+  .gil-fig-dark svg { display:block; margin:0 auto; max-width:100%; height:auto; }
+  </style>
+
+  <p>One example the whole way down: a crawler pipeline that <strong>fetches</strong> URLs and <strong>scores</strong> the HTML. Each concept is motivated by the previous one — a single causal chain from why the GIL exists to when you route around it.</p>
+
+  <h3>The running example — a two-stage crawler pipeline</h3>
+  <p>Two stages, sitting on opposite ends of the spectrum. That contrast drives every decision that follows.</p>
+  <pre><code class="language-python">import time, hashlib
+
+URLS = [f"https://example.com/page/{i}" for i in range(8)]
+
+def fetch(url):        # STAGE 1 — I/O-bound: mostly blocked on a socket
+    time.sleep(0.1)    # stand-in for the network round trip
+    return f"&lt;html&gt;{url} " + ("word " * 5000) + "&lt;/html&gt;"
+
+def score(html):       # STAGE 2 — CPU-bound: 200 SHA-256 rounds, never blocks
+    h = html.encode()
+    for _ in range(200):
+        h = hashlib.sha256(h).digest()
+    return sum(h)</code></pre>
+  <p><code>fetch</code> spends ~99% of its wall-clock time <strong>blocked in a syscall</strong> waiting for bytes. <code>score</code> spends 100% of its time <strong>executing on a core</strong>. That distinction is the single fact that determines which concurrency primitive is correct.</p>
+  <span class="gil-measured">baseline &nbsp;sequential: [score(fetch(u)) for u in URLS] → 0.80 s</span>
+
+  <p class="gil-step">STEP 1 · THE ROOT CAUSE</p>
+  <h3>Reference counting, and why it isn't thread-safe</h3>
+  <p>Every <code>PyObject</code> begins with a header containing <code>ob_refcnt</code>. When <code>fetch</code> returns an HTML string and you bind it, CPython adjusts that field via the C macros <code>Py_INCREF</code> / <code>Py_DECREF</code>. When it reaches zero, <code>score</code>'s intermediate <code>bytes</code> objects are deallocated immediately — deterministic, not "someday" like a tracing GC.</p>
+  <pre><code class="language-python">import sys
+html = fetch(URLS[0])
+sys.getrefcount(html)   # -> 2  (your name + the temporary arg to getrefcount)
+alias = html
+sys.getrefcount(html)   # -> 3</code></pre>
+  <p>Now imagine two threads both drop their reference to the same <code>html</code> page at once. <code>Py_DECREF</code> is, at the C level, roughly <code>ob_refcnt = ob_refcnt - 1; if (ob_refcnt == 0) dealloc()</code> — a <strong>read-modify-write</strong>, not atomic. Interleave two of them:</p>
+
+  <div class="gil-fig-dark">
+    <svg viewBox="0 0 780 150" role="img" aria-label="Non-atomic decref race">
+      <rect x="10" y="10" width="760" height="130" rx="10" fill="#12161d" stroke="#252b34"/>
+      <text x="30" y="34" font-size="12.5" fill="#9aa4b2">ob_refcnt starts at <tspan fill="#79c0ff">2</tspan> — two threads each DECREF:</text>
+      <rect x="30" y="48" width="345" height="78" rx="7" fill="#161a21" stroke="#30363d"/>
+      <text x="45" y="68" font-size="12" fill="#e6edf3">T1: read 2</text>
+      <text x="45" y="88" font-size="12" fill="#e6edf3">T1: compute 2-1 = 1</text>
+      <text x="45" y="108" font-size="12" fill="#f85149">T1: write 1</text>
+      <rect x="405" y="48" width="345" height="78" rx="7" fill="#161a21" stroke="#30363d"/>
+      <text x="420" y="68" font-size="12" fill="#e6edf3">T2: read 2  — before T1 wrote</text>
+      <text x="420" y="88" font-size="12" fill="#e6edf3">T2: compute 2-1 = 1</text>
+      <text x="420" y="108" font-size="12" fill="#f85149">T2: write 1</text>
+      <text x="390" y="140" text-anchor="middle" font-size="12" fill="#f85149">Final refcnt = 1, should be 0. Object never freed — leak. (The mirror case frees a live object — use-after-free crash.)</text>
+    </svg>
+  </div>
+  <p>Fixing this per-object — a lock or atomic on every refcount touch — would put an atomic op on the hottest path in the interpreter (refcounts churn on virtually every bytecode). That was measured as prohibitively slow for the common single-threaded case.</p>
+  <p class="gil-link"><strong>→ leads to:</strong> instead of millions of fine-grained locks, CPython takes <strong>one</strong> coarse lock around the whole interpreter. That lock is the GIL.</p>
+
+  <p class="gil-step">STEP 2 · THE MECHANISM</p>
+  <h3>What the GIL actually is, and when it's released</h3>
+  <p>The GIL is a single mutex (today a condition-variable-backed struct in <code>ceval.c</code>) that a thread must hold to execute bytecode in the CPython eval loop. Consequences that fall straight out of that:</p>
+  <ul>
+    <li>Individual bytecodes and refcount updates are effectively serialized — no two threads mutate <code>ob_refcnt</code> concurrently, so Step 1's race can't happen.</li>
+    <li>A running thread doesn't hold the GIL forever. The eval loop checks a request flag on a cadence set by <code>sys.setswitchinterval()</code> — <strong>default 5 ms</strong> — and drops the GIL so another thread can run.</li>
+    <li>Crucially, the GIL is <strong>explicitly released around blocking C calls</strong>. <code>time.sleep</code>, socket reads, and file I/O wrap the blocking call in <code>Py_BEGIN_ALLOW_THREADS … Py_END_ALLOW_THREADS</code>. So during <code>fetch</code>'s wait, the GIL is free.</li>
+  </ul>
+  <pre><code class="language-python">import sys
+sys.getswitchinterval()   # -> 0.005   (5 ms time-slice for CPU-bound threads)</code></pre>
+  <div class="gil-fig-dark">
+    <svg viewBox="0 0 780 160" role="img" aria-label="GIL held during score, released during fetch">
+      <rect x="10" y="10" width="760" height="140" rx="10" fill="#12161d" stroke="#252b34"/>
+      <text x="30" y="34" font-size="12.5" fill="#9aa4b2">GIL ownership over time (one thread):</text>
+      <text x="30" y="62" font-size="12" fill="#d2a8ff">score(html) →</text>
+      <rect x="140" y="50" width="250" height="20" fill="#f0883e"/>
+      <text x="265" y="65" text-anchor="middle" font-size="11" fill="#0b0e13">HOLDS GIL (CPU, yields every 5ms)</text>
+      <text x="30" y="102" font-size="12" fill="#d2a8ff">fetch(url) →</text>
+      <rect x="140" y="90" width="45" height="20" fill="#f0883e"/>
+      <rect x="185" y="90" width="205" height="20" fill="#30363d"/>
+      <text x="287" y="105" text-anchor="middle" font-size="11" fill="#9aa4b2">GIL RELEASED (blocked in socket read)</text>
+      <rect x="390" y="90" width="45" height="20" fill="#f0883e"/>
+      <text x="30" y="140" font-size="11.5" fill="#3fb950">The grey gap is free time another thread can use. score() has no such gap.</text>
+    </svg>
+  </div>
+  <p class="gil-link"><strong>→ splits the problem in two:</strong> <code>fetch</code> hands the GIL back while blocked (so threads help), <code>score</code> never does (so threads are useless for it). The next three steps follow directly.</p>
+
+  <p class="gil-step">STEP 3 · CONSEQUENCE FOR I/O</p>
+  <h3>Threads — overlap the <code>fetch</code> waits</h3>
+  <p>Because <code>fetch</code> releases the GIL inside the blocking read, N threads' waits overlap. While thread A is parked in the syscall, thread B holds the GIL and issues its own request. You get near-linear speedup on Stage 1 despite only one thread ever running Python bytecode at a time.</p>
+  <pre><code class="language-python">from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor(8) as tp:
+    pages = list(tp.map(fetch, URLS))   # 8 waits overlap → ~0.1s not 0.8s</code></pre>
+  <p>But push the <em>same</em> pool at <code>score</code> and you get nothing: every thread wants the GIL continuously, so they round-robin on the 5 ms interval and finish no faster than sequential — plus a little context-switch overhead. This is the classic "threading didn't speed up my CPU code" result, working exactly as designed.</p>
+  <p class="gil-link"><strong>→ but:</strong> Stage 2 (<code>score</code>) is still the bottleneck and threads can't touch it. To parallelize CPU work you must escape the single GIL entirely.</p>
+
+  <p class="gil-step">STEP 4 · CONSEQUENCE FOR CPU</p>
+  <h3>Multiprocessing — N interpreters, N GILs</h3>
+  <p>Fork/spawn separate processes; each has its own interpreter, its own memory, and <strong>its own GIL</strong>. Now <code>score</code> runs truly in parallel across cores. The cost is the process boundary: arguments and return values cross it by <strong>pickling</strong> (serialize → pipe → unserialize), and each worker is a full interpreter (memory + startup cost).</p>
+  <pre><code class="language-python">from concurrent.futures import ProcessPoolExecutor
+with ProcessPoolExecutor(4) as pp:
+    scores = list(pp.map(score, pages))   # real parallelism across 4 cores</code></pre>
+  <p>Two practical corollaries of "separate memory": objects aren't shared (mutating a global in a worker doesn't affect the parent), and passing large payloads is expensive because they're copied through the pickle pipe. For big shared arrays you reach for <code>multiprocessing.shared_memory</code> to skip the copy.</p>
+  <p class="gil-link"><strong>→ combine 3 + 4:</strong> the pipeline wants threads for the I/O stage and processes for the CPU stage. <code>concurrent.futures</code> gives both the same <code>Executor.map</code> API, so you compose them.</p>
+  <pre><code class="language-python"># fetch on threads (I/O), then score on processes (CPU)
+with ThreadPoolExecutor(8) as tp:
+    pages = list(tp.map(fetch, URLS))
+with ProcessPoolExecutor(4) as pp:
+    scores = list(pp.map(score, pages))</code></pre>
+  <span class="gil-measured">measured &nbsp;sequential 0.80 s &nbsp;→&nbsp; threads+processes 0.14 s</span>
+
+  <p class="gil-step">STEP 5 · A DIFFERENT ANSWER FOR I/O</p>
+  <h3>asyncio — one thread, thousands of in-flight fetches</h3>
+  <p>Threads solve the I/O stage but cost an OS thread and ~5 ms-sliced scheduling per unit. When you need <em>thousands</em> of concurrent fetches, that overhead dominates. asyncio replaces OS-thread concurrency with a single-threaded <strong>event loop</strong> over non-blocking sockets (via <code>epoll</code>/<code>kqueue</code> selectors).</p>
+  <p>The mechanics link straight back to Step 2's "released while blocked": instead of the C layer releasing a lock during a blocking syscall, the coroutine <em>suspends itself</em> at <code>await</code> and hands control to the loop, which registers the socket with the selector and resumes the coroutine when data is ready. No GIL contention because there's only one thread; concurrency is cooperative, not preemptive.</p>
+  <pre><code class="language-python">import asyncio, aiohttp
+
+async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.text()          # suspend here; loop runs other fetches
+
+async def main():
+    async with aiohttp.ClientSession() as s:
+        return await asyncio.gather(*[fetch(s, u) for u in URLS])</code></pre>
+  <p>Two hazards, both consequences of "single thread, cooperative": (1) a <code>score</code>-style CPU loop inside a coroutine <strong>blocks the entire loop</strong> — nothing else progresses until it yields; (2) a synchronous <code>requests.get</code> call has no <code>await</code>, so it also stalls everything. The bridge back to Steps 3–4 is <code>run_in_executor</code>, which offloads blocking/CPU work to a thread or process pool:</p>
+  <pre><code class="language-python">loop = asyncio.get_running_loop()
+# push the CPU stage onto processes without blocking the loop
+result = await loop.run_in_executor(process_pool, score, html)</code></pre>
+  <p class="gil-link"><strong>→ orthogonal optimization:</strong> all of Steps 3–5 are about doing many things concurrently. None of them help if you keep recomputing the <em>same</em> result. That's caching.</p>
+
+  <p class="gil-step">STEP 6 · A DIFFERENT AXIS ENTIRELY</p>
+  <h3>Caching — eliminate the work instead of parallelizing it</h3>
+  <p>Concurrency divides the work across time/cores. A cache <strong>removes</strong> repeated work. If the crawler sees the same page twice, <code>score</code> is a <strong>pure function</strong> of its input — same HTML, same result — so it's a textbook memoization target.</p>
+  <pre><code class="language-python">from functools import lru_cache
+
+@lru_cache(maxsize=256)
+def score(html):        # must be hashable args + deterministic output
+    ...
+
+# after processing 8 unique pages twice:
+score.cache_info()      # CacheInfo(hits=8, misses=8, maxsize=256, currsize=8)</code></pre>
+  <p>Mechanically, <code>lru_cache</code> is a dict keyed by the (hashable) arguments, plus a doubly-linked recency list. On a <strong>hit</strong> it returns the stored value in O(1); on a <strong>miss</strong> it computes, stores, and — if <code>currsize == maxsize</code> — <strong>evicts the least-recently-used</strong> entry. That policy is one choice among several, each mapping to a real system:</p>
+  <div class="gil-figure">
+    <table class="gil-table">
+      <tr><th>Policy</th><th>Evicts</th><th>Cost / structure</th><th>Seen in</th></tr>
+      <tr><td><strong>LRU</strong></td><td>least-recently-used</td><td>dict + recency list, O(1)</td><td><code>functools.lru_cache</code></td></tr>
+      <tr><td><strong>LFU</strong></td><td>least-frequently-used</td><td>needs frequency counts</td><td>CDN edge caches</td></tr>
+      <tr><td><strong>FIFO</strong></td><td>oldest inserted</td><td>plain queue</td><td>simple ring buffers</td></tr>
+      <tr><td><strong>TTL</strong></td><td>entries past an expiry</td><td>timestamp per entry</td><td>DNS, HTTP <code>Cache-Control</code></td></tr>
+    </table>
+  </div>
+  <h4>Where the cache physically lives</h4>
+  <ul>
+    <li><strong>In-process</strong> (<code>lru_cache</code>, <code>functools.cache</code>): a Python dict on the heap. Fastest, but <strong>not shared across the Step-4 processes</strong> — each worker has its own, and it dies with the process.</li>
+    <li><strong>On disk</strong> (<code>shelve</code>, <code>diskcache</code>): survives restarts, slower, serialized.</li>
+    <li><strong>Distributed</strong> (Redis / Memcached): one store many workers/machines share — the right answer once you've split into processes and want a <em>shared</em> cache with TTL eviction.</li>
+    <li><strong>Hardware</strong> (CPU L1/L2/L3): the same locality principle in silicon; the <code>score</code> hash loop is fast partly because its working set fits in L1.</li>
+  </ul>
+  <p>Correctness caveats are just the definition of memoization enforced: keys must be <strong>hashable</strong> (they index the dict) and the function must be <strong>pure</strong>. Caching <code>fetch</code> directly would be wrong unless you add a TTL — the page can change under you, so you'd want <code>Cache-Control</code>/ETag semantics rather than an unbounded <code>lru_cache</code>.</p>
+
+  <h3>How it all links — one causal chain</h3>
+  <div class="gil-fig-dark">
+    <svg viewBox="0 0 820 250" role="img" aria-label="Concept dependency chain">
+      <defs>
+        <marker id="gilarrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#f0883e"/>
+        </marker>
+      </defs>
+      <g font-size="12.5" fill="#e6edf3" text-anchor="middle">
+        <rect x="20"  y="20" width="200" height="46" rx="8" fill="#161a21" stroke="#f0883e"/>
+        <text x="120" y="39">refcount is a non-atomic</text><text x="120" y="55">read-modify-write</text>
+        <rect x="300" y="20" width="200" height="46" rx="8" fill="#161a21" stroke="#f0883e"/>
+        <text x="400" y="39">one coarse lock is cheaper</text><text x="400" y="55">than per-object locks — GIL</text>
+        <rect x="580" y="20" width="220" height="46" rx="8" fill="#161a21" stroke="#f0883e"/>
+        <text x="690" y="39">GIL released on blocking I/O,</text><text x="690" y="55">held during pure CPU</text>
+
+        <rect x="90"  y="120" width="200" height="46" rx="8" fill="#161a21" stroke="#3fb950"/>
+        <text x="190" y="139">I/O → threads or asyncio</text><text x="190" y="155">(overlap the waits)</text>
+        <rect x="520" y="120" width="220" height="46" rx="8" fill="#161a21" stroke="#3fb950"/>
+        <text x="630" y="139">CPU → multiprocessing</text><text x="630" y="155">(N interpreters, N GILs)</text>
+
+        <rect x="300" y="200" width="220" height="40" rx="8" fill="#161a21" stroke="#d29922"/>
+        <text x="410" y="225">orthogonal: cache repeated work</text>
+
+        <line x1="220" y1="43" x2="298" y2="43" stroke="#f0883e" stroke-width="2" marker-end="url(#gilarrow)"/>
+        <line x1="500" y1="43" x2="578" y2="43" stroke="#f0883e" stroke-width="2" marker-end="url(#gilarrow)"/>
+        <line x1="660" y1="66" x2="230" y2="118" stroke="#3fb950" stroke-width="1.6" marker-end="url(#gilarrow)"/>
+        <line x1="700" y1="66" x2="640" y2="118" stroke="#3fb950" stroke-width="1.6" marker-end="url(#gilarrow)"/>
+        <line x1="300" y1="150" x2="300" y2="205" stroke="#d29922" stroke-width="1.4" marker-end="url(#gilarrow)"/>
+        <line x1="560" y1="150" x2="520" y2="205" stroke="#d29922" stroke-width="1.4" marker-end="url(#gilarrow)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="gil-figure">
+    <table class="gil-table">
+      <tr><th>Stage</th><th>Bound by</th><th>GIL released?</th><th>Right tool</th><th>Why</th></tr>
+      <tr><td><code>fetch</code></td><td>network I/O</td><td class="gil-win">yes (in syscall)</td><td>threads / asyncio</td><td>waits overlap while GIL is free</td></tr>
+      <tr><td><code>score</code></td><td>CPU</td><td class="gil-lose">no</td><td>multiprocessing</td><td>needs multiple GILs for real parallelism</td></tr>
+      <tr><td>repeat calls</td><td>redundancy</td><td>—</td><td>cache (LRU/TTL)</td><td>removes the work rather than spreading it</td></tr>
+    </table>
+  </div>
+
+  <h3>Deeper cuts</h3>
+  <ul>
+    <li><strong>GIL scheduling internals:</strong> pre-3.2 used an opcode-count check (bad for latency); 3.2+ uses the time-based <code>gil_drop_request</code> flag with the <code>setswitchinterval</code> cadence. There's still a known "convoy effect" where a CPU thread starves an I/O thread that keeps re-acquiring.</li>
+    <li><strong>Free-threaded CPython (PEP 703):</strong> 3.13 ships an experimental <code>--disable-gil</code> build. To keep refcounting safe without the GIL it uses biased reference counting, per-object locks, and immortal objects for common singletons. This is the real path to removing the lock this whole document is about.</li>
+    <li><strong>Sub-interpreters (PEP 684 / 734):</strong> 3.12+ gives each interpreter its own GIL within one process — a middle ground between threads and multiprocessing, with an <code>interpreters</code> module in 3.13+.</li>
+    <li><strong>The GIL is a CPython detail:</strong> Jython (JVM) and IronPython (.NET) never had one; PyPy has one but with different release behaviour.</li>
+    <li><strong>C extensions opt out:</strong> NumPy, hashlib, zlib and friends drop the GIL around long C computations, which is why some "CPU" work in Python is already parallel across threads.</li>
+  </ul>
+  <p style="color:#6b7280;font-size:0.85rem">Timings measured on one machine: sequential 0.80 s → threads+processes 0.14 s → cached second pass 0.003 s (8 hits / 8 misses).</p>
 
 </div>
 
