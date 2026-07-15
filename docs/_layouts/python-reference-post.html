@@ -14,8 +14,14 @@ layout: page
   </header>
 
   <div class="ql-tabs">
+    {% if page.tabs %}
+      {% for t in page.tabs %}
+    <button class="ql-tab-btn{% if forloop.first %} active{% endif %}" onclick="showTab('{{ t.id }}', this)">{{ t.label }}</button>
+      {% endfor %}
+    {% else %}
     <button class="ql-tab-btn active" onclick="showTab('concept', this)">Concept</button>
     <button class="ql-tab-btn" onclick="showTab('elia12', this)">ELIA12</button>
+    {% endif %}
   </div>
 
   {{ content }}
