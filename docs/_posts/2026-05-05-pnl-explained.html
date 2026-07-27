@@ -58,6 +58,8 @@ permalink: "/math-finance/pnl-explained/"
   <tr><td><strong>Dirty P&amp;L</strong></td><td>The sum of all of it &mdash; the actual change in the book&rsquo;s value. This is what hits the ledger.</td><td>Actual P&amp;L, total P&amp;L</td></tr>
 </table>
 
+<p><strong>Trade-lifecycle events</strong> &mdash; amendments, cancels, novations, terminations, and maturities/exercises &mdash; are broken out separately for the same reason new trades are: a position stepping into or out of the book is <em>not</em> a market move. Letting any of them leak into clean P&amp;L corrupts the very number risk is trying to predict (a classic source of unexplained P&amp;L &mdash; see &sect;7).</p>
+
 <p><strong>Why the distinction earns its keep:</strong> a desk can look flat on dirty P&amp;L while its clean P&amp;L was deeply negative, rescued only by aggressive new-trade margin. Risk cares about <em>clean</em> P&amp;L, because that&rsquo;s the number their risk model is supposed to predict. Finance cares about <em>dirty</em> P&amp;L, because that&rsquo;s what the firm actually earned.</p>
 
 <hr>
@@ -86,7 +88,20 @@ permalink: "/math-finance/pnl-explained/"
   <tr><td><strong>Unexplained</strong></td><td>&mdash;</td><td>Everything the sensitivities didn&rsquo;t capture (see &sect;7).</td></tr>
 </table>
 
-<p>For a linear rates or cash book the same idea uses <strong>DV01 / PV01</strong> (delta of price to a 1bp rate move), <strong>CS01</strong> (to credit spread), and convexity instead of the option Greeks &mdash; the machinery is identical, only the risk factors change.</p>
+<p>The option Greeks above are just one asset class&rsquo;s version of the expansion. Every desk runs the identical machinery on its own risk factors:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Asset class</th><th>Predicted-P&amp;L terms</th></tr>
+  <tr><td><strong>Spot / equity</strong></td><td>&delta; &middot; &Delta;S &nbsp;+&nbsp; &frac12; &middot; &gamma; &middot; &Delta;S&sup2;</td></tr>
+  <tr><td><strong>Rates</strong></td><td>&Sigma;<sub>k</sub> bucketed <strong>PV01<sub>k</sub></strong> &middot; &Delta;curve<sub>k</sub> &nbsp;(<em>key-rate, not a single parallel shift</em>) &nbsp;+&nbsp; &frac12; &middot; convexity &middot; &Delta;r&sup2;</td></tr>
+  <tr><td><strong>Volatility</strong></td><td>&nu; &middot; &Delta;&sigma; &nbsp;+&nbsp; <strong>vanna</strong> (&part;&sup2;V/&part;S&part;&sigma;) &middot; &Delta;S&middot;&Delta;&sigma; &nbsp;+&nbsp; <strong>volga</strong> (&part;&sup2;V/&part;&sigma;&sup2;) &middot; &Delta;&sigma;&sup2;</td></tr>
+  <tr><td><strong>Credit</strong></td><td><strong>CS01</strong> &middot; &Delta;spread &nbsp;(per name / per tenor bucket)</td></tr>
+  <tr><td><strong>FX</strong></td><td>&delta;<sub>FX</sub> &middot; &Delta;FX on cross-currency exposure</td></tr>
+  <tr><td><strong>Time</strong></td><td>&Theta; &middot; &Delta;t &mdash; theta, carry, and roll-down along the curve</td></tr>
+  <tr><td><strong>Cross-effects</strong></td><td>cross-gamma between factors (rate &times; FX, spot &times; vol, &hellip;)</td></tr>
+</table>
+
+<p>Two details mark out someone who has actually run this: rates P&amp;L is attributed on a <strong>bucketed key-rate</strong> basis, never a single parallel DV01 &mdash; a curve steepening has near-zero parallel move but plenty of P&amp;L; and the vol bucket is more than vega &mdash; naming <strong>vanna</strong> and <strong>volga</strong> shows you know exactly where a first-order explain springs a leak.</p>
 
 <hr>
 
@@ -142,18 +157,43 @@ permalink: "/math-finance/pnl-explained/"
 <p>Unexplained P&amp;L is the gap between the full reprice and the sum of the risk-based buckets. It is the single most-scrutinised number in P&amp;L attribution, because a large or persistent residual means your risk model doesn&rsquo;t describe your book. Common sources:</p>
 
 <ul>
-  <li><strong>Higher-order terms</strong> &mdash; the Taylor series was truncated. Third-order (speed), and cross-terms like <strong>vanna</strong> (&part;&delta;/&part;&sigma;) and <strong>volga</strong> (&part;&nu;/&part;&sigma;) aren&rsquo;t in a first-order explain.</li>
-  <li><strong>Cross-gamma</strong> &mdash; spot <em>and</em> vol moved together; the pure delta/vega buckets miss the interaction.</li>
-  <li><strong>Vol surface</strong> &mdash; a single vega assumes a parallel shift; real skew/term-structure moves need bucketed vega.</li>
-  <li><strong>Unmapped risk factors</strong> &mdash; a basis, a dividend, a correlation the risk model doesn&rsquo;t carry.</li>
-  <li><strong>Timing / snapping</strong> &mdash; front office and risk marked at slightly different times or sources.</li>
+  <li><strong>Higher-order terms</strong> &mdash; the Taylor series was truncated, or the move was simply too large for a first/second-order expansion to hold. Third-order (speed) and beyond are dropped.</li>
+  <li><strong>Cross-gamma / cross-effects</strong> &mdash; spot <em>and</em> vol (or rate <em>and</em> FX) moved together; the pure single-factor buckets miss the interaction.</li>
+  <li><strong>Vanna and volga</strong> &mdash; a first-order vega alone can&rsquo;t explain P&amp;L when spot and vol both move (vanna, &part;&sup2;V/&part;S&part;&sigma;) or vol moves a lot (volga, &part;&sup2;V/&part;&sigma;&sup2;).</li>
+  <li><strong>Discontinuous payoffs</strong> &mdash; barriers, digitals, and callables near an exercise boundary, where the pricing function isn&rsquo;t smooth and a Taylor expansion breaks down entirely.</li>
+  <li><strong>Vol surface</strong> &mdash; a single vega assumes a parallel shift; real skew / term-structure moves need bucketed vega.</li>
+  <li><strong>Unmapped risk factors</strong> &mdash; a basis, dividend, seasonality, or correlation the risk model doesn&rsquo;t carry.</li>
+  <li><strong>Stale / off-market marks &amp; bad fixings</strong> &mdash; a wrong input, not a wrong model.</li>
+  <li><strong>Snap-time mismatch</strong> &mdash; risk struck at the T&minus;1 close but P&amp;L at the T close, or intraday vs EOD; the two series see different market data.</li>
+  <li><strong>Trade-population mis-tagging</strong> &mdash; a new trade leaking into market P&amp;L (it belonged in the new-trade bucket), or an amend double-counted.</li>
+  <li><strong>Model / library / config change</strong> &mdash; a pricer version bump or a parameter change between the two runs moves value with no market move at all.</li>
+  <li><strong>Curve reconstruction differences</strong> &mdash; two systems bootstrap or interpolate the same curve slightly differently.</li>
+  <li><strong>Missing cashflows, resets, or fixings</strong> &mdash; a coupon or reset not picked up on the day it happens.</li>
 </ul>
 
 <p>A clean way to shrink the residual is a <strong>full-reval attribution</strong>: reprice moving one factor at a time (spot only, then +vol, then +time) so each bucket is itself a mini full-reval and the &ldquo;unexplained&rdquo; collapses to genuine cross-effects and truncation.</p>
 
 <hr>
 
-<h2>8. Carry, theta, and funding &mdash; the P&amp;L of doing nothing</h2>
+<h2>8. Risk explain &mdash; the sibling of P&amp;L explain</h2>
+
+<p>Most candidates prepare P&amp;L explain and stop there. The same discipline applies to <strong>risk</strong>: when your Greeks (or DV01s, vegas) change between two snapshots, you decompose <em>that</em> change the same way. Risk is state-dependent, so it drifts even with no trading &mdash; and a good desk explains why. Decompose &Delta;risk between two runs into:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Bucket</th><th>What moved the risk</th></tr>
+  <tr><td><strong>Trade activity</strong></td><td>New, amended, matured, or exercised trades adding or removing sensitivity.</td></tr>
+  <tr><td><strong>Market moves</strong></td><td>Risk is state-dependent &mdash; <strong>gamma means delta moves on its own</strong> as spot moves; vanna means delta moves as vol moves.</td></tr>
+  <tr><td><strong>Passage of time</strong></td><td>Theta acting on the Greeks themselves &mdash; a day&rsquo;s decay reshapes delta and gamma, not just value.</td></tr>
+  <tr><td><strong>Model / config change</strong></td><td>A pricer or parametrisation change that reshapes the sensitivities.</td></tr>
+  <tr><td><strong>Static data change</strong></td><td>A curve definition or instrument reference-data change.</td></tr>
+  <tr><td><strong>Residual</strong></td><td>Treated with the same discipline as unexplained P&amp;L (&sect;7) &mdash; investigated, not ignored.</td></tr>
+</table>
+
+<p>The tell that you&rsquo;ve actually done this: pointing out that <strong>gamma makes delta move without anyone trading</strong>. That one sentence separates a candidate who has run a risk explain from one who has only read about it.</p>
+
+<hr>
+
+<h2>9. Carry, theta, and funding &mdash; the P&amp;L of doing nothing</h2>
 
 <p>Even with markets frozen, a book&rsquo;s value drifts overnight. That drift is <strong>carry</strong> (a.k.a. the theta/time bucket for options):</p>
 
@@ -167,7 +207,7 @@ permalink: "/math-finance/pnl-explained/"
 
 <hr>
 
-<h2>9. Regulatory view: FRTB P&amp;L Attribution (PLA)</h2>
+<h2>10. Regulatory view: FRTB P&amp;L Attribution (PLA)</h2>
 
 <p>Under the Basel <strong>FRTB</strong> framework, a desk that wants to use its own internal model (IMA) instead of the punitive standardised approach must prove its risk model actually tracks its front-office P&amp;L. The <strong>P&amp;L Attribution (PLA)</strong> test compares two daily series over a trailing window (250 business days):</p>
 
@@ -196,7 +236,7 @@ permalink: "/math-finance/pnl-explained/"
 
 <hr>
 
-<h2>10. Economic vs accounting P&amp;L</h2>
+<h2>11. Economic vs accounting P&amp;L</h2>
 
 <p>One last split, because it trips people up. The same trade can show two different P&amp;Ls depending on the lens:</p>
 
@@ -211,7 +251,7 @@ permalink: "/math-finance/pnl-explained/"
 
 <hr>
 
-<h2>11. Python: decompose the option P&amp;L</h2>
+<h2>12. Python: decompose the option P&amp;L</h2>
 
 <p>The whole worked example in code &mdash; price and Greeks under Black-Scholes, then a first-order attribution against a full reprice:</p>
 
@@ -267,7 +307,7 @@ UNEXPLAINED-0.0082</code></pre>
 
 <hr>
 
-<h2>12. The one table to keep</h2>
+<h2>13. The one table to keep</h2>
 
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
   <tr><th>P&amp;L flavour</th><th>Includes</th><th>Question it answers</th><th>Owned by</th></tr>
