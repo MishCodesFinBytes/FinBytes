@@ -1,0 +1,284 @@
+---
+layout: post
+title: "P&L Explained: Clean, Dirty, Attributed, and Unexplained"
+date: 2026-05-05
+tags: [math, finance, pnl, attribution, greeks, frtb, risk, mark-to-market, quant-lab]
+categories:
+- Math / Finance
+section: math-finance
+permalink: "/math-finance/pnl-explained/"
+---
+
+<p>&ldquo;What&rsquo;s your P&amp;L?&rdquo; sounds like one number. It isn&rsquo;t. A trading book has half a dozen legitimate P&amp;L figures that answer different questions, and confusing them is how desks, risk, finance, and product control end up arguing about the &ldquo;same&rdquo; number that never reconciles. This post walks through the main variations &mdash; what each one includes, why it exists, and how they fit together &mdash; then decomposes one option position every way at once.</p>
+
+<hr>
+
+<h2>1. What &ldquo;P&amp;L&rdquo; actually measures</h2>
+
+<p>At heart, profit and loss is the change in the value of what you hold plus any cash that moved:</p>
+
+<p style="margin-left:2em;">
+  P&amp;L<sub>today</sub> = (Portfolio value<sub>today</sub> &minus; Portfolio value<sub>yesterday</sub>) + Cash flows<sub>today</sub>
+</p>
+
+<p>Every variation below is just a different rule for <em>which</em> value changes and cash flows you count. The two axes that generate most of the vocabulary are:</p>
+
+<ul>
+  <li><strong>Has the position been closed?</strong> &mdash; realized vs unrealized.</li>
+  <li><strong>What caused the change?</strong> &mdash; market moves only (clean) vs everything, including new trades and fees (dirty).</li>
+</ul>
+
+<hr>
+
+<h2>2. Realized vs unrealized P&amp;L</h2>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Type</th><th>Definition</th><th>Example</th></tr>
+  <tr><td><strong>Realized</strong></td><td>Locked in by closing a position &mdash; the cash is real and can&rsquo;t change.</td><td>Bought at 100, sold at 105 &rarr; <strong>+5 realized</strong>, done.</td></tr>
+  <tr><td><strong>Unrealized</strong> (mark-to-market)</td><td>The paper gain/loss on positions still open, valued at today&rsquo;s market price.</td><td>Bought at 100, still holding, marked at 103 &rarr; <strong>+3 unrealized</strong>, will move tomorrow.</td></tr>
+</table>
+
+<p>Total P&amp;L = realized + unrealized. The split matters because unrealized P&amp;L is an <em>estimate</em> &mdash; it depends entirely on your marks. A book can show a large unrealized profit that evaporates the moment you try to sell into a thin market. That gap between mark and achievable price is exactly what reserves (bid-offer, liquidity, model reserves) are meant to cover.</p>
+
+<hr>
+
+<h2>3. The daily P&amp;L identity: clean vs dirty</h2>
+
+<p>Overnight, three different things change a book&rsquo;s value. Product control decomposes the total (&ldquo;dirty&rdquo;) P&amp;L into them:</p>
+
+<p style="margin-left:2em;">
+  <strong>Dirty P&amp;L</strong> = <span style="color:#2a7ae2;">Clean (market) P&amp;L</span> + <span style="color:#15803d;">New-trade P&amp;L</span> + <span style="color:#b45309;">Fees, funding &amp; adjustments</span>
+</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Component</th><th>What it is</th><th>Also called</th></tr>
+  <tr><td><strong>Clean P&amp;L</strong></td><td>Revalue <em>yesterday&rsquo;s</em> positions with <em>today&rsquo;s</em> market data. No new trades, no fees. Isolates pure market movement.</td><td>Market P&amp;L, hypothetical P&amp;L</td></tr>
+  <tr><td><strong>New-trade P&amp;L</strong></td><td>Value created (or destroyed) by trades executed today &mdash; mostly the bid-offer captured or crossed at execution.</td><td>Day-1 P&amp;L, DoD trade P&amp;L</td></tr>
+  <tr><td><strong>Fees / funding / adjustments</strong></td><td>Commissions, brokerage, funding cost of the position, reserve changes, valuation adjustments (XVA).</td><td>&mdash;</td></tr>
+  <tr><td><strong>Dirty P&amp;L</strong></td><td>The sum of all of it &mdash; the actual change in the book&rsquo;s value. This is what hits the ledger.</td><td>Actual P&amp;L, total P&amp;L</td></tr>
+</table>
+
+<p><strong>Why the distinction earns its keep:</strong> a desk can look flat on dirty P&amp;L while its clean P&amp;L was deeply negative, rescued only by aggressive new-trade margin. Risk cares about <em>clean</em> P&amp;L, because that&rsquo;s the number their risk model is supposed to predict. Finance cares about <em>dirty</em> P&amp;L, because that&rsquo;s what the firm actually earned.</p>
+
+<hr>
+
+<h2>4. P&amp;L attribution: explaining the clean P&amp;L</h2>
+
+<p>Clean P&amp;L tells you the market moved you by, say, +$1.65. <strong>P&amp;L attribution</strong> (&ldquo;P&amp;L explain,&rdquo; PAA) tells you <em>why</em> &mdash; how much came from spot, from volatility, from the passage of time. For a derivatives book it is a Taylor expansion of the pricing function in its risk factors, i.e. the <a href="{{ "/math-finance/greeks/" | relative_url }}">Greeks</a>:</p>
+
+<p style="margin-left:2em;">
+  &Delta;V &asymp;
+  <span style="color:#2a7ae2;">&delta; &middot; &Delta;S</span>
+  + <span style="color:#7c3aed;">&frac12; &middot; &gamma; &middot; &Delta;S&sup2;</span>
+  + <span style="color:#15803d;">&nu; &middot; &Delta;&sigma;</span>
+  + <span style="color:#b45309;">&Theta; &middot; &Delta;t</span>
+  + <span style="color:#6b7280;">&rho; &middot; &Delta;r + &hellip;</span>
+  + <span style="color:#b91c1c;">unexplained</span>
+</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Attribution bucket</th><th>Greek</th><th>Answers</th></tr>
+  <tr><td>Delta P&amp;L (directional)</td><td>&delta;</td><td>How much did I make from the underlying moving?</td></tr>
+  <tr><td>Gamma P&amp;L (convexity)</td><td>&gamma;</td><td>How much extra because that move was large / my delta changed?</td></tr>
+  <tr><td>Vega P&amp;L</td><td>&nu;</td><td>How much from implied volatility changing?</td></tr>
+  <tr><td>Theta / carry P&amp;L</td><td>&Theta;</td><td>How much did I bleed (or earn) just from a day passing?</td></tr>
+  <tr><td>Rho P&amp;L</td><td>&rho;</td><td>How much from the discount rate moving?</td></tr>
+  <tr><td><strong>Unexplained</strong></td><td>&mdash;</td><td>Everything the sensitivities didn&rsquo;t capture (see &sect;7).</td></tr>
+</table>
+
+<p>For a linear rates or cash book the same idea uses <strong>DV01 / PV01</strong> (delta of price to a 1bp rate move), <strong>CS01</strong> (to credit spread), and convexity instead of the option Greeks &mdash; the machinery is identical, only the risk factors change.</p>
+
+<hr>
+
+<h2>5. Running example: one option, one day</h2>
+
+<p>Take the at-the-money call from the <a href="{{ "/math-finance/greeks/" | relative_url }}">Greeks post</a> and hold it overnight. Start-of-day inputs and the Black-Scholes Greeks:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; text-align:center;">
+  <tr><th colspan="2">Start of day (t<sub>0</sub>)</th><th colspan="2">Greeks at t<sub>0</sub></th></tr>
+  <tr><td>S (spot)</td><td>$100</td><td>Delta &delta;</td><td>0.6368</td></tr>
+  <tr><td>K (strike)</td><td>$100</td><td>Gamma &gamma;</td><td>0.0188</td></tr>
+  <tr><td>T (expiry)</td><td>1.00 yr</td><td>Vega &nu; (per 1 vol pt)</td><td>0.3752</td></tr>
+  <tr><td>r (rate)</td><td>5%</td><td>Theta &Theta; (per day)</td><td>&minus;0.0255</td></tr>
+  <tr><td>&sigma; (vol)</td><td>20%</td><td>Price C<sub>0</sub></td><td><strong>$10.4506</strong></td></tr>
+</table>
+
+<p>Overnight the market moves: <strong>spot 100 &rarr; 102</strong> (&Delta;S = +2), <strong>implied vol 20% &rarr; 21%</strong> (&Delta;&sigma; = +1 pt), and <strong>one day passes</strong> (&Delta;t = 1/252). Re-pricing the option with Black-Scholes at the new inputs gives:</p>
+
+<p style="margin-left:2em;">C<sub>1</sub> = <strong>$12.1034</strong> &nbsp;&rarr;&nbsp; <strong>Clean P&amp;L (full revaluation) = 12.1034 &minus; 10.4506 = +$1.6528</strong></p>
+
+<p>That is the &ldquo;truth&rdquo; &mdash; a full reprice. Now explain it with the Greeks.</p>
+
+<hr>
+
+<h2>6. Predicted P&amp;L vs actual P&amp;L</h2>
+
+<p>Two ways to get the clean P&amp;L, and the desk computes both:</p>
+
+<ul>
+  <li><strong>Actual (full revaluation) P&amp;L</strong> &mdash; reprice the position from scratch at today&rsquo;s market data. Exact, but a black box: it doesn&rsquo;t tell you <em>why</em>.</li>
+  <li><strong>Predicted (risk-based, Taylor) P&amp;L</strong> &mdash; multiply yesterday&rsquo;s Greeks by today&rsquo;s market moves. Transparent and additive, but approximate.</li>
+</ul>
+
+<p>Plugging the moves into the expansion:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Bucket</th><th>Calculation</th><th>P&amp;L</th></tr>
+  <tr><td>Delta P&amp;L</td><td>0.6368 &times; 2</td><td style="text-align:right;">+1.2737</td></tr>
+  <tr><td>Gamma P&amp;L</td><td>&frac12; &times; 0.0188 &times; 2&sup2;</td><td style="text-align:right;">+0.0375</td></tr>
+  <tr><td>Vega P&amp;L</td><td>0.3752 &times; 1</td><td style="text-align:right;">+0.3752</td></tr>
+  <tr><td>Theta P&amp;L</td><td>&minus;0.0255 &times; 1</td><td style="text-align:right;">&minus;0.0255</td></tr>
+  <tr><td><strong>Predicted total</strong></td><td>sum of the above</td><td style="text-align:right;"><strong>+1.6610</strong></td></tr>
+  <tr><td><strong>Actual (full reval)</strong></td><td>C<sub>1</sub> &minus; C<sub>0</sub></td><td style="text-align:right;"><strong>+1.6528</strong></td></tr>
+  <tr style="background:#fef2f2;"><td><strong>Unexplained</strong></td><td>actual &minus; predicted</td><td style="text-align:right;"><strong>&minus;0.0082</strong></td></tr>
+</table>
+
+<p>The Greeks explain <strong>99.5%</strong> of the move. A residual of &minus;$0.008 on a $1.65 move is tiny &mdash; and that&rsquo;s the point of a good attribution.</p>
+
+<hr>
+
+<h2>7. Unexplained P&amp;L &mdash; where the residual comes from</h2>
+
+<p>Unexplained P&amp;L is the gap between the full reprice and the sum of the risk-based buckets. It is the single most-scrutinised number in P&amp;L attribution, because a large or persistent residual means your risk model doesn&rsquo;t describe your book. Common sources:</p>
+
+<ul>
+  <li><strong>Higher-order terms</strong> &mdash; the Taylor series was truncated. Third-order (speed), and cross-terms like <strong>vanna</strong> (&part;&delta;/&part;&sigma;) and <strong>volga</strong> (&part;&nu;/&part;&sigma;) aren&rsquo;t in a first-order explain.</li>
+  <li><strong>Cross-gamma</strong> &mdash; spot <em>and</em> vol moved together; the pure delta/vega buckets miss the interaction.</li>
+  <li><strong>Vol surface</strong> &mdash; a single vega assumes a parallel shift; real skew/term-structure moves need bucketed vega.</li>
+  <li><strong>Unmapped risk factors</strong> &mdash; a basis, a dividend, a correlation the risk model doesn&rsquo;t carry.</li>
+  <li><strong>Timing / snapping</strong> &mdash; front office and risk marked at slightly different times or sources.</li>
+</ul>
+
+<p>A clean way to shrink the residual is a <strong>full-reval attribution</strong>: reprice moving one factor at a time (spot only, then +vol, then +time) so each bucket is itself a mini full-reval and the &ldquo;unexplained&rdquo; collapses to genuine cross-effects and truncation.</p>
+
+<hr>
+
+<h2>8. Carry, theta, and funding &mdash; the P&amp;L of doing nothing</h2>
+
+<p>Even with markets frozen, a book&rsquo;s value drifts overnight. That drift is <strong>carry</strong> (a.k.a. the theta/time bucket for options):</p>
+
+<ul>
+  <li><strong>Options</strong> &mdash; time decay. Our call loses <strong>&minus;$0.0255/day</strong> of time value just from the clock. A long-option book bleeds theta; a short-option book earns it.</li>
+  <li><strong>Bonds / cash</strong> &mdash; coupon accrual and &ldquo;rolldown&rdquo; the curve. You earn the coupon and, on an upward curve, the bond rolls to a lower yield and higher price.</li>
+  <li><strong>Funding</strong> &mdash; the cost of financing the position (repo, unsecured funding). A leveraged long pays funding every day; that is real, negative carry.</li>
+</ul>
+
+<p>Carry is the predictable, direction-free part of P&amp;L. Isolating it lets a desk see whether it made money from taking a view (delta/vega) or simply from holding inventory (carry).</p>
+
+<hr>
+
+<h2>9. Regulatory view: FRTB P&amp;L Attribution (PLA)</h2>
+
+<p>Under the Basel <strong>FRTB</strong> framework, a desk that wants to use its own internal model (IMA) instead of the punitive standardised approach must prove its risk model actually tracks its front-office P&amp;L. The <strong>P&amp;L Attribution (PLA)</strong> test compares two daily series over a trailing window (250 business days):</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Series</th><th>Full name</th><th>Who produces it / how</th></tr>
+  <tr><td><strong>APL</strong></td><td>Actual P&amp;L</td><td>Front office&rsquo;s actual clean daily P&amp;L (real prices, excludes fees &amp; new deals).</td></tr>
+  <tr><td><strong>HPL</strong></td><td>Hypothetical P&amp;L</td><td>Yesterday&rsquo;s positions repriced on today&rsquo;s market data with front-office models &mdash; positions frozen.</td></tr>
+  <tr><td><strong>RTPL</strong></td><td>Risk-Theoretical P&amp;L</td><td>The <em>risk engine&rsquo;s</em> predicted P&amp;L, using only the risk factors and sensitivities in the model.</td></tr>
+</table>
+
+<p>PLA compares <strong>RTPL vs HPL</strong>: if the risk model&rsquo;s factors are complete, its predicted P&amp;L should track the hypothetical full reprice closely. Two statistics on the paired daily series decide the outcome:</p>
+
+<ul>
+  <li><strong>Spearman rank correlation</strong> &mdash; do the two series move together (in rank)?</li>
+  <li><strong>Kolmogorov&ndash;Smirnov (KS) statistic</strong> &mdash; do they have the same distribution?</li>
+</ul>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; text-align:center;">
+  <tr><th>Zone</th><th>Condition (BCBS d457)</th><th>Consequence</th></tr>
+  <tr style="background:#f0fdf4;"><td><strong>Green</strong></td><td>Spearman &ge; 0.80 <em>and</em> KS &le; 0.09</td><td>Desk keeps internal-model approval.</td></tr>
+  <tr style="background:#fffbeb;"><td><strong>Amber</strong></td><td>between green and red</td><td>Allowed, but a capital surcharge.</td></tr>
+  <tr style="background:#fef2f2;"><td><strong>Red</strong></td><td>Spearman &lt; 0.70 <em>or</em> KS &gt; 0.12</td><td>Desk falls back to standardised approach &mdash; far more capital.</td></tr>
+</table>
+
+<p>This is the institutional reason unexplained P&amp;L (&sect;7) matters in hard money: a persistent residual pushes a desk from green to red and can multiply its capital charge. Good P&amp;L attribution isn&rsquo;t bookkeeping hygiene &mdash; it&rsquo;s capital.</p>
+
+<hr>
+
+<h2>10. Economic vs accounting P&amp;L</h2>
+
+<p>One last split, because it trips people up. The same trade can show two different P&amp;Ls depending on the lens:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th></th><th>Economic (fair value / MTM)</th><th>Accounting (accrual)</th></tr>
+  <tr><td>Basis</td><td>Today&rsquo;s market price of everything, every day.</td><td>Recognise income over time per accounting rules (IFRS 9 / US GAAP).</td></tr>
+  <tr><td>Volatility</td><td>Marks move daily &mdash; noisy.</td><td>Smoothed &mdash; a loan accrues interest steadily.</td></tr>
+  <tr><td>Day-1 P&amp;L</td><td>Recognise the bid-offer / model edge immediately.</td><td>May <strong>defer</strong> day-1 P&amp;L when inputs are unobservable (Level 3) and release it over the life of the trade.</td></tr>
+</table>
+
+<p>Trading desks live in the economic/MTM world; banking-book and finance often live in the accrual world. When they disagree about &ldquo;the P&amp;L,&rdquo; they&rsquo;re usually both right &mdash; about different numbers.</p>
+
+<hr>
+
+<h2>11. Python: decompose the option P&amp;L</h2>
+
+<p>The whole worked example in code &mdash; price and Greeks under Black-Scholes, then a first-order attribution against a full reprice:</p>
+
+<pre><code class="language-python">from math import log, sqrt, exp, erf, pi
+
+def _N(x):  return 0.5 * (1 + erf(x / sqrt(2)))
+def _n(x):  return exp(-x * x / 2) / sqrt(2 * pi)
+
+def call_and_greeks(S, K, T, r, sig):
+    d1 = (log(S / K) + (r + sig * sig / 2) * T) / (sig * sqrt(T))
+    d2 = d1 - sig * sqrt(T)
+    price = S * _N(d1) - K * exp(-r * T) * _N(d2)
+    delta = _N(d1)
+    gamma = _n(d1) / (S * sig * sqrt(T))
+    vega  = S * _n(d1) * sqrt(T)                      # per 1.00 (100%) vol
+    theta = (-(S * _n(d1) * sig) / (2 * sqrt(T))
+             - r * K * exp(-r * T) * _N(d2))          # per year
+    return price, delta, gamma, vega, theta
+
+# --- start of day ---
+S0, K, T0, r, sig0 = 100, 100, 1.0, 0.05, 0.20
+C0, delta, gamma, vega, theta = call_and_greeks(S0, K, T0, r, sig0)
+
+# --- overnight market moves ---
+dS, dsig, dt = +2.0, +0.01, 1 / 252
+S1, sig1, T1 = S0 + dS, sig0 + dsig, T0 - dt
+C1, *_ = call_and_greeks(S1, K, T1, r, sig1)
+
+# --- attribution ---
+pnl_full  = C1 - C0                      # actual (full revaluation)
+pnl_delta = delta * dS
+pnl_gamma = 0.5 * gamma * dS ** 2
+pnl_vega  = vega * dsig                  # vega is per 1.00 vol; dsig in vol units
+pnl_theta = theta * dt
+predicted = pnl_delta + pnl_gamma + pnl_vega + pnl_theta
+unexplained = pnl_full - predicted
+
+print(f"delta      {pnl_delta:+.4f}")
+print(f"gamma      {pnl_gamma:+.4f}")
+print(f"vega       {pnl_vega:+.4f}")
+print(f"theta      {pnl_theta:+.4f}")
+print(f"predicted  {predicted:+.4f}")
+print(f"full reval {pnl_full:+.4f}")
+print(f"UNEXPLAINED{unexplained:+.4f}")</code></pre>
+
+<pre><code class="language-text">delta      +1.2737
+gamma      +0.0375
+vega       +0.3752
+theta      -0.0255
+predicted  +1.6610
+full reval +1.6528
+UNEXPLAINED-0.0082</code></pre>
+
+<hr>
+
+<h2>12. The one table to keep</h2>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>P&amp;L flavour</th><th>Includes</th><th>Question it answers</th><th>Owned by</th></tr>
+  <tr><td><strong>Realized</strong></td><td>Closed positions only</td><td>What have I actually banked?</td><td>Finance</td></tr>
+  <tr><td><strong>Unrealized (MTM)</strong></td><td>Open positions at market</td><td>What&rsquo;s my paper P&amp;L right now?</td><td>Desk / risk</td></tr>
+  <tr><td><strong>Clean / market</strong></td><td>Market moves on frozen positions</td><td>How did the market move me?</td><td>Risk / product control</td></tr>
+  <tr><td><strong>New-trade</strong></td><td>Today&rsquo;s executions (bid-offer)</td><td>What did trading <em>add</em> today?</td><td>Desk</td></tr>
+  <tr><td><strong>Dirty / actual</strong></td><td>Everything incl. fees &amp; funding</td><td>What did the firm actually earn?</td><td>Finance</td></tr>
+  <tr><td><strong>Attributed (explain)</strong></td><td>Clean P&amp;L split by Greek</td><td><em>Why</em> did the market move me?</td><td>Risk / product control</td></tr>
+  <tr><td><strong>Unexplained</strong></td><td>Full reval &minus; predicted</td><td>What does my model miss?</td><td>Risk (and the regulator)</td></tr>
+  <tr><td><strong>Carry / theta</strong></td><td>Time &amp; funding, no market move</td><td>What do I make doing nothing?</td><td>Desk</td></tr>
+</table>
+
+<p>Same book, same day, eight legitimate answers. Knowing which one someone means &mdash; and which one <em>you</em> mean &mdash; is most of the skill.</p>
