@@ -1,0 +1,202 @@
+---
+layout: post
+title: "INQLabs: Architecture of a Dependency-Free Generative-Art Studio"
+date: 2026-07-27
+tags: [architecture, system-design, generative-art, canvas, webgl, netlify, serverless, jamstack, tech-stack]
+categories:
+- Projects
+section: infrastructure
+permalink: "/tech-stack/inqlab-architecture/"
+---
+
+<p><a href="https://inqlab.uk">INQLabs</a> is a generative-art studio &mdash; 40+ browser-based art generators plus an editorial gallery site. This is a technical walkthrough of how it&rsquo;s built. The whole design falls out of one deliberately strict constraint, so we&rsquo;ll start there and work outward to the site, the data, and the serverless backend that quietly turns a static site into a CMS.</p>
+
+<hr>
+
+<h2>The one constraint that shapes everything</h2>
+
+<blockquote>
+  <p>Every generator is a <strong>single, self-contained HTML file with zero external dependencies</strong>.</p>
+</blockquote>
+
+<p>No bundler, no framework, no CDN script tags. A tool is just <code>studio/&lt;slug&gt;/index.html</code> with its CSS, JavaScript, palette data, and export logic all inline. That single rule buys three things at once:</p>
+
+<ul>
+  <li><strong>Portability</strong> &mdash; the same file runs as a static asset on Netlify, embeds in a Jekyll blog, or opens straight from <code>file://</code> with no build step.</li>
+  <li><strong>Longevity</strong> &mdash; nothing to <code>npm install</code> means nothing to rot. A piece made today reproduces in five years.</li>
+  <li><strong>Reviewability</strong> &mdash; one file is one artefact. What you read is exactly what ships.</li>
+</ul>
+
+<p>New tools are scaffolded from two templates that encode the house rules: <code>_template-canvas2d.html</code> for Canvas 2D generators (most of them) and <code>_template-webgl.html</code> for shader work &mdash; the fluid-simulation tools like Marbling and Reaction-Diffusion.</p>
+
+<hr>
+
+<h2>The whole system at a glance</h2>
+
+<div class="mermaid">
+graph TD
+  subgraph Browser["Browser — a single HTML file per tool"]
+    GEN["Generator (Canvas 2D / WebGL)"]
+    SIG["Signature overlay canvas"]
+    EXP["PNG export + tEXt metadata"]
+    GEN --> SIG --> EXP
+  end
+
+  subgraph Netlify["Netlify (static host, inqlab.uk)"]
+    PUB["Public site: home, /collections/ SPA, /about, /palettes"]
+    STU["Protected /studio/* (Identity, Role=admin)"]
+    FN["Serverless Functions"]
+  end
+
+  GH[("GitHub repo — YAML/JSON + PNGs")]
+
+  EXP -->|"Add to pool ★"| FN
+  STU -->|admin actions| FN
+  FN -->|"commit via GitHub API"| GH
+  GH -->|"push triggers deploy"| Netlify
+  PUB --> GEN
+</div>
+
+<p>The loop worth noticing: <strong>publishing a piece is a git commit</strong>. A generator&rsquo;s &ldquo;Add to pool&rdquo; button and every admin action call a serverless function that writes back to the GitHub repo; the push triggers a Netlify rebuild that serves the new content. There is no database server &mdash; git <em>is</em> the database.</p>
+
+<hr>
+
+<h2>Anatomy of a single tool</h2>
+
+<p>Every generated piece follows the same skeleton, enforced by the templates:</p>
+
+<h3>Dual-canvas signature</h3>
+<p>Two stacked canvases: <code>#canvas</code> draws the artwork, and a separate <code>#sigCanvas</code> paints the visible <strong>INQ.LAB</strong> signature. Keeping the signature on its own layer means it composites cleanly at export without the generation code ever having to know about it.</p>
+
+<h3>PNG metadata, injected by hand</h3>
+<p>Export doesn&rsquo;t stop at <code>canvas.toDataURL()</code>. A small routine splices a <strong><code>tEXt</code> chunk</strong> directly into the PNG byte stream, right after the <code>IHDR</code>, so author, copyright, and palette provenance travel <em>inside</em> the file:</p>
+
+<pre><code class="language-javascript">// after the 8-byte PNG signature + 25-byte IHDR chunk,
+// insert a tEXt chunk carrying "Author", "Copyright", "Palette"
+function injectPNGMeta(dataURL, fmt) {
+  const src = base64ToBytes(dataURL.split(',')[1]);
+  const text = `Software\0INQLabs — © 2026 INQ.LAB`;   // keyword\0value
+  const chunk = makeTextChunk(text);                    // len + 'tEXt' + data + CRC32
+  const out = new Uint8Array(src.length + chunk.length);
+  out.set(src.slice(0, 33));        // PNG sig + IHDR
+  out.set(chunk, 33);               // our tEXt chunk
+  out.set(src.slice(33), 33 + chunk.length);
+  return bytesToDataURL(out);
+}</code></pre>
+
+<p>It&rsquo;s a few dozen lines of byte-wrangling (length prefix, the ASCII <code>tEXt</code> tag, the payload, a CRC-32), but it means provenance can&rsquo;t be stripped by a right-click &ldquo;Save As&rdquo;.</p>
+
+<h3>Three non-negotiables</h3>
+<p>Every tool must ship a <strong>visible signature</strong>, <strong>embedded PNG metadata</strong>, and an <strong>on-page copyright notice</strong>. These aren&rsquo;t style preferences &mdash; they&rsquo;re part of the tool contract, because the output is meant to be sold and attributed.</p>
+
+<hr>
+
+<h2>Colour as a first-class subsystem</h2>
+
+<p>Palettes aren&rsquo;t hard-coded per tool. Eight <strong>historical, public-domain colour sources</strong> &mdash; Sanzo Wada, Werner&rsquo;s Nomenclature of Colours, Munsell, Goethe, Kalamkari, Rangoli, Warli, and natural Western dyes &mdash; ship as JSON, and every generator exposes the same palette-selector UI over a universal colour-role mapping (background / primary / accent / detail).</p>
+
+<p>There&rsquo;s an explicit <em>legal</em> stance baked in too: a documented &ldquo;never use&rdquo; list (Pantone, paint-manufacturer palettes, and living- or recently-deceased-artist styles). Everything is sourced from long-dead artists and cultural traditions on purpose &mdash; the provenance line in the PNG metadata is only true because the palette pipeline guarantees it.</p>
+
+<hr>
+
+<h2>Determinism, treated as a testable property</h2>
+
+<p>Because a piece is identified by its seed/state, the same seed should always reproduce the same image. That&rsquo;s easy to <em>claim</em> and easy to break &mdash; a stray <code>Date()</code> baked into a constant, or an un-seeded <code>Math.random()</code> in a hot path, silently makes a generator non-reproducible.</p>
+
+<p>So determinism is audited, per generator, in a running report that grades each tool <strong>MUST-FIX / VERIFY / clean</strong> and documents every known gap. Reproducibility here is a tested invariant, not a hope.</p>
+
+<hr>
+
+<h2>Export pipeline</h2>
+
+<p>Beyond single PNGs, the export layer handles the commercial reality of selling prints:</p>
+
+<ul>
+  <li><strong>Multiple aspect ratios</strong> and print resolutions per piece.</li>
+  <li><strong>Etsy and Instagram bundles</strong> &mdash; correctly-sized sets zipped client-side with JSZip (no server round-trip).</li>
+  <li><strong>Sets</strong> &mdash; a &ldquo;mini-series&rdquo; and &ldquo;split-artwork&rdquo; system that renders coordinated multi-piece compositions sharing a palette and composition seeds.</li>
+</ul>
+
+<hr>
+
+<h2>The site around the tools</h2>
+
+<p>The generators live inside an editorial gallery site, hosted static on Netlify (<code>publish = "."</code>, no build command). The interesting engineering is the auth boundary.</p>
+
+<h3>Public vs Studio</h3>
+<p>The gallery (<code>/</code>, <code>/collections/</code>, <code>/about/</code>, <code>/palettes/</code>, <code>/rights/</code>, <code>/contact/</code>) is open. Everything under <code>/studio/*</code> &mdash; the generators themselves and the admin suite &mdash; is gated to an <code>admin</code> role. The gate is one line in <code>_redirects</code>:</p>
+
+<pre><code class="language-text">/studio/*  /studio/:splat  200!  Role=admin
+/collections/*  /collections/index.html  200</code></pre>
+
+<h3>The nf_jwt cookie bridge</h3>
+<p>This is the subtle part. Netlify&rsquo;s <code>Role=admin</code> redirect is evaluated at the edge and reads the <code>nf_jwt</code> <strong>cookie</strong> &mdash; but the Netlify Identity widget signs users in <em>client-side only</em>. Without bridging the two, the edge sees every request as anonymous and the studio 404s even when you&rsquo;re &ldquo;logged in.&rdquo;</p>
+
+<p>The fix is to mirror the Identity JWT into a cookie on every widget lifecycle event:</p>
+
+<pre><code class="language-javascript">function syncJwt(user) {
+  if (user &amp;&amp; user.token)
+    document.cookie =
+      `nf_jwt=${user.token.access_token}; path=/; secure; samesite=lax`;
+}
+
+netlifyIdentity.on('init',    syncJwt);   // restore cookie on page load
+netlifyIdentity.on('login',   syncJwt);   // set on sign-in
+netlifyIdentity.on('refresh', syncJwt);   // Identity rotates JWTs hourly
+netlifyIdentity.on('logout',  () =&gt; {      // expire immediately
+  document.cookie = 'nf_jwt=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=lax';
+});</code></pre>
+
+<p>The <code>refresh</code> listener matters: Identity rotates the JWT every hour, so without it a long studio session would silently lose its edge authorisation.</p>
+
+<hr>
+
+<h2>Data architecture: YAML source, JSON runtime</h2>
+
+<p>Everything is a flat file in the repo, in two tiers:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+  <tr><th>Tier</th><th>Where</th><th>Role</th></tr>
+  <tr><td><strong>Source of truth</strong></td><td><code>_data/*.yml</code></td><td>Human-editable: collections, the piece pool, sets, the featured hero, the studio statement.</td></tr>
+  <tr><td><strong>Runtime</strong></td><td><code>assets/data/*.json</code></td><td>Machine-fetched mirrors the pages actually read.</td></tr>
+</table>
+
+<p>Collections carry a slug, status (production/wip), a featured flag (the first nine drive the homepage 3&times;3 grid), and a tile image. Exported pieces land in a per-collection pool (<code>_data/pieces/&lt;slug&gt;.yml</code>); sets get their own YAML with a hash, layout, and the composition seeds needed to re-render them.</p>
+
+<hr>
+
+<h2>The serverless &ldquo;CMS&rdquo;</h2>
+
+<p>A static site can&rsquo;t mutate itself &mdash; so a set of <strong>Netlify Functions</strong> does the writing. An admin dashboard at <code>/studio/admin/</code> (pool, hero, tiles, collections, statement, pieces) calls functions that commit changes straight back to GitHub through a shared helper (JWT auth + atomic commit). A weekly cron function rotates the featured hero from the pool every Sunday.</p>
+
+<div class="mermaid">
+graph LR
+  A["Admin UI / Generator ★"] -->|POST| B["Netlify Function"]
+  B --> C["github.js helper<br/>(JWT + atomic commit)"]
+  C -->|"PUT contents API"| D[("GitHub repo")]
+  D -->|webhook| E["Netlify build"]
+  E --> F["Updated static site"]
+  G["Sunday cron"] --> B
+</div>
+
+<p>So the entire content lifecycle &mdash; generate → add to pool → promote to hero/tiles → publish &mdash; is just structured commits. No database to run, back up, or secure; the version history <em>is</em> the audit log.</p>
+
+<hr>
+
+<h2>How it&rsquo;s actually built</h2>
+
+<ul>
+  <li><strong>Prompt-driven</strong> &mdash; the studio is built from a versioned build-prompt playbook, one prompt per tool, with deliberate <strong>asset-reuse chains</strong> (Ink Bloom&rsquo;s botanical SVG library feeds the Ikebana composer; Zen Canvas feeds the Zen Generator).</li>
+  <li><strong>Phased</strong> &mdash; tools first, then the auth gate, then the editorial redesign, then the pool/admin CMS, then sets and print-resolution export pipelines.</li>
+  <li><strong>Python side-scripts</strong> generate the social-media reels, cards, and banners from finished pieces.</li>
+  <li><strong>Local dev</strong> is <code>python -m http.server</code> and open <code>localhost:8000/&lt;tool&gt;/</code> &mdash; the zero-dependency rule pays off here too.</li>
+</ul>
+
+<hr>
+
+<h2>The one-sentence version</h2>
+
+<p>INQLabs is a fleet of dependency-free HTML canvas/WebGL generators, standardised by two templates and a strict signature / metadata / palette contract, wrapped in a Netlify static site whose admin actions are serverless functions that commit YAML, JSON, and images back to git &mdash; a JAMstack studio where the repo is the database and publishing is a commit.</p>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
