@@ -21,6 +21,16 @@ permalink: /tech-stack/
 
 <p class="misc-lede">Technology stack references &mdash; libraries, infrastructure, and tooling. Practical guides with code examples you can copy-paste.</p>
 
+<div class="misc-section" id="projects">
+  <div class="misc-hdr">Projects <span class="sub">architecture deep-dives</span></div>
+  <ul class="misc-list">
+    <li>
+      <a href="{{ "/tech-stack/inqlab-architecture/" | relative_url }}">INQLabs &mdash; Dependency-Free Generative-Art Studio</a>
+      <span class="misc-desc">Self-contained HTML canvas/WebGL generators, PNG <code>tEXt</code> provenance, Netlify Identity auth (nf_jwt bridge), and a serverless git-as-CMS backend</span>
+    </li>
+  </ul>
+</div>
+
 <div class="misc-section" id="tech-references">
   <div class="misc-hdr">Technology references <span class="sub">from the QuantLab project</span></div>
   <ul class="misc-list">
