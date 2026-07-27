@@ -91,3 +91,13 @@ permalink: /math-finance/
     </li>
   </ul>
 </div>
+
+<div class="mf-section">
+  <div class="mf-hdr">P&amp;L &amp; Attribution</div>
+  <ul class="mf-list">
+    <li>
+      <a href="{{ "/math-finance/pnl-explained/" | relative_url }}">P&amp;L Explained: Clean, Dirty, Attributed, and Unexplained</a>
+      <span class="mf-desc">Realized vs unrealized, clean vs dirty, new-trade P&amp;L, Greeks-based attribution, predicted vs actual &amp; unexplained P&amp;L, FRTB PLA (HPL/RTPL/APL, Spearman &amp; KS), carry, economic vs accounting</span>
+    </li>
+  </ul>
+</div>
