@@ -220,6 +220,54 @@ if __name__ == "__main__":   # required on Windows — guards the spawn entry po
 
 <div id="tab-elia12" class="ql-tab-content" style="display:none">
 
+  <h3>First: where does a variable keep its value?</h3>
+
+  <p>In some languages a variable is a <strong>box</strong> you drop a value into. In Python it's more like a <strong>sticky name-tag you stick onto a thing</strong>. The actual value sits on a big shared table (the computer's memory), and the name is just a label pointing at it. You can even stick two name-tags on the <em>same</em> thing.</p>
+
+  <pre><code class="language-python">a = [1, 2, 3]
+b = a          # you stuck a second tag, b, on the SAME list
+b.append(4)
+print(a)       # [1, 2, 3, 4] — one thing, two name-tags</code></pre>
+
+  <p>Why do it this way instead of copying? Because copying everything on every <code>=</code> would be slow and waste memory. Pointing a new label at the same thing is instant. To know when a thing is safe to throw away, each thing keeps a little tally of how many name-tags are stuck on it — when the last tag comes off, it gets binned. (That tally is the "reference count.")</p>
+
+  <h3>Mutable vs immutable: can you change the thing itself?</h3>
+
+  <p>Some things you can change; some you can't — that's the whole idea.</p>
+
+  <ul>
+    <li><strong>Mutable = a whiteboard.</strong> You can rub bits out and add new bits without getting a new board. <code>list</code>, <code>dict</code>, <code>set</code> work like this. If two name-tags are on the same list and you change it, <em>both</em> tags see the change.</li>
+    <li><strong>Immutable = a printed photo.</strong> Once it's made you can't edit it — if you want it different you have to print a <em>new</em> one. <code>int</code>, <code>str</code>, <code>tuple</code>, <code>bool</code> work like this.</li>
+  </ul>
+
+  <p>This trips people up with numbers. It <em>looks</em> like you're changing one, but you're not:</p>
+
+  <pre><code class="language-python">x = 5
+y = x        # y points at the same 5
+x = x + 1    # but 5 can't change! Python makes a NEW 6 and moves x's tag to it
+print(x, y)  # 6 5  — y is still on the old 5</code></pre>
+
+  <p>Compare that to a list, which really <em>does</em> change in place:</p>
+
+  <pre><code class="language-python">a = [1, 2]
+b = a
+a.append(3)   # the list itself is edited
+print(b)      # [1, 2, 3] — b sees it, because it's the same thing</code></pre>
+
+  <h3>Why make some things un-changeable on purpose?</h3>
+
+  <ul>
+    <li><strong>It's safe.</strong> If a thing can never change, you can hand it to anyone and nobody can mess it up behind your back. That's gold when lots of workers (threads) share it — no nasty surprises.</li>
+    <li><strong>It can be shared and reused.</strong> Because they never change, Python quietly reuses the same little numbers and short words everywhere instead of making copies.</li>
+    <li><strong>It can label a drawer.</strong> Only immutable things can be dictionary keys or go in a set — the filing system needs a key that won't change out from under it. A <code>list</code> can't be a key; a <code>tuple</code> can.</li>
+  </ul>
+
+  <div class="cpp-note"><strong>The trick to remember:</strong> a variable is a name-tag on a thing, not a box. Mutable things (list/dict/set) you can edit in place, so two names can surprise each other. Immutable things (int/str/tuple) can't be edited — Python makes a new one and moves your tag. Un-changeable things are safe to share, which is exactly why they're friendly to threads.</div>
+
+  <hr>
+
+  <h3>Now: doing many things at once</h3>
+
   <p>Imagine one waiter serving many tables. The waiter doesn't clone themselves — they take an order, go put it in, then immediately serve another table while the kitchen works. They're always moving; they never stand waiting. That's asyncio: one thread, many tasks, switching whenever a task is waiting for something.</p>
 
   <p>The key rule is that tasks have to <em>choose</em> to hand control back — they're not interrupted. An <code>await</code> is the waiter saying "I'm done with this table for now, let me go do something else." A task that never <code>await</code>s freezes every other task for its entire duration, because nobody else gets a turn.</p>
