@@ -4,9 +4,66 @@ title: "Python: Concurrency — asyncio, threading &amp; multiprocessing"
 date: 2026-04-21
 tags: [python, reference]
 permalink: /private/python-asyncio/
+tabs:
+  - id: concept
+    label: Concept
+  - id: elia12
+    label: ELIA12
+  - id: tldr
+    label: "TL;DR"
+  - id: interview
+    label: Interview
 ---
 
 <div id="tab-concept" class="ql-tab-content">
+
+  <h3>How Python stores data in a variable</h3>
+
+  <p>A Python variable is not a box that holds a value — it is a <strong>name bound to an object</strong>. Every value (an int, a list, a function) is a <code>PyObject</code> living on the heap, and a variable is just a reference (a pointer) to one. Assignment never copies the object; it binds a name to the <em>same</em> object.</p>
+
+  <pre><code class="language-python">a = [1, 2, 3]
+b = a            # b is NOT a copy — both names point to the SAME list
+b.append(4)
+print(a)         # [1, 2, 3, 4]  — one object, two names</code></pre>
+
+  <p>That's why <strong>value</strong> and <strong>identity</strong> are different questions. <code>==</code> asks "do these objects <em>contain</em> the same value?"; <code>is</code> asks "are these the <em>same</em> object in memory?" (<code>id(x)</code> is essentially its address).</p>
+
+  <pre><code class="language-python">x = [1, 2]; y = [1, 2]
+x == y     # True  — same contents
+x is y     # False — two distinct objects
+z = x
+z is x     # True  — same object, two names</code></pre>
+
+  <p><strong>Reference counting.</strong> Each object carries a small integer — its <code>ob_refcnt</code> — counting how many references point at it right now. Binding a name, appending to a container, or passing an argument bumps it up; rebinding, <code>del</code>, or a name going out of scope bumps it down. When the count hits <strong>0</strong>, nothing can reach the object, so CPython frees it immediately — deterministic cleanup, unlike a tracing garbage collector. (A separate cyclic collector mops up reference cycles that never reach 0.)</p>
+
+  <pre><code class="language-python">import sys
+a = []
+sys.getrefcount(a)   # 2 — the name 'a' + the temporary argument to getrefcount
+b = a
+sys.getrefcount(a)   # 3 — 'b' references the same object too
+del b
+sys.getrefcount(a)   # 2 again</code></pre>
+
+  <p>Small immutables are shared to save memory: CPython caches the ints <code>-5…256</code> and interns short strings, so <code>256 is 256</code> is <code>True</code> but <code>257 is 257</code> may be <code>False</code>. Never use <code>is</code> to compare values — only for identity and for the singletons <code>None</code> / <code>True</code> / <code>False</code>.</p>
+
+  <hr>
+
+  <h3>What "multithreading" means in Python</h3>
+
+  <p>Threads inside one process <strong>share the same memory — the same object graph</strong>. That's what makes threads cheap (nothing is copied), but also dangerous: if two threads touch the same object at once they can corrupt it. And they touch shared state constantly, because the <code>ob_refcnt</code> above is mutated on almost every operation — every name binding, every argument pass. Changing a refcount is really <em>read → add → write</em>, which is not atomic; two threads doing it at the same instant would clobber each other and either leak the object or free it while it's still in use (a crash).</p>
+
+  <p>CPython's answer is the <strong>GIL (Global Interpreter Lock)</strong>: one lock a thread must hold to execute any Python bytecode, so <strong>only one thread runs Python at a time</strong>. One coarse lock is simpler and faster for the common single-threaded case than putting a lock on every object. That single fact shapes everything below:</p>
+
+  <ul>
+    <li><strong>CPU-bound work → threads don't help.</strong> Two threads doing heavy maths just take turns on the one GIL — no speedup. Use <code>multiprocessing</code>: separate processes, each with its own interpreter and its own GIL, for real parallelism.</li>
+    <li><strong>I/O-bound work → threads help.</strong> The GIL is <em>released</em> while a thread blocks on a socket, a file, or <code>time.sleep()</code>, so another thread runs during the wait. <code>asyncio</code> gets the same overlap on a single thread, cooperatively.</li>
+  </ul>
+
+  <p>So "multithreading in Python" gives you real OS threads and genuine concurrency for <em>waiting</em>, but not parallel execution of Python code. (Full detail in the <a href="{{ "/private/python-gil/" | relative_url }}">GIL note</a>; the experimental free-threaded 3.13+ build is starting to change this.)</p>
+
+  <hr>
+
+  <h3>asyncio — cooperative concurrency on one thread</h3>
 
   <p><code>asyncio</code> runs on a single-threaded event loop. The loop maintains a queue of tasks — scheduled coroutines. On each iteration it picks a ready task, runs it until it hits an <code>await</code>, then suspends it and moves to the next ready task. There is no thread switching and no parallelism; concurrency comes from coroutines voluntarily yielding control.</p>
 
@@ -234,5 +291,83 @@ if __name__ == "__main__":
         # 8 chefs cooking 8 dishes simultaneously — ~8x faster</code></pre>
 
   <div class="cpp-note"><strong>When to use which:</strong> asyncio for many concurrent I/O tasks in one thread &mdash; threading for simpler I/O-bound scripts that benefit from real threads &mdash; multiprocessing when you need multiple CPU cores working in parallel.</div>
+
+</div>
+
+<div id="tab-tldr" class="ql-tab-content" style="display:none">
+
+  <p>The whole topic as one story — each step exists <em>because of</em> the one before it.</p>
+
+  <h3>1 · A variable is a name, not a box</h3>
+  <p>Every value in Python is an object on the heap. A variable is just a <strong>name pointing at one</strong>, and assignment shares the object rather than copying it (<code>b = a</code> gives two names for one list). Hence two different questions: <code>==</code> (same value?) versus <code>is</code> (same object?).</p>
+
+  <h3>2 · Objects count their own references</h3>
+  <p>Each object holds a <strong>reference count</strong>. Every name binding or argument pass bumps it up; every <code>del</code> or scope-exit bumps it down. At <strong>0</strong> the object is freed immediately — simple, fast, deterministic.</p>
+
+  <h3>3 · Threads share the object graph — which breaks refcounting</h3>
+  <p>Threads in one process see the <strong>same objects</strong>. But the refcount is touched on nearly every operation, and bumping it is a non-atomic <em>read → add → write</em>. Two threads at once corrupt it → freed-too-early crashes or never-freed leaks. A <strong>race condition</strong> at the very core of the interpreter.</p>
+
+  <h3>4 · The GIL is the fix — and the catch</h3>
+  <p>CPython wraps the interpreter in one lock, the <strong>GIL</strong>: only one thread runs Python bytecode at a time. That makes refcounting safe cheaply — but it means threads <strong>never execute Python in parallel</strong>.</p>
+
+  <h3>5 · So the tool depends on the problem</h3>
+  <ul>
+    <li><strong>CPU-bound</strong> (maths, crunching) → <strong>multiprocessing</strong>: separate processes, each with its own GIL → real parallelism.</li>
+    <li><strong>Lots of I/O</strong> (network, files) → <strong>asyncio</strong>: one thread, cooperative, control freed during every wait → thousands of tasks cheaply.</li>
+    <li><strong>A bit of I/O</strong> → <strong>threading</strong>: real threads, GIL released while blocked, simpler than asyncio.</li>
+  </ul>
+
+  <h3>6 · Each tool brings its own problem</h3>
+  <ul>
+    <li><strong>asyncio</strong> — one blocking call with no <code>await</code> freezes <em>every</em> task; never block the loop (offload with <code>run_in_executor</code>).</li>
+    <li><strong>threading</strong> — the GIL protects the interpreter, <em>not your logic</em>, so your own shared state still races; you need <code>Lock</code>, and over-locking risks deadlock.</li>
+    <li><strong>multiprocessing</strong> — no shared memory; data crosses the process boundary by pickling (copy + overhead).</li>
+  </ul>
+
+  <div class="cpp-note"><strong>The whole arc in one line:</strong> variables share objects → objects count references → threads racing on those counts forced the GIL → the GIL kills thread parallelism → so use multiprocessing for CPU and asyncio/threads for I/O, each with its own failure mode.</div>
+
+</div>
+
+<div id="tab-interview" class="ql-tab-content" style="display:none">
+
+  <p>Two-minute cram. Skim top to bottom before you walk in.</p>
+
+  <h3>The 30-second story</h3>
+  <p>Variables are names bound to heap objects; each object reference-counts itself. Threads share those objects, but refcount updates aren't atomic, so CPython added the <strong>GIL</strong> — one thread runs Python at a time. Consequence: threads don't parallelise CPU work. Use <strong>multiprocessing</strong> for CPU, <strong>asyncio/threads</strong> for I/O (the GIL is released while waiting).</p>
+
+  <h3>One-liners</h3>
+  <ul>
+    <li><strong>GIL</strong> — a mutex letting only one thread run Python bytecode at a time; exists because reference counting isn't thread-safe.</li>
+    <li><strong>Coroutine</strong> — an <code>async def</code> function that suspends at <code>await</code> and yields to the event loop; not a thread.</li>
+    <li><strong>Thread vs process</strong> — threads share memory + the GIL (concurrent, not parallel for Python); processes have separate memory + their own GIL (truly parallel).</li>
+    <li><strong>Race condition</strong> — two threads mutating shared state at once; result depends on timing.</li>
+    <li><strong>Deadlock</strong> — two threads each holding a lock the other needs; both wait forever.</li>
+    <li><strong>Daemon thread</strong> — background thread killed automatically when the main thread exits.</li>
+    <li><strong><code>==</code> vs <code>is</code></strong> — value equality vs same-object identity.</li>
+  </ul>
+
+  <h3>Which tool?</h3>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+    <tr><th>Workload</th><th>Tool</th><th>Why</th></tr>
+    <tr><td>CPU-bound</td><td><strong>multiprocessing</strong></td><td>own GIL per process → parallel</td></tr>
+    <tr><td>Thousands of I/O</td><td><strong>asyncio</strong></td><td>one thread, cooperative, cheap</td></tr>
+    <tr><td>A few I/O tasks</td><td><strong>threading</strong></td><td>GIL freed during waits, simple</td></tr>
+    <tr><td>Repeated work</td><td><strong>cache it</strong></td><td>skip the work entirely</td></tr>
+  </table>
+
+  <h3>Gotchas they probe</h3>
+  <ul>
+    <li>Threads give <strong>no speedup for CPU-bound</strong> Python — the GIL. (Classic trap.)</li>
+    <li>A blocking call inside a coroutine <strong>freezes the whole event loop</strong>.</li>
+    <li>The GIL protects the interpreter, <strong>not your data</strong> — you still need <code>Lock</code>.</li>
+    <li><code>if __name__ == "__main__":</code> guard is <strong>required</strong> for multiprocessing (spawn re-imports the module).</li>
+    <li>Don't use <code>is</code> to compare values — interning makes it look right, then it breaks.</li>
+    <li>Free-threaded (no-GIL) builds arrived experimentally in <strong>3.13</strong> (PEP 703).</li>
+  </ul>
+
+  <h3>Say it out loud</h3>
+  <p><strong>"Why doesn't threading speed up my CPU code?"</strong> &mdash; "The GIL lets only one thread run Python at a time, so CPU-bound threads just take turns. I'd use multiprocessing for real parallelism."</p>
+  <p><strong>"asyncio vs threads?"</strong> &mdash; "asyncio is single-threaded cooperative concurrency, best for thousands of I/O tasks; threads are real OS threads, simpler for a handful. Neither parallelises CPU work."</p>
+  <p><strong>"Why does the GIL exist at all?"</strong> &mdash; "Reference counting isn't thread-safe; one interpreter-wide lock is cheaper than locking every object."</p>
 
 </div>
