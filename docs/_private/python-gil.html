@@ -85,6 +85,23 @@ def slow_io():
 y = x       # same list, count = 2
 del x       # count = 1
 del y       # count = 0  -> memory thrown away</code></pre>
+
+  <div class="gil-figure">
+    <svg viewBox="0 0 640 200" role="img" aria-label="Two names raise an object's reference count to 2">
+      <defs><marker id="rcA" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1f2328"/></marker></defs>
+      <rect x="10" y="10" width="620" height="180" rx="12" fill="#fbfbfa" stroke="#e5e7eb"/>
+      <text x="320" y="40" text-anchor="middle" font-size="14" font-weight="700" fill="#1f2328">Each name adds 1 to the object's reference count</text>
+      <rect x="60" y="78" width="70" height="32" rx="8" fill="#e0edff" stroke="#2563eb"/><text x="95" y="99" text-anchor="middle" font-size="15" font-weight="700" fill="#2563eb">x</text>
+      <rect x="60" y="128" width="70" height="32" rx="8" fill="#dcfce7" stroke="#15803d"/><text x="95" y="149" text-anchor="middle" font-size="15" font-weight="700" fill="#15803d">y</text>
+      <rect x="380" y="84" width="210" height="72" rx="10" fill="#fff" stroke="#1f2328"/>
+      <text x="485" y="108" text-anchor="middle" font-size="13" fill="#6b7280">one list object</text>
+      <text x="485" y="134" text-anchor="middle" font-size="16" font-weight="700" fill="#c2410c">reference count = 2</text>
+      <line x1="132" y1="94" x2="378" y2="110" stroke="#1f2328" stroke-width="2" marker-end="url(#rcA)"/>
+      <line x1="132" y1="144" x2="378" y2="130" stroke="#1f2328" stroke-width="2" marker-end="url(#rcA)"/>
+    </svg>
+    <p class="gil-cap">Each name pointing at the object adds 1 to its count. When the last name goes, the count hits 0 and the object is freed.</p>
+  </div>
+
   <p>Adding 1 to the tally is secretly <strong>three</strong> steps: read the number, add one, write it back. If two cooks do this at the same instant, they clobber each other:</p>
 
   <div class="gil-figure">
