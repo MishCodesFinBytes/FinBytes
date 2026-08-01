@@ -1,0 +1,112 @@
+---
+layout: python-reference-post
+title: "Python: Data types — mutable vs immutable & how variables store values"
+date: 2026-04-21
+tags: [python, reference]
+permalink: /private/python-data-types/
+---
+
+<div id="tab-concept" class="ql-tab-content">
+
+  <p>A Python variable is a <strong>name bound to an object</strong>, not a box that holds a value. Every value — an <code>int</code>, a <code>list</code>, a function — is a <code>PyObject</code> on the heap; a variable is just a reference (a pointer) to one. Assignment never copies the object, it binds a name to the <em>same</em> object.</p>
+
+  <pre><code class="language-python">a = [1, 2, 3]
+b = a            # both names reference the SAME list
+b.append(4)
+print(a)         # [1, 2, 3, 4]  — one object, two names</code></pre>
+
+  <p>So <strong>value</strong> and <strong>identity</strong> are separate questions: <code>==</code> compares contents, <code>is</code> compares object identity (<code>id(x)</code> is essentially its address). Python tracks how many references point at each object — its <strong>reference count</strong> — and frees the object the moment that count hits 0.</p>
+
+  <pre><code class="language-python">x = [1, 2]; y = [1, 2]
+x == y   # True  — same contents
+x is y   # False — two distinct objects</code></pre>
+
+  <h3>Mutable vs immutable</h3>
+
+  <p>The dividing line is whether an object's value can change <em>after it is created</em>.</p>
+
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+    <tr><th></th><th>Change in place?</th><th>Built-in types</th></tr>
+    <tr><td><strong>Immutable</strong></td><td>No — operations produce a <em>new</em> object</td><td><code>int</code>, <code>float</code>, <code>bool</code>, <code>complex</code>, <code>str</code>, <code>bytes</code>, <code>tuple</code>, <code>frozenset</code>, <code>None</code></td></tr>
+    <tr><td><strong>Mutable</strong></td><td>Yes — edited in place</td><td><code>list</code>, <code>dict</code>, <code>set</code>, <code>bytearray</code>, most class instances</td></tr>
+  </table>
+
+  <p>With an immutable object, an operation that looks like a change actually <strong>rebinds the name to a new object</strong> and leaves the original untouched. With a mutable one, the same object is modified — so every name pointing at it sees the change:</p>
+
+  <pre><code class="language-python">x = 5
+y = x
+x += 1        # int is immutable: a NEW 6 is created, x is rebound; the 5 is unchanged
+print(x, y)   # 6 5
+
+a = [1, 2]
+b = a
+a += [3]      # list is mutable: the SAME list is extended in place
+print(a, b)   # [1, 2, 3] [1, 2, 3]   — b sees it too</code></pre>
+
+  <h3>Why the language is built this way</h3>
+
+  <ul>
+    <li><strong>Hashability → dict keys and set members.</strong> A hash must stay constant for the object's whole life. Immutable objects can guarantee that, so they're hashable; mutable ones generally aren't (a <code>list</code> or <code>dict</code> can't be a key). A <code>tuple</code> is hashable only if everything inside it is.</li>
+    <li><strong>Safe sharing.</strong> An object that can never change can be shared freely — across functions, or across threads — with no risk of one holder mutating it under another. Immutable objects are inherently thread-safe.</li>
+    <li><strong>Interning / caching.</strong> Because they never change, CPython safely reuses a single copy of common immutables — the ints <code>-5…256</code> and interned short strings — to save memory. This is only sound <em>because</em> they're immutable.</li>
+    <li><strong>Predictable copy semantics.</strong> Assignment only ever aliases (points a new name at the same object). When you genuinely need an independent mutable copy, you ask for one: <code>list(x)</code>, <code>x.copy()</code>, or <code>copy.deepcopy(x)</code> for nested structures.</li>
+  </ul>
+
+  <p><strong>Classic foot-guns</strong> that fall straight out of this model:</p>
+  <ul>
+    <li><strong>Mutable default arguments.</strong> <code>def f(x, acc=[])</code> creates the list <em>once</em>, at definition time; every call without <code>acc</code> shares and mutates the same one. Use <code>acc=None</code> and <code>acc = acc if acc is not None else []</code> inside.</li>
+    <li><strong>Aliasing.</strong> <code>b = a</code> on a list means edits through either name show through both — copy if you want independence.</li>
+    <li><strong><code>is</code> vs <code>==</code>.</strong> Interning makes <code>256 is 256</code> <code>True</code> but <code>257 is 257</code> possibly <code>False</code> — never use <code>is</code> to compare values; reserve it for <code>None</code> / <code>True</code> / <code>False</code> and genuine identity checks.</li>
+  </ul>
+
+  <p>The same reference-counting foundation is why concurrency needs care — see the <a href="{{ "/private/python-asyncio/" | relative_url }}">concurrency note</a> and the <a href="{{ "/private/python-gil/" | relative_url }}">GIL note</a>.</p>
+
+</div>
+
+<div id="tab-elia12" class="ql-tab-content" style="display:none">
+
+  <h3>Where does a variable keep its value?</h3>
+
+  <p>In some languages a variable is a <strong>box</strong> you drop a value into. In Python it's more like a <strong>sticky name-tag you stick onto a thing</strong>. The actual value sits on a big shared table (the computer's memory), and the name is just a label pointing at it. You can even stick two name-tags on the <em>same</em> thing.</p>
+
+  <pre><code class="language-python">a = [1, 2, 3]
+b = a          # you stuck a second tag, b, on the SAME list
+b.append(4)
+print(a)       # [1, 2, 3, 4] — one thing, two name-tags</code></pre>
+
+  <p>Why do it this way instead of copying? Because copying everything on every <code>=</code> would be slow and waste memory. Pointing a new label at the same thing is instant. To know when a thing is safe to throw away, each thing keeps a little tally of how many name-tags are stuck on it — when the last tag comes off, it gets binned. (That tally is the "reference count.")</p>
+
+  <h3>Mutable vs immutable: can you change the thing itself?</h3>
+
+  <p>Some things you can change; some you can't — that's the whole idea.</p>
+
+  <ul>
+    <li><strong>Mutable = a whiteboard.</strong> You can rub bits out and add new bits without getting a new board. <code>list</code>, <code>dict</code>, <code>set</code> work like this. If two name-tags are on the same list and you change it, <em>both</em> tags see the change.</li>
+    <li><strong>Immutable = a printed photo.</strong> Once it's made you can't edit it — if you want it different you have to print a <em>new</em> one. <code>int</code>, <code>str</code>, <code>tuple</code>, <code>bool</code> work like this.</li>
+  </ul>
+
+  <p>This trips people up with numbers. It <em>looks</em> like you're changing one, but you're not:</p>
+
+  <pre><code class="language-python">x = 5
+y = x        # y points at the same 5
+x = x + 1    # but 5 can't change! Python makes a NEW 6 and moves x's tag to it
+print(x, y)  # 6 5  — y is still on the old 5</code></pre>
+
+  <p>Compare that to a list, which really <em>does</em> change in place:</p>
+
+  <pre><code class="language-python">a = [1, 2]
+b = a
+a.append(3)   # the list itself is edited
+print(b)      # [1, 2, 3] — b sees it, because it's the same thing</code></pre>
+
+  <h3>Why make some things un-changeable on purpose?</h3>
+
+  <ul>
+    <li><strong>It's safe.</strong> If a thing can never change, you can hand it to anyone and nobody can mess it up behind your back. That's gold when lots of workers (threads) share it — no nasty surprises.</li>
+    <li><strong>It can be shared and reused.</strong> Because they never change, Python quietly reuses the same little numbers and short words everywhere instead of making copies.</li>
+    <li><strong>It can label a drawer.</strong> Only immutable things can be dictionary keys or go in a set — the filing system needs a key that won't change out from under it. A <code>list</code> can't be a key; a <code>tuple</code> can.</li>
+  </ul>
+
+  <div class="cpp-note"><strong>The trick to remember:</strong> a variable is a name-tag on a thing, not a box. Mutable things (list/dict/set) you can edit in place, so two names can surprise each other. Immutable things (int/str/tuple) can't be edited — Python makes a new one and moves your tag. Un-changeable things are safe to share, which is exactly why they're friendly to threads.</div>
+
+</div>
