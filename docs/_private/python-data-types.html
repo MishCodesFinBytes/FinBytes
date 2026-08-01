@@ -4,9 +4,124 @@ title: "Python: Data types — mutable vs immutable & how variables store values
 date: 2026-04-21
 tags: [python, reference]
 permalink: /private/python-data-types/
+tabs:
+  - id: elia10
+    label: ELIA10
+  - id: concept
+    label: Concept
+  - id: tldr
+    label: "TL;DR"
 ---
 
-<div id="tab-concept" class="ql-tab-content">
+<div id="tab-elia10" class="ql-tab-content">
+
+  <style>
+  /* Self-contained light figures so the diagrams stay readable in either site theme. */
+  .dt-fig { background:#fbfbfa; border:1px solid #e5e7eb; border-radius:10px; padding:12px; margin:16px 0; }
+  .dt-fig svg { display:block; margin:0 auto; max-width:100%; height:auto; }
+  .dt-cap { text-align:center; color:#6b7280; font-size:0.82rem; margin:8px 0 0; }
+  </style>
+
+  <h3>Where does a variable keep its value?</h3>
+
+  <p>In some languages a variable is a <strong>box</strong> you drop a value into. In Python it's more like a <strong>sticky name-tag you stick onto a thing</strong>. The actual value sits on a big shared table (the computer's memory), and the name is just a label pointing at it. You can even stick two name-tags on the <em>same</em> thing.</p>
+
+  <div class="dt-fig">
+    <svg viewBox="0 0 640 200" role="img" aria-label="Two names pointing at one list object">
+      <defs><marker id="dtA" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1f2328"/></marker></defs>
+      <rect x="10" y="10" width="620" height="180" rx="12" fill="#fbfbfa" stroke="#e5e7eb"/>
+      <text x="320" y="40" text-anchor="middle" font-size="14" font-weight="700" fill="#1f2328">A name is a tag on an object — not a box</text>
+      <rect x="60" y="78" width="70" height="32" rx="8" fill="#e0edff" stroke="#2563eb"/><text x="95" y="99" text-anchor="middle" font-size="15" font-weight="700" fill="#2563eb">a</text>
+      <rect x="60" y="128" width="70" height="32" rx="8" fill="#dcfce7" stroke="#15803d"/><text x="95" y="149" text-anchor="middle" font-size="15" font-weight="700" fill="#15803d">b</text>
+      <rect x="380" y="88" width="210" height="64" rx="10" fill="#fff" stroke="#1f2328"/>
+      <text x="485" y="112" text-anchor="middle" font-size="12" fill="#6b7280">one list object</text>
+      <text x="485" y="136" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2328">[1, 2, 3, 4]</text>
+      <line x1="132" y1="94" x2="378" y2="112" stroke="#1f2328" stroke-width="2" marker-end="url(#dtA)"/>
+      <line x1="132" y1="144" x2="378" y2="130" stroke="#1f2328" stroke-width="2" marker-end="url(#dtA)"/>
+    </svg>
+    <p class="dt-cap">Two names, one object — change it through either tag and both see it.</p>
+  </div>
+
+  <pre><code class="language-python">a = [1, 2, 3]
+b = a          # you stuck a second tag, b, on the SAME list
+b.append(4)
+print(a)       # [1, 2, 3, 4] — one thing, two name-tags</code></pre>
+
+  <p>Why do it this way instead of copying? Because copying everything on every <code>=</code> would be slow and waste memory. Pointing a new label at the same thing is instant. To know when a thing is safe to throw away, each thing keeps a little tally of how many name-tags are stuck on it — when the last tag comes off, it gets binned. (That tally is the <strong>reference count</strong>.)</p>
+
+  <h3>Mutable vs immutable: can you change the thing itself?</h3>
+
+  <p>Some things you can change; some you can't — that's the whole idea.</p>
+
+  <div class="dt-fig">
+    <svg viewBox="0 0 680 300" role="img" aria-label="Immutable rebinds to a new object; mutable changes in place">
+      <defs><marker id="dtB" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1f2328"/></marker></defs>
+      <rect x="10" y="10" width="320" height="280" rx="12" fill="#fbfbfa" stroke="#e5e7eb"/>
+      <rect x="350" y="10" width="320" height="280" rx="12" fill="#fbfbfa" stroke="#e5e7eb"/>
+      <!-- immutable -->
+      <text x="170" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">IMMUTABLE — int</text>
+      <text x="170" y="60" text-anchor="middle" font-size="12" fill="#6b7280">x = 5 ; y = x ; x = x + 1</text>
+      <rect x="40" y="95" width="52" height="30" rx="8" fill="#ede9fe" stroke="#7c3aed"/><text x="66" y="115" text-anchor="middle" font-size="14" font-weight="700" fill="#7c3aed">x</text>
+      <rect x="40" y="190" width="52" height="30" rx="8" fill="#e0edff" stroke="#2563eb"/><text x="66" y="210" text-anchor="middle" font-size="14" font-weight="700" fill="#2563eb">y</text>
+      <rect x="210" y="90" width="80" height="40" rx="8" fill="#fff" stroke="#7c3aed"/><text x="250" y="116" text-anchor="middle" font-size="17" font-weight="700" fill="#7c3aed">6</text>
+      <text x="250" y="82" text-anchor="middle" font-size="11" fill="#15803d">a NEW object</text>
+      <rect x="210" y="185" width="80" height="40" rx="8" fill="#fff" stroke="#1f2328"/><text x="250" y="211" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2328">5</text>
+      <text x="250" y="245" text-anchor="middle" font-size="11" fill="#6b7280">old 5, untouched</text>
+      <line x1="94" y1="110" x2="208" y2="110" stroke="#1f2328" stroke-width="2" marker-end="url(#dtB)"/>
+      <line x1="94" y1="205" x2="208" y2="205" stroke="#1f2328" stroke-width="2" marker-end="url(#dtB)"/>
+      <text x="170" y="278" text-anchor="middle" font-size="11.5" fill="#7c3aed">"changing" x made a NEW 6 — y still sees 5</text>
+      <!-- mutable -->
+      <text x="510" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">MUTABLE — list</text>
+      <text x="510" y="60" text-anchor="middle" font-size="12" fill="#6b7280">a = [1,2] ; b = a ; a.append(3)</text>
+      <rect x="378" y="120" width="52" height="30" rx="8" fill="#dcfce7" stroke="#15803d"/><text x="404" y="140" text-anchor="middle" font-size="14" font-weight="700" fill="#15803d">a</text>
+      <rect x="378" y="170" width="52" height="30" rx="8" fill="#fef3c7" stroke="#b45309"/><text x="404" y="190" text-anchor="middle" font-size="14" font-weight="700" fill="#b45309">b</text>
+      <rect x="520" y="130" width="120" height="50" rx="8" fill="#fff" stroke="#15803d"/><text x="580" y="161" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2328">[1, 2, 3]</text>
+      <line x1="432" y1="135" x2="518" y2="150" stroke="#1f2328" stroke-width="2" marker-end="url(#dtB)"/>
+      <line x1="432" y1="185" x2="518" y2="160" stroke="#1f2328" stroke-width="2" marker-end="url(#dtB)"/>
+      <text x="510" y="278" text-anchor="middle" font-size="11.5" fill="#15803d">the SAME list was edited — b sees it too</text>
+    </svg>
+    <p class="dt-cap">Immutable: the value can't change, so Python makes a new object and moves your tag. Mutable: the same object is edited in place.</p>
+  </div>
+
+  <ul>
+    <li><strong>Mutable = a whiteboard.</strong> You can rub bits out and add new bits without getting a new board. <code>list</code>, <code>dict</code>, <code>set</code>.</li>
+    <li><strong>Immutable = a printed photo.</strong> Once it's made you can't edit it — for something different you print a <em>new</em> one. <code>int</code>, <code>str</code>, <code>tuple</code>, <code>bool</code>.</li>
+  </ul>
+
+  <div class="dt-fig">
+    <svg viewBox="0 0 640 240" role="img" aria-label="Which built-in types are mutable vs immutable">
+      <rect x="10" y="10" width="620" height="220" rx="12" fill="#fbfbfa" stroke="#e5e7eb"/>
+      <rect x="30" y="35" width="280" height="185" rx="10" fill="#fff" stroke="#7c3aed"/>
+      <text x="170" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">IMMUTABLE — printed photo</text>
+      <text x="170" y="80" text-anchor="middle" font-size="11" fill="#6b7280">can't be edited after it's made</text>
+      <text x="170" y="112" text-anchor="middle" font-size="14" fill="#1f2328">int · float · bool · complex</text>
+      <text x="170" y="140" text-anchor="middle" font-size="14" fill="#1f2328">str · bytes</text>
+      <text x="170" y="168" text-anchor="middle" font-size="14" fill="#1f2328">tuple · frozenset</text>
+      <text x="170" y="196" text-anchor="middle" font-size="14" fill="#1f2328">None</text>
+      <rect x="330" y="35" width="280" height="185" rx="10" fill="#fff" stroke="#15803d"/>
+      <text x="470" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">MUTABLE — whiteboard</text>
+      <text x="470" y="80" text-anchor="middle" font-size="11" fill="#6b7280">edited in place</text>
+      <text x="470" y="112" text-anchor="middle" font-size="14" fill="#1f2328">list</text>
+      <text x="470" y="140" text-anchor="middle" font-size="14" fill="#1f2328">dict · set</text>
+      <text x="470" y="168" text-anchor="middle" font-size="14" fill="#1f2328">bytearray</text>
+      <text x="470" y="196" text-anchor="middle" font-size="14" fill="#1f2328">most objects you write</text>
+    </svg>
+    <p class="dt-cap">A handy split to memorise. Note: a <code>tuple</code> is immutable, but if it holds a list, that inner list can still change.</p>
+  </div>
+
+  <h3>Why make some things un-changeable on purpose?</h3>
+
+  <ul>
+    <li><strong>It's safe.</strong> If a thing can never change, you can hand it to anyone and nobody can mess it up behind your back. Gold when many workers (threads) share it — no nasty surprises.</li>
+    <li><strong>It can be shared and reused.</strong> Because they never change, Python quietly reuses the same little numbers and short words everywhere instead of making copies.</li>
+    <li><strong>It can label a drawer.</strong> Only immutable things can be dictionary keys or go in a set — the filing system needs a key that won't change out from under it. A <code>list</code> can't be a key; a <code>tuple</code> can.</li>
+  </ul>
+
+  <div class="cpp-note"><strong>The trick to remember:</strong> a variable is a name-tag on a thing, not a box. Mutable things (list/dict/set) you can edit in place, so two names can surprise each other. Immutable things (int/str/tuple) can't be edited — Python makes a new one and moves your tag. Un-changeable things are safe to share, which is exactly why they're friendly to threads.</div>
+
+</div>
+
+<div id="tab-concept" class="ql-tab-content" style="display:none">
 
   <p>A Python variable is a <strong>name bound to an object</strong>, not a box that holds a value. Every value — an <code>int</code>, a <code>list</code>, a function — is a <code>PyObject</code> on the heap; a variable is just a reference (a pointer) to one. Assignment never copies the object, it binds a name to the <em>same</em> object.</p>
 
@@ -63,50 +178,47 @@ print(a, b)   # [1, 2, 3] [1, 2, 3]   — b sees it too</code></pre>
 
 </div>
 
-<div id="tab-elia12" class="ql-tab-content" style="display:none">
+<div id="tab-tldr" class="ql-tab-content" style="display:none">
 
-  <h3>Where does a variable keep its value?</h3>
+  <p>Two-minute cram — skim before an interview.</p>
 
-  <p>In some languages a variable is a <strong>box</strong> you drop a value into. In Python it's more like a <strong>sticky name-tag you stick onto a thing</strong>. The actual value sits on a big shared table (the computer's memory), and the name is just a label pointing at it. You can even stick two name-tags on the <em>same</em> thing.</p>
+  <h3>The 30-second story</h3>
+  <p>A variable is a <strong>name bound to an object</strong>, not a box — assignment shares, it doesn't copy. <strong>Immutable</strong> types (<code>int</code>, <code>str</code>, <code>tuple</code>, <code>frozenset</code>, <code>bytes</code>, <code>bool</code>, <code>None</code>) can't change, so any "change" builds a <em>new</em> object; <strong>mutable</strong> types (<code>list</code>, <code>dict</code>, <code>set</code>, <code>bytearray</code>) are edited in place, so every alias sees the change. Immutable ⇒ hashable ⇒ usable as dict keys / set members, and inherently thread-safe.</p>
 
-  <pre><code class="language-python">a = [1, 2, 3]
-b = a          # you stuck a second tag, b, on the SAME list
-b.append(4)
-print(a)       # [1, 2, 3, 4] — one thing, two name-tags</code></pre>
-
-  <p>Why do it this way instead of copying? Because copying everything on every <code>=</code> would be slow and waste memory. Pointing a new label at the same thing is instant. To know when a thing is safe to throw away, each thing keeps a little tally of how many name-tags are stuck on it — when the last tag comes off, it gets binned. (That tally is the "reference count.")</p>
-
-  <h3>Mutable vs immutable: can you change the thing itself?</h3>
-
-  <p>Some things you can change; some you can't — that's the whole idea.</p>
-
+  <h3>One-liners</h3>
   <ul>
-    <li><strong>Mutable = a whiteboard.</strong> You can rub bits out and add new bits without getting a new board. <code>list</code>, <code>dict</code>, <code>set</code> work like this. If two name-tags are on the same list and you change it, <em>both</em> tags see the change.</li>
-    <li><strong>Immutable = a printed photo.</strong> Once it's made you can't edit it — if you want it different you have to print a <em>new</em> one. <code>int</code>, <code>str</code>, <code>tuple</code>, <code>bool</code> work like this.</li>
+    <li><strong>Mutable</strong> — value can change in place (<code>list.append</code>); aliases see it.</li>
+    <li><strong>Immutable</strong> — value fixed for life; operations return a new object.</li>
+    <li><strong>Hashable</strong> — has a stable <code>__hash__</code>; required for dict keys / set members. Immutability is what makes it stable.</li>
+    <li><strong>Aliasing</strong> — two names for one object (<code>b = a</code>); a copy (<code>a.copy()</code>, <code>list(a)</code>) breaks the link.</li>
+    <li><strong><code>==</code> vs <code>is</code></strong> — same value vs same object (<code>id()</code>).</li>
+    <li><strong>Shallow vs deep copy</strong> — shallow copies the outer container but shares the inner objects; <code>copy.deepcopy</code> clones all the way down.</li>
   </ul>
 
-  <p>This trips people up with numbers. It <em>looks</em> like you're changing one, but you're not:</p>
+  <h3>Quick table</h3>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+    <tr><th>Type</th><th>Mutable?</th><th>Hashable? (dict key / set)</th></tr>
+    <tr><td><code>int</code>, <code>float</code>, <code>bool</code>, <code>str</code>, <code>bytes</code></td><td>no</td><td class="dt-yes">yes</td></tr>
+    <tr><td><code>tuple</code>, <code>frozenset</code></td><td>no</td><td>yes — <em>if</em> contents are hashable</td></tr>
+    <tr><td><code>list</code>, <code>dict</code>, <code>set</code>, <code>bytearray</code></td><td>yes</td><td>no</td></tr>
+  </table>
 
-  <pre><code class="language-python">x = 5
-y = x        # y points at the same 5
-x = x + 1    # but 5 can't change! Python makes a NEW 6 and moves x's tag to it
-print(x, y)  # 6 5  — y is still on the old 5</code></pre>
-
-  <p>Compare that to a list, which really <em>does</em> change in place:</p>
-
-  <pre><code class="language-python">a = [1, 2]
-b = a
-a.append(3)   # the list itself is edited
-print(b)      # [1, 2, 3] — b sees it, because it's the same thing</code></pre>
-
-  <h3>Why make some things un-changeable on purpose?</h3>
-
+  <h3>Gotchas they probe</h3>
   <ul>
-    <li><strong>It's safe.</strong> If a thing can never change, you can hand it to anyone and nobody can mess it up behind your back. That's gold when lots of workers (threads) share it — no nasty surprises.</li>
-    <li><strong>It can be shared and reused.</strong> Because they never change, Python quietly reuses the same little numbers and short words everywhere instead of making copies.</li>
-    <li><strong>It can label a drawer.</strong> Only immutable things can be dictionary keys or go in a set — the filing system needs a key that won't change out from under it. A <code>list</code> can't be a key; a <code>tuple</code> can.</li>
+    <li><strong>Mutable default argument</strong> — <code>def f(a=[])</code> shares one list across calls. Use <code>None</code> sentinel.</li>
+    <li><strong>Aliasing surprise</strong> — mutating a list seen through another name changes "both".</li>
+    <li><strong><code>is</code> for values</strong> — small-int/string interning makes it look right, then breaks (<code>257 is 257</code>).</li>
+    <li><strong>Tuple of a list</strong> — the tuple is immutable but <em>unhashable</em>, because a contained list can change: <code>hash(([1],))</code> raises.</li>
+    <li><strong>Dict keys must be immutable/hashable</strong> — a <code>list</code> key raises <code>TypeError: unhashable type</code>.</li>
   </ul>
 
-  <div class="cpp-note"><strong>The trick to remember:</strong> a variable is a name-tag on a thing, not a box. Mutable things (list/dict/set) you can edit in place, so two names can surprise each other. Immutable things (int/str/tuple) can't be edited — Python makes a new one and moves your tag. Un-changeable things are safe to share, which is exactly why they're friendly to threads.</div>
+  <h3>Say it out loud</h3>
+  <p><strong>"Why can't a list be a dict key?"</strong> — "Keys must be hashable with a hash that never changes; a list is mutable, so its hash could change and break the table. Use a tuple."</p>
+  <p><strong>"What happens on <code>x += 1</code> for an int vs a list?"</strong> — "For an int (immutable) it builds a new object and rebinds the name; for a list (mutable) <code>+=</code> extends the same object in place, so other names see it."</p>
+  <p><strong>"Are tuples always immutable?"</strong> — "The tuple's own structure is fixed, but it can hold mutable objects — those can still change, which is also why such a tuple isn't hashable."</p>
 
 </div>
+
+<style>
+.dt-yes { color:#15803d; font-weight:700; }
+</style>
